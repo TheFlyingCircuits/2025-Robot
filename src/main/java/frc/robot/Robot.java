@@ -4,17 +4,35 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.TimedRobot;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-public class Robot extends TimedRobot {
+public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
+      private void initAdvantageKit() {
+        Logger.recordMetadata("projectName", "2024Robot");
+        Logger.addDataReceiver(new NT4Publisher());
+        if (Constants.atCompetition) {
+            Logger.addDataReceiver(new WPILOGWriter()); // <- log to USB stick
+        }
+        new PowerDistribution(); // Apparently just constructing a PDH
+                                    // will allow it's values to be logged? 
+                                    // This is what the advantage kit docs imply at least.
+        Logger.start();
+    }
+
 
   private final RobotContainer m_robotContainer;
 
   public Robot() {
     m_robotContainer = new RobotContainer();
+    
   }
 
   @Override
@@ -26,14 +44,16 @@ public class Robot extends TimedRobot {
   public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    m_robotContainer.drivetrain.setPoseToVisionMeasurement();
+  }
 
   @Override
   public void disabledExit() {}
 
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+    //m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();

@@ -154,7 +154,7 @@ public class Drivetrain extends SubsystemBase {
         translationController = new PIDController(4.0, 0, 0); // kP has units of metersPerSecond per meter of error.
         translationController.setTolerance(0.05); // 5 centimeters
 
-        configPathPlanner();
+        //configPathPlanner();
     }
 
     private void configPathPlanner() {
