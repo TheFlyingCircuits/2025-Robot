@@ -10,6 +10,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants.ArmConstants;
+import edu.wpi.first.math.system.NumericalIntegration;
 
 public class ArmIOSim implements ArmIO {
 
@@ -24,13 +25,33 @@ public class ArmIOSim implements ArmIO {
     @Override
     public void updateInputs(ArmIOInputs inputs) {
         // TODO Auto-generated method stub
-        ArmIO.super.updateInputs(inputs);
+        //ArmIO.super.updateInputs(inputs);
+
+        Matrix<N4, N1> state = VecBuilder.fill(
+            inputs.shoulderAngleDegrees,
+            inputs.shoulderVelocityDegreesPerSecond,
+            inputs.extensionLengthMeters,
+            inputs.extensionLengthMetersPerSecond
+        );
+        Matrix<N2, N1> systemInputs = VecBuilder.fill(
+            
+        );
+        Matrix<N4, N1> nextState = NumericalIntegration.rk4(this::calculateSystemDerivative, state, systemInputs, 0.05); //period should be replaced with a constant maybe
+
+        inputs.shoulderAngleDegrees = nextState.get(0, 0);
+        inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
+        inputs.shoulder
+
+
+        inputs.extensionLengthMeters = nextState.get(2, 0);
+        inputs.extensionLengthMetersPerSecond = nextState.get(3, 0);
+        inputs.extensionAppliedVolts = systemInputs.get(1, 0);
     }
 
 
     /*
      *    STATE VECTOR
-     * shoulder angle (deg))
+     * shoulder angle (deg))   <needs to become radians>
      * shoulder angvel (deg/s)
      * arm length (m)
      * arm extension vel. (m/s)
@@ -67,21 +88,21 @@ public class ArmIOSim implements ArmIO {
         double extensionMetersPerSecond = state.get(3, 0);
         double extensionVoltage = input.get(1, 0);
 
-        double extensionCurrent = extensionMotor.getCurrent(extensionMetersPerSecond, extensionVoltage);
+        double extensionCurrentAmps = extensionMotor.getCurrent(extensionMetersPerSecond, extensionVoltage);
+        double extensionTorqueNM = extensionMotor.KtNMPerAmp * extensionCurrentAmps;
 
 
-
+        //double extensionMetersPerSecondSquared = extensionKv * extensionVoltage;
+        double extensionMetersPerSecondSquared = extensionTorqueNM / ArmConstants.pulleyGearRadiusMeters;
         
 
-        return null;
-        // return VecBuilder.fill(
-        //     shoulderDegreesPerSecond,
-        //     Math.toDegrees(shoulderRadiansPerSecondSquared),
-
-        // )
-
-
-
+        //return null; 
+        return VecBuilder.fill(
+            shoulderDegreesPerSecond,
+            Math.toDegrees(shoulderRadiansPerSecondSquared),
+            extensionMetersPerSecond,
+            extensionMetersPerSecondSquared
+        );
 
     }
 

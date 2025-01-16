@@ -57,18 +57,12 @@ public final class Constants {
         public final static double kVFlywheelsVoltsSecondsPerMeter = 0.4047;
         public final static double kAFlywheelsVoltsSecondsSquaredPerMeter = 0.;
 
-<<<<<<< Updated upstream
-        public final static int leftMotorID = 6;
-        public final static int rightMotorID = 5;
-=======
-        public final static double gravityMetersPerSecondSquared = 9.81;
+        
 
 
-        /***** GEOMETRY ******/
+        
 
-        /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
-        public final static double shoulderGearReduction = 100;
->>>>>>> Stashed changes
+        
 
         public final static int indexerMotorID = 4;
 
@@ -80,16 +74,6 @@ public final class Constants {
         public static final double kSIndexerVolts = 0;
         public static final double kVIndexerVoltsPerRPS = 0.130;
 
-<<<<<<< Updated upstream
-        /** Rotations of the black roller of the indexer per rotation of the motor. */
-        public static final double indexerBlackRollerGearRatio = (17.0 / 37.0) * (18.0 / 24.0);
-        public static final double blackRollerRadiusMeters = Units.inchesToMeters(2.125/2.0);
-        public static final double blackRollerCircumferenceMeters = 2 * Math.PI * blackRollerRadiusMeters;
-=======
-        /***** MASS *******/
-        /** Mass of the telescoping segment of the arm. Does not include wrist etc. */
-        public final static double armMassKg = 7;
->>>>>>> Stashed changes
 
         /** Rotations of the orange wheels on the indexer per rotation of the motor. */
         public static final double indexerOrangeWheelsGearRatio = (17.0 / 37.0);
@@ -236,6 +220,20 @@ public final class Constants {
     }
 
     public final static class ArmConstants {
+
+        /***** MASS *******/
+        /** Mass of the telescoping segment of the arm. Does not include wrist etc. */
+        public final static double armMassKg = 7;
+
+        public final static double gravityMetersPerSecondSquared = 9.81;
+
+        /***** GEOMETRY ******/
+        /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
+        public final static double shoulderGearReduction = 100;
+        public final static double pulleyGearRadiusMeters = 0.03;
+
+
+
         /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
         public final static double armGearReduction = 460./3.;
 
