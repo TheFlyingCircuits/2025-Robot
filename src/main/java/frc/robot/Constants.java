@@ -30,6 +30,7 @@ import edu.wpi.first.units.Unit;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Reefscape.FieldConstants;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -223,7 +224,7 @@ public final class Constants {
     public final static class VisionConstants {
 
 
-        public final static AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+        public final static AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.tagLayout;
                                                                       
         public final static Transform3d robotToShooterCamera = new Transform3d(
             new Translation3d(Units.inchesToMeters(9.25), 0, Units.inchesToMeters(10.625)),

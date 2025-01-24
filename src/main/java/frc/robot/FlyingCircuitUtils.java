@@ -1,6 +1,7 @@
 package frc.robot;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.json.simple.parser.ParseException;
 
@@ -8,9 +9,12 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.VisionConstants;
 
@@ -72,5 +76,23 @@ public class FlyingCircuitUtils {
 
         return (pos.getY() > 8.19 + toleranceMeters) || (pos.getY() < 0 - toleranceMeters)
             ||(pos.getX() > 16.54 + toleranceMeters) || (pos.getX() < 0 - toleranceMeters);
+    }
+
+
+
+    public static <T> T getAllianceDependentValue(T valueOnRed, T valueOnBlue, T valueWhenNoComms) {
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+
+        if (alliance.isPresent()) {
+            if (alliance.get() == Alliance.Red) {
+                return valueOnRed;
+            }
+            if (alliance.get() == Alliance.Blue) {
+                return valueOnBlue;
+            }
+        }
+
+        // Should never get to this point as long as we're connected to the driver station.
+        return valueWhenNoComms;
     }
 }
