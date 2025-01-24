@@ -188,14 +188,6 @@ public interface FieldElement {
             return FlyingCircuitUtils.getAllianceDependentValue(redTagID, blueTagID, -1);
         }
 
-        public ReefFace getReefFace() {
-            return reefFace;
-        }
-
-        public ReefBranch[] getBranches() {
-            return branches;
-        }
-
         private boolean isLeftStalk() {
             // left and right is determined from the robot's perspecive
             // as it goes up to score on the stalk.
