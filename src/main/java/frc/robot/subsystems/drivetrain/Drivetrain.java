@@ -50,7 +50,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.FlyingCircuitUtils;
 import frc.robot.Constants.DrivetrainConstants;
-import frc.robot.Constants.FieldElement;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
@@ -154,7 +153,7 @@ public class Drivetrain extends SubsystemBase {
         translationController = new PIDController(4.0, 0, 0); // kP has units of metersPerSecond per meter of error.
         translationController.setTolerance(0.05); // 5 centimeters
 
-        configPathPlanner();
+        //configPathPlanner();
     }
 
     private void configPathPlanner() {
@@ -526,17 +525,17 @@ public class Drivetrain extends SubsystemBase {
                 Pose2d tagPose = VisionConstants.aprilTagFieldLayout.getTagPose(id).get().toPose2d();
                 trackedTags.add(tagPose);
 
-                if (id == FieldElement.getSpeakerTagID()) {
-                    mostRecentSpeakerTagMeasurements.add(visionMeasurement);
+                // if (id == FieldElement.getSpeakerTagID()) {
+                //     mostRecentSpeakerTagMeasurements.add(visionMeasurement);
 
-                    if (mostRecentSpeakerTagMeasurement == null) {
-                        mostRecentSpeakerTagMeasurement = visionMeasurement;
-                    }
+                //     if (mostRecentSpeakerTagMeasurement == null) {
+                //         mostRecentSpeakerTagMeasurement = visionMeasurement;
+                //     }
 
-                    if (visionMeasurement.timestampSeconds > mostRecentSpeakerTagMeasurement.timestampSeconds) {
-                        mostRecentSpeakerTagMeasurement = visionMeasurement;
-                    }
-                }
+                //     if (visionMeasurement.timestampSeconds > mostRecentSpeakerTagMeasurement.timestampSeconds) {
+                //         mostRecentSpeakerTagMeasurement = visionMeasurement;
+                //     }
+                // }
             }
         }
 
@@ -557,23 +556,23 @@ public class Drivetrain extends SubsystemBase {
     }
 
 
-    public boolean inSpeakerShotRange() {
-        Translation2d speakerLocation = FieldElement.SPEAKER.getLocation().toTranslation2d();
-        Translation2d robotLocation = getPoseMeters().getTranslation();
+    // public boolean inSpeakerShotRange() {
+    //     Translation2d speakerLocation = FieldElement.SPEAKER.getLocation().toTranslation2d();
+    //     Translation2d robotLocation = getPoseMeters().getTranslation();
 
-        // about half way between the center line and our wing.
-        boolean closeEnough = Math.abs(speakerLocation.getX() - robotLocation.getX()) <= 7.091;
-        return closeEnough;
-    }
+    //     // about half way between the center line and our wing.
+    //     boolean closeEnough = Math.abs(speakerLocation.getX() - robotLocation.getX()) <= 7.091;
+    //     return closeEnough;
+    // }
 
-    public boolean inAmpShotRange() {
-        Translation2d ampLocation = FieldElement.AMP.getLocation().toTranslation2d();
-        Translation2d robotLocation = getPoseMeters().getTranslation();
+    // public boolean inAmpShotRange() {
+    //     Translation2d ampLocation = FieldElement.AMP.getLocation().toTranslation2d();
+    //     Translation2d robotLocation = getPoseMeters().getTranslation();
 
-        boolean closeEnoughX = Math.abs(ampLocation.getX() - robotLocation.getX()) < 3.0;
-        boolean closeEnoughY = Math.abs(ampLocation.getY() - robotLocation.getY()) < 3.0;
-        return closeEnoughX && closeEnoughY;
-    }
+    //     boolean closeEnoughX = Math.abs(ampLocation.getX() - robotLocation.getX()) < 3.0;
+    //     boolean closeEnoughY = Math.abs(ampLocation.getY() - robotLocation.getY()) < 3.0;
+    //     return closeEnoughX && closeEnoughY;
+    // }
 
 
     public Translation3d fieldCoordsFromRobotCoords(Translation3d robotCoords) {
@@ -628,17 +627,18 @@ public class Drivetrain extends SubsystemBase {
 
 
     public Optional<Rotation2d> getAutoRotationOverride() {
-        if (isTrackingSpeakerInAuto) {
-            Translation2d speakerLocation = Constants.FieldElement.SPEAKER.getLocation().toTranslation2d();
-            Translation2d robotLocation = getPoseMeters().getTranslation();
-            Rotation2d angle = speakerLocation.minus(robotLocation).getAngle();
-            Logger.recordOutput("PathPlanner/rotationTargetOverride", angle);
-            return Optional.of(angle);
-        }
-        else {
-            Logger.recordOutput("PathPlanner/rotationTargetOverride", new Rotation2d(0));
-            return Optional.empty();
-        }
+        // if (isTrackingSpeakerInAuto) {
+        //     Translation2d speakerLocation = Constants.FieldElement.SPEAKER.getLocation().toTranslation2d();
+        //     Translation2d robotLocation = getPoseMeters().getTranslation();
+        //     Rotation2d angle = speakerLocation.minus(robotLocation).getAngle();
+        //     Logger.recordOutput("PathPlanner/rotationTargetOverride", angle);
+        //     return Optional.of(angle);
+        // }
+        // else {
+        //     Logger.recordOutput("PathPlanner/rotationTargetOverride", new Rotation2d(0));
+        //     return Optional.empty();
+        // }
+        return Optional.empty();
     }
 
     /**

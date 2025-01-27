@@ -19,7 +19,6 @@ public class ArmIOSim implements ArmIO {
     private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(1);
 
     public ArmIOSim() {
-
     };
 
     @Override
@@ -40,7 +39,6 @@ public class ArmIOSim implements ArmIO {
 
         inputs.shoulderAngleDegrees = nextState.get(0, 0);
         inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
-        inputs.shoulder
 
 
         inputs.extensionLengthMeters = nextState.get(2, 0);

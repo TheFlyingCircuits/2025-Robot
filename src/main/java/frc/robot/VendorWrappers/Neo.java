@@ -63,7 +63,7 @@ public class Neo extends SparkMax {
 
     @Override
     public REVLibError configure(SparkBaseConfig config, ResetMode resetMode, PersistMode persistMode) {
-        double secondsBetweenRetrys = 1.0/8.0;
+        double secondsBetweenRetrys = 5;
 
         while (true) {
             REVLibError errorCode = super.configure(config, resetMode, persistMode);
@@ -80,7 +80,7 @@ public class Neo extends SparkMax {
     }
 
     public REVLibError waitForConfig(Supplier<REVLibError> configFunction, String errorMessage) {
-        double waitTimeSeconds = 1.0/8.0;
+        double waitTimeSeconds = 4.0/8.0;
         
         while (true) {
             REVLibError errorCode = configFunction.get();

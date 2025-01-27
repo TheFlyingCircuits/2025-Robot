@@ -10,7 +10,6 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import frc.robot.Constants.MotorConstants;
 import frc.robot.Constants.SwerveModuleConstants;
 import frc.robot.VendorWrappers.Neo;
 
@@ -78,8 +77,8 @@ public class SwerveModuleIONeo implements SwerveModuleIO{
     private void configAngleMotor() {
         SparkMaxConfig config = new SparkMaxConfig();
         config.idleMode(IdleMode.kBrake);
-        config.smartCurrentLimit(MotorConstants.angleContinuousCurrentLimit);
-        config.inverted(MotorConstants.angleInvert);
+        config.smartCurrentLimit(SwerveModuleConstants.angleContinuousCurrentLimit);
+        config.inverted(SwerveModuleConstants.angleInvert);
         config.absoluteEncoder.positionConversionFactor(SwerveModuleConstants.steerGearReduction*360.0);
         config.absoluteEncoder.velocityConversionFactor(SwerveModuleConstants.steerGearReduction*360.0/60.0);
         //converts rpm of motor into deg/s of wheel
@@ -89,12 +88,12 @@ public class SwerveModuleIONeo implements SwerveModuleIO{
     private void configDriveMotor() {
         SparkMaxConfig config = new SparkMaxConfig();
         config.idleMode(IdleMode.kBrake);
-        config.smartCurrentLimit(MotorConstants.driveContinuousCurrentLimit);
+        config.smartCurrentLimit(SwerveModuleConstants.driveContinuousCurrentLimit);
         config.absoluteEncoder.positionConversionFactor(SwerveModuleConstants.driveGearReduction 
         * SwerveModuleConstants.wheelCircumferenceMeters);
         config.absoluteEncoder.velocityConversionFactor(1./60. * SwerveModuleConstants.driveGearReduction
         * SwerveModuleConstants.wheelCircumferenceMeters);
-        config.inverted(MotorConstants.driveInvert);
+        config.inverted(SwerveModuleConstants.driveInvert);
         driveMotor.setPosition(0.0);
         // Converts rpm of motor to m/s of wheel.
         driveMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
