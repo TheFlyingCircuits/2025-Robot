@@ -48,6 +48,16 @@ public final class Constants {
 
     public final static class ArmConstants {
 
+        /**
+         * Translation from the center of the shoulder pivot to the center of the wrist pivot.
+         */
+        public final static Translation2d shoulderToWristMeters = new Translation2d(
+            0.6,
+            -0.2
+        );
+
+
+
         /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
         public final static double shoulderGearReduction = 100;
 
