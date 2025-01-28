@@ -53,14 +53,14 @@ public final class Constants {
 
     public final static class ArmConstants {
 
-        /**
-         * Translation from the center of the shoulder pivot to the center of the wrist pivot.
-         */
-        public final static Translation2d shoulderToWristMeters = new Translation2d(
-            0.6,
-            -0.2
-        );
 
+        /**
+         * Vertical distance from the center of the shoulder pivot to the line at the center of the arm.
+         */
+        public final static double shoulderBracketLengthMeters = -0.2;
+
+
+        public final static Translation2d shoulderPivotPositionMeters = new Translation2d(-0.4, 0.4);
         
 
 
