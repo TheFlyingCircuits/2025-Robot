@@ -50,7 +50,7 @@ public final class Constants {
         public final static double defaultPeriod = 0.02;
 
     }
-    
+
     public final static class ArmConstants {
 
         /**
@@ -60,6 +60,11 @@ public final class Constants {
             0.6,
             -0.2
         );
+
+        
+
+
+        public static final double pulleyGearRadiusMeters = 0;
 
 
 
@@ -77,6 +82,9 @@ public final class Constants {
 
 
 
+
+
+        public final static double armMassKg = 10;
         
 
         /***** REAL CONSTANTS ******/
@@ -100,6 +108,8 @@ public final class Constants {
         public final static TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(
             armMaxVelDegreesPerSecond, armMaxAccelDegreesPerSecondSquared
         );
+
+
         
     }
 
