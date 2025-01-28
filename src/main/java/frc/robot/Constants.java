@@ -45,7 +45,12 @@ public final class Constants {
     public final static boolean atCompetition = false;
     public final static boolean isDemoMode = false;
 
+    public final class UniversalConstants {
+        public final static double gravityMetersPerSecondSquared = 9.81;
+        public final static double defaultPeriod = 0.02;
 
+    }
+    
     public final static class ArmConstants {
 
         /**

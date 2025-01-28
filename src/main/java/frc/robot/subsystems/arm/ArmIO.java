@@ -23,10 +23,15 @@ public interface ArmIO {
 
         public double shoulderAccelerationDegreesPerSecondSquared = 0.0;
 
+        
+        public double shoulderAppliedCurrent = 0.0;
+
 
         public double extensionLengthMeters = 0.0;
 
         public double extensionLengthMetersPerSecond = 0.0;
+
+        public double extensionAppliedVolts = 0.0;
 
 
         public boolean atUpperAngleLimit = false;
@@ -39,7 +44,7 @@ public interface ArmIO {
     /** Updates the set of loggable inputs. */
     public default void updateInputs(ArmIOInputs inputs) {};
 
-    public default void setArmAccelerationDegreesPerSecondSquared(double degreesPerSecondSquared) {};
+    public default void setShoulderAccelerationDegreesPerSecondSquared(double degreesPerSecondSquared) {};
 
     
 
@@ -47,7 +52,7 @@ public interface ArmIO {
      * Run the two arm motors at the specified voltage.
      * A positive value will raise the arm, while a negative value will lower it.
     */
-    public default void setArmMotorVolts(double volts) {};
+    public default void setShoulderMotorVolts(double volts) {};
 
     public default void setExtensionMotorVolts(double volts) {};
 

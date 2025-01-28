@@ -1,8 +1,11 @@
 package frc.robot.subsystems.arm;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N4;
@@ -18,12 +21,14 @@ public class ArmIOSim implements ArmIO {
     private DCMotor shoulderMotor = DCMotor.getKrakenX60(2).withReduction(ArmConstants.shoulderGearReduction);
     private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(1);
 
+    private final PIDController shoulderFeedback = new PIDController(1, 0, 0);
+    private final PIDController extensionFeedback = new PIDController(1, 0, 0);
+
     public ArmIOSim() {
     };
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
-        // TODO Auto-generated method stub
         //ArmIO.super.updateInputs(inputs);
 
         Matrix<N4, N1> state = VecBuilder.fill(
@@ -33,13 +38,13 @@ public class ArmIOSim implements ArmIO {
             inputs.extensionLengthMetersPerSecond
         );
         Matrix<N2, N1> systemInputs = VecBuilder.fill(
-            
+            shoulderFeedback.calculate(inputs.shoulderAngleDegrees),
+            extensionFeedback.calculate(inputs.extensionLengthMeters)
         );
-        Matrix<N4, N1> nextState = NumericalIntegration.rk4(this::calculateSystemDerivative, state, systemInputs, 0.05); //period should be replaced with a constant maybe
+        Matrix<N4, N1> nextState = NumericalIntegration.rk4(this::calculateSystemDerivative, state, systemInputs, UniversalConstants.defaultPeriod);
 
         inputs.shoulderAngleDegrees = nextState.get(0, 0);
         inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
-
 
         inputs.extensionLengthMeters = nextState.get(2, 0);
         inputs.extensionLengthMetersPerSecond = nextState.get(3, 0);
@@ -76,7 +81,7 @@ public class ArmIOSim implements ArmIO {
         //kt = torque/current
         double shoulderMotorTorqueNM = shoulderMotor.KtNMPerAmp * input.get(0, 0);
         double shoulderMotorRadiansPerSecondSquared = shoulderMotorTorqueNM / calculateShoulderMomentOfInertia(extensionMeters);
-        double shoulderGravityRadiansPerSecondSquared = ArmConstants.gravityMetersPerSecondSquared
+        double shoulderGravityRadiansPerSecondSquared = UniversalConstants.gravityMetersPerSecondSquared
                                                         /calculateCenterOfMassMeters(extensionMeters)*Math.cos(Math.toRadians(shoulderDegrees));
 
         double shoulderRadiansPerSecondSquared = shoulderMotorRadiansPerSecondSquared + shoulderGravityRadiansPerSecondSquared;
@@ -115,15 +120,15 @@ public class ArmIOSim implements ArmIO {
 
 
     @Override
-    public void setArmAccelerationDegreesPerSecondSquared(double degreesPerSecondSquared) {
+    public void setShoulderAccelerationDegreesPerSecondSquared(double degreesPerSecondSquared) {
         // TODO Auto-generated method stub
-        ArmIO.super.setArmAccelerationDegreesPerSecondSquared(degreesPerSecondSquared);
+        ArmIO.super.setShoulderAccelerationDegreesPerSecondSquared(degreesPerSecondSquared);
     }
 
     @Override
-    public void setArmMotorVolts(double volts) {
+    public void setShoulderMotorVolts(double volts) {
         // TODO Auto-generated method stub
-        ArmIO.super.setArmMotorVolts(volts);
+        ArmIO.super.setShoulderMotorVolts(volts);
     }
 
 }
