@@ -45,6 +45,10 @@ public final class Constants {
     public final static boolean atCompetition = false;
     public final static boolean isDemoMode = false;
 
+    public final static class PlacerGrabberConstants {
+        public final static double motorMaxTempCelsius = 70;
+        // dont know if temp is too high
+    }
 
     public final static class ArmConstants {
 
@@ -248,9 +252,6 @@ public final class Constants {
 
         public final static String[] cameraNames = {
             "shooterCamera",
-            "trapCamera",
-            "leftCamera",
-            "rightCamera"
         };
 
         public final static Transform3d tagCameraTransforms[] = {
