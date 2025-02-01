@@ -47,33 +47,34 @@ public final class Constants {
 
     public final class UniversalConstants {
         public final static double gravityMetersPerSecondSquared = 9.81;
-        public final static double defaultPeriod = 0.02;
+        public final static double defaultPeriodSeconds = 0.02;
 
     }
 
     public final static class ArmConstants {
+        
 
+        public final static double armMassKg = 10;
 
         /**
          * Vertical distance from the center of the shoulder pivot to the line at the center of the arm.
          */
         public final static double shoulderBracketLengthMeters = -0.2;
-
-
         public final static Translation2d shoulderPivotPositionMeters = new Translation2d(-0.4, 0.4);
         
+        /** Minimum length of the arm when fully retracted */
+        public final static double minExtensionMeters = 0.8;
+        /** Maximum length of the arm when fully extended */
+        public final static double maxExtensionMeters = 2.4;
 
 
-        public static final double pulleyGearRadiusMeters = 0;
 
 
 
-        /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
-        public final static double shoulderGearReduction = 100;
+
 
         /**Minimum angle of the arm, in degrees.*/
         public final static double armMinAngleDegrees = 10;
-
         /**Maximum angle of the arm, in degrees. This value should be positive and greater than 90, as it is beyond the vertical. */
         public final static double armMaxAngleDegrees = 170.0;  
 
@@ -83,8 +84,13 @@ public final class Constants {
 
 
 
+        public static final double pulleyRadiusMeters = 0.2;
+        /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
+        public final static double shoulderGearReduction = 100;
 
-        public final static double armMassKg = 10;
+        public final static double extensionGearReduction = 15;
+
+
         
 
         /***** REAL CONSTANTS ******/

@@ -5,6 +5,8 @@
 package frc.robot.subsystems.arm;
 
 import org.littletonrobotics.junction.AutoLog;
+
+import frc.robot.Constants.ArmConstants;
 public interface ArmIO {
 
     @AutoLog
@@ -20,31 +22,21 @@ public interface ArmIO {
          * Follows the same direction as armAngleDegrees.
          */
         public double shoulderVelocityDegreesPerSecond = 0.0;
-
         public double shoulderAccelerationDegreesPerSecondSquared = 0.0;
-
-        
         public double shoulderAppliedCurrent = 0.0;
 
-
-        public double extensionLengthMeters = 0.0;
-
+        public double extensionLengthMeters = ArmConstants.minExtensionMeters;
         public double extensionLengthMetersPerSecond = 0.0;
 
         public double extensionAppliedVolts = 0.0;
 
-
-        public boolean atUpperAngleLimit = false;
-        public boolean atLowerAngleLimit = false;
-
-        public boolean atUpperLengthLimit = false;
-        public boolean atLowerLengthLimit = false;
     }
 
     /** Updates the set of loggable inputs. */
     public default void updateInputs(ArmIOInputs inputs) {};
 
-    public default void setShoulderAccelerationDegreesPerSecondSquared(double degreesPerSecondSquared) {};
+    /** Sets the torquecurrent that the shoulder motors get. A positive value will raise the arm. */
+    public default void setShoulderMotorAmps(double amps) {};
 
     
 
@@ -54,6 +46,9 @@ public interface ArmIO {
     */
     public default void setShoulderMotorVolts(double volts) {};
 
+    /**
+     * Sets the voltage that the extension motor gets. A positive value will extend the arm.
+     */
     public default void setExtensionMotorVolts(double volts) {};
 
     

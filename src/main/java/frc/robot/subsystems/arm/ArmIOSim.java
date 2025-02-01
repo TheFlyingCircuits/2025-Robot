@@ -2,12 +2,16 @@ package frc.robot.subsystems.arm;
 
 import static edu.wpi.first.units.Units.Degrees;
 
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -20,38 +24,11 @@ public class ArmIOSim implements ArmIO {
 
     
     private DCMotor shoulderMotor = DCMotor.getKrakenX60(2).withReduction(ArmConstants.shoulderGearReduction);
-    private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(1);
+    private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(ArmConstants.extensionGearReduction);
 
-    private final PIDController shoulderFeedback = new PIDController(1, 0, 0);
-    private final PIDController extensionFeedback = new PIDController(1, 0, 0);
+    Matrix<N2, N1> systemInputs = VecBuilder.fill(0, 0);
 
-    public ArmIOSim() {
-    };
-
-    @Override
-    public void updateInputs(ArmIOInputs inputs) {
-        //ArmIO.super.updateInputs(inputs);
-
-        Matrix<N4, N1> state = VecBuilder.fill(
-            inputs.shoulderAngleDegrees,
-            inputs.shoulderVelocityDegreesPerSecond,
-            inputs.extensionLengthMeters,
-            inputs.extensionLengthMetersPerSecond
-        );
-        Matrix<N2, N1> systemInputs = VecBuilder.fill(
-            shoulderFeedback.calculate(inputs.shoulderAngleDegrees),
-            extensionFeedback.calculate(inputs.extensionLengthMeters)
-        );
-        Matrix<N4, N1> nextState = NumericalIntegration.rk4(this::calculateSystemDerivative, state, systemInputs, UniversalConstants.defaultPeriod);
-
-        inputs.shoulderAngleDegrees = nextState.get(0, 0);
-        inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
-
-        inputs.extensionLengthMeters = nextState.get(2, 0);
-        inputs.extensionLengthMetersPerSecond = nextState.get(3, 0);
-        inputs.extensionAppliedVolts = systemInputs.get(1, 0);
-    }
-
+    public ArmIOSim() {};
 
     /*
      *    STATE VECTOR
@@ -66,24 +43,57 @@ public class ArmIOSim implements ArmIO {
      * extension motor voltage (volts)
      */
 
+    @Override
+    public void updateInputs(ArmIOInputs inputs) {
+
+        Matrix<N4, N1> state = VecBuilder.fill(
+            inputs.shoulderAngleDegrees,
+            inputs.shoulderVelocityDegreesPerSecond,
+            inputs.extensionLengthMeters,
+            inputs.extensionLengthMetersPerSecond
+        );
+        
+        Matrix<N4, N1> nextState = NumericalIntegration.rk4(
+            this::calculateSystemDerivative,
+            state,
+            this.systemInputs, 
+            UniversalConstants.defaultPeriodSeconds
+        );
+
+        inputs.shoulderAngleDegrees = nextState.get(0, 0);
+        inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
+        inputs.shoulderAppliedCurrent = this.systemInputs.get(0, 0);
+
+        inputs.extensionLengthMeters = nextState.get(2, 0);
+        inputs.extensionLengthMetersPerSecond = nextState.get(3, 0);
+        inputs.extensionAppliedVolts = this.systemInputs.get(1, 0);
+    }
+
+
 
 
     /**
      * Returns the first derivative of state matrix
      */
     private Matrix<N4, N1> calculateSystemDerivative(Matrix<N4, N1> state, Matrix<N2, N1> input) {
-
-
         double shoulderDegrees = state.get(0, 0);
         double shoulderDegreesPerSecond = state.get(1, 0);
-
         double extensionMeters = state.get(2, 0);
 
         //kt = torque/current
-        double shoulderMotorTorqueNM = shoulderMotor.KtNMPerAmp * input.get(0, 0);
+        shoulderMotor.getVoltage(shoulderDegreesPerSecond, extensionMeters);
+        double shoulderMotorTorqueNM = shoulderMotor.getTorque(input.get(0, 0));
+
+        shoulderMotor.getVoltage(shoulderMotorTorqueNM, input.get(1, 0));
+
+
+
         double shoulderMotorRadiansPerSecondSquared = shoulderMotorTorqueNM / calculateShoulderMomentOfInertia(extensionMeters);
         double shoulderGravityRadiansPerSecondSquared = UniversalConstants.gravityMetersPerSecondSquared
-                                                        /calculateCenterOfMassMeters(extensionMeters)*Math.cos(Math.toRadians(shoulderDegrees));
+                                                        /calculateCenterOfMassMeters(extensionMeters)
+                                                        *Math.cos(Math.toRadians(shoulderDegrees));
+
+        Logger.recordOutput("arm/shoulderGravityRadiansPerSecondSquared", shoulderGravityRadiansPerSecondSquared);
 
         double shoulderRadiansPerSecondSquared = shoulderMotorRadiansPerSecondSquared + shoulderGravityRadiansPerSecondSquared;
 
@@ -91,13 +101,12 @@ public class ArmIOSim implements ArmIO {
 
         double extensionMetersPerSecond = state.get(3, 0);
         double extensionVoltage = input.get(1, 0);
-
         double extensionCurrentAmps = extensionMotor.getCurrent(extensionMetersPerSecond, extensionVoltage);
         double extensionTorqueNM = extensionMotor.KtNMPerAmp * extensionCurrentAmps;
 
 
         //double extensionMetersPerSecondSquared = extensionKv * extensionVoltage;
-        double extensionMetersPerSecondSquared = extensionTorqueNM / ArmConstants.pulleyGearRadiusMeters;
+        double extensionMetersPerSecondSquared = extensionTorqueNM / ArmConstants.pulleyRadiusMeters;
         
 
         //return null; 
@@ -107,7 +116,6 @@ public class ArmIOSim implements ArmIO {
             extensionMetersPerSecond,
             extensionMetersPerSecondSquared
         );
-
     }
 
 
@@ -121,15 +129,13 @@ public class ArmIOSim implements ArmIO {
 
 
     @Override
-    public void setShoulderAccelerationDegreesPerSecondSquared(double degreesPerSecondSquared) {
-        // TODO Auto-generated method stub
-        ArmIO.super.setShoulderAccelerationDegreesPerSecondSquared(degreesPerSecondSquared);
+    public void setShoulderMotorAmps(double amps) {
+        systemInputs.set(0, 0, amps);
     }
 
     @Override
     public void setShoulderMotorVolts(double volts) {
-        // TODO Auto-generated method stub
-        ArmIO.super.setShoulderMotorVolts(volts);
+        systemInputs.set(1, 0, volts);
     }
 
 }
