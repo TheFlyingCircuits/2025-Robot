@@ -9,6 +9,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N3;
@@ -80,22 +82,19 @@ public class ArmIOSim implements ArmIO {
         double shoulderDegreesPerSecond = state.get(1, 0);
         double extensionMeters = state.get(2, 0);
 
-        //kt = torque/current
-        shoulderMotor.getVoltage(shoulderDegreesPerSecond, extensionMeters);
         double shoulderMotorTorqueNM = shoulderMotor.getTorque(input.get(0, 0));
-
-        shoulderMotor.getVoltage(shoulderMotorTorqueNM, input.get(1, 0));
-
-
-
         double shoulderMotorRadiansPerSecondSquared = shoulderMotorTorqueNM / calculateShoulderMomentOfInertia(extensionMeters);
-        double shoulderGravityRadiansPerSecondSquared = UniversalConstants.gravityMetersPerSecondSquared
-                                                        /calculateCenterOfMassMeters(extensionMeters)
-                                                        *Math.cos(Math.toRadians(shoulderDegrees));
+
+        Translation2d centerOfMassMeters = calculateCenterOfMassMeters(shoulderDegrees, extensionMeters);
+        double shoulderGravityRadiansPerSecondSquared = -UniversalConstants.gravityMetersPerSecondSquared
+                                                        /centerOfMassMeters.getNorm()
+                                                        *Math.cos(centerOfMassMeters.getAngle().getRadians());
+
 
         Logger.recordOutput("arm/shoulderGravityRadiansPerSecondSquared", shoulderGravityRadiansPerSecondSquared);
 
         double shoulderRadiansPerSecondSquared = shoulderMotorRadiansPerSecondSquared + shoulderGravityRadiansPerSecondSquared;
+        shoulderRadiansPerSecondSquared -= Math.signum(shoulderDegreesPerSecond)*5; //friction
 
         
 
@@ -123,8 +122,12 @@ public class ArmIOSim implements ArmIO {
         return ArmConstants.armMassKg / 3. * armLengthMeters * armLengthMeters; //somewhat temporary, assumes that arm is a constant density beam thing.
     }
 
-    private double calculateCenterOfMassMeters(double armLengthMeters) {
-        return armLengthMeters/2;
+    /**
+     * Calculates the center of mass of the arm, in the pivot reference frame.
+     */
+    private Translation2d calculateCenterOfMassMeters(double shoulderAngleDegrees, double armLengthMeters) {
+        Translation2d armFrameMeters = new Translation2d(armLengthMeters/2, -ArmConstants.shoulderBracketLengthMeters);
+        return armFrameMeters.rotateBy(Rotation2d.fromDegrees(shoulderAngleDegrees));
     }
 
 

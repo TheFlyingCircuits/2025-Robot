@@ -54,7 +54,7 @@ public class Arm extends SubsystemBase {
         //TODO: for some reason the @autologoutput annotation doesn't work
         Logger.recordOutput("arm/mech2d", this.mech2d);
 
-        shoulderBracket.setAngle(inputs.shoulderAngleDegrees);
+        shoulderBracket.setAngle(180+inputs.shoulderAngleDegrees);
         telescoper.setLength(inputs.extensionLengthMeters);
     }
 }
