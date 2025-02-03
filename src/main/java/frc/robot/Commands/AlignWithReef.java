@@ -2,9 +2,12 @@ package frc.robot.Commands;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Reefscape.FieldElement;
+import frc.robot.Reefscape.FieldElement.ReefFace;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 
 public class AlignWithReef extends Command{
@@ -29,7 +32,11 @@ public class AlignWithReef extends Command{
     @Override
     public void execute() {
         if (target == FieldElement.ReefFace.FRONT) {
-            drivetrain.fieldOrientedDriveOnALine(translationController.get(), FieldElement.ReefFace.FRONT.getPose().toPose2d());
+
+            Pose2d targetPose = ReefFace.FRONT.getPose2d();
+
+            Rotation2d adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
+            drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
         }
     }
 }

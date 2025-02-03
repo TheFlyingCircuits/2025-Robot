@@ -20,16 +20,6 @@ import frc.robot.Constants.VisionConstants;
 
 public class FlyingCircuitUtils {
 
-    public static Translation3d noteCameraCoordsFromRobotCoords(Translation3d robotCoords) {
-        Transform3d robotAxesFromCamPerspective = VisionConstants.robotToNoteCamera.inverse();
-        return robotCoords.rotateBy(robotAxesFromCamPerspective.getRotation()).plus(robotAxesFromCamPerspective.getTranslation());
-    }
-
-    public static Translation3d robotCoordsFromNoteCameraCoords(Translation3d noteCamCoords) {
-        Transform3d camAxesFromRobotPerspective = VisionConstants.robotToNoteCamera;
-        return noteCamCoords.rotateBy(camAxesFromRobotPerspective.getRotation()).plus(camAxesFromRobotPerspective.getTranslation());
-    }
-
     /**
      * Generates a field relative pose for the closest pickup for auto-intaking a note
      * by drawing a straight line to the note.

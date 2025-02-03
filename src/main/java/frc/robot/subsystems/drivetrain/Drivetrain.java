@@ -1,15 +1,12 @@
 
 package frc.robot.subsystems.drivetrain;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -17,12 +14,11 @@ import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.controllers.PPLTVController;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.util.PathPlannerLogging;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -40,17 +36,13 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import frc.robot.FlyingCircuitUtils;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.FlyingCircuitUtils;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
 import frc.robot.subsystems.vision.VisionIO.VisionMeasurement;
@@ -146,12 +138,12 @@ public class Drivetrain extends SubsystemBase {
             new Pose2d());
 
         //angleController = new PIDController(11, 0, 0.5); // kP has units of degreesPerSecond per degree of error.
-        angleController = new PIDController(8, 0, 0);
+        angleController = new PIDController(5, 0, 0.3);// 1 too high???? 5 very agressive too high
         angleController.enableContinuousInput(-180, 180);
-        angleController.setTolerance(2.0, 3.0); // degrees, degreesPerSecond.
+        angleController.setTolerance(1); // degrees, degreesPerSecond.
 
-        translationController = new PIDController(4.0, 0, 0); // kP has units of metersPerSecond per meter of error.
-        translationController.setTolerance(0.05); // 5 centimeters
+        translationController = new PIDController(5, 0, 0.1); // kP has units of metersPerSecond per meter of error.
+        translationController.setTolerance(0.01); // 5 centimeters
 
         //configPathPlanner();
     }
@@ -256,12 +248,15 @@ public class Drivetrain extends SubsystemBase {
         // Use PID controller to generate a desired angular velocity based on the desired angle
         double measuredAngle = getPoseMeters().getRotation().getDegrees();
         double desiredAngleDegrees = desiredAngle.getDegrees();
-        double desiredRadiansPerSecond = Math.toRadians(angleController.calculate(measuredAngle, desiredAngleDegrees));
+        double desiredRadiansPerSeconds =  Math.toRadians(angleController.calculate(measuredAngle, desiredAngleDegrees));
+        if (angleController.atSetpoint()) {
+            desiredRadiansPerSeconds = 0;
+        }
 
         ChassisSpeeds desiredSpeeds = new ChassisSpeeds(
             desiredTranslationalSpeeds.vxMetersPerSecond,
             desiredTranslationalSpeeds.vyMetersPerSecond,
-            desiredRadiansPerSecond
+            desiredRadiansPerSeconds
         );
 
         this.fieldOrientedDrive(desiredSpeeds, true);
@@ -294,6 +289,9 @@ public class Drivetrain extends SubsystemBase {
         // 3) Use a proportional controller to decide how quickly we should drive
         //    towards the line based on our perpendicular distance to the line.
         double speedTowardsLine = Math.abs(translationController.calculate(distanceFromRobotToLine, 0));
+        if (translationController.atSetpoint()) {
+            speedTowardsLine = 0;
+        }
 
         // 4) Find the direction we should travel when driving at that speed
         ChassisSpeeds directionTowardsLine = new ChassisSpeeds();
@@ -499,10 +497,6 @@ public class Drivetrain extends SubsystemBase {
         List<Pose2d> trackedTags = new ArrayList<Pose2d>();
         for (VisionMeasurement visionMeasurement : visionInputs.visionMeasurements) {
 
-            // disregard shooter camera when lining up for a trap. We only want to trust the trap camera then.
-            if (onlyUseTrapCamera && !visionMeasurement.cameraName.equals("trapCamera")) {
-                continue;
-            }
 
             Translation2d visionTranslation = visionMeasurement.robotFieldPose.getTranslation();
             Translation2d estimatedTranslation = fusedPoseEstimator.getEstimatedPosition().getTranslation();

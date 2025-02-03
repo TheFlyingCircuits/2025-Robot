@@ -89,9 +89,9 @@ public class SwerveModuleIONeo implements SwerveModuleIO{
         SparkMaxConfig config = new SparkMaxConfig();
         config.idleMode(IdleMode.kBrake);
         config.smartCurrentLimit(SwerveModuleConstants.driveContinuousCurrentLimit);
-        config.absoluteEncoder.positionConversionFactor(SwerveModuleConstants.driveGearReduction 
+        config.encoder.positionConversionFactor(SwerveModuleConstants.driveGearReduction 
         * SwerveModuleConstants.wheelCircumferenceMeters);
-        config.absoluteEncoder.velocityConversionFactor(1./60. * SwerveModuleConstants.driveGearReduction
+        config.encoder.velocityConversionFactor(1./60. * SwerveModuleConstants.driveGearReduction
         * SwerveModuleConstants.wheelCircumferenceMeters);
         config.inverted(SwerveModuleConstants.driveInvert);
         driveMotor.setPosition(0.0);

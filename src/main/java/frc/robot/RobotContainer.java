@@ -7,10 +7,15 @@ package frc.robot;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Commands.AlignWithReef;
+import frc.robot.Reefscape.FieldElement;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIO;
+import frc.robot.subsystems.drivetrain.GyroIOPigeon;
+import frc.robot.subsystems.drivetrain.GyroIOSim;
 import frc.robot.subsystems.drivetrain.SwerveModuleIO;
+import frc.robot.subsystems.drivetrain.SwerveModuleIONeo;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonLib;
@@ -32,34 +37,35 @@ public class RobotContainer {
 
         /**** INITIALIZE SUBSYSTEMS ****/
         if (RobotBase.isReal()) {
-        drivetrain = new Drivetrain( // fr 0.092041015625, br , 0.0419921875, fl -0.178955078125, bl -0.332763671875
-            new GyroIO(){},
-            new SwerveModuleIO(){},
-            new SwerveModuleIO(){},
-            new SwerveModuleIO(){},
-            new SwerveModuleIO(){},
-            new VisionIOPhotonLib()
-            );
-
-            /****** FOR NOODLE *******/
             // drivetrain = new Drivetrain(
             //     new GyroIOPigeon(),
-            //     new SwerveModuleIONeo(1, 2, -0.177978515625, 0),
-            //     new SwerveModuleIONeo(3, 4, 0.33935546875, 1),
-            //     new SwerveModuleIONeo(5, 6, -0.339599609375, 2),
-            //     new SwerveModuleIONeo(7, 8, -0.206787109375, 3),
+            //     new SwerveModuleIOKraken(3, 1, -0.00342, 7, false, false, "frontLeft"),
+            //     new SwerveModuleIOKraken(2, 2, 0.36816, 6, false, false, "frontRight"),
+            //     new SwerveModuleIOKraken(1, 5, -0.09009, 5, false, true, "backLeft"),
+            //     new SwerveModuleIOKraken(0, 6, -0.37622, 4, true, false, "backRight"),
             //     new VisionIOPhotonLib()
             // );
+
+
+            /****** FOR NOODLE *******/
+        drivetrain = new Drivetrain( // fr 0.092041015625, br , 0.0419921875, fl -0.178955078125, bl -0.332763671875
+            new GyroIOPigeon(),
+            new SwerveModuleIONeo(7, 8, -0.184814453125, 0), 
+            new SwerveModuleIONeo(5, 6, 0.044677734375, 3),
+            new SwerveModuleIONeo(3, 4, -0.3349609375, 2),
+            new SwerveModuleIONeo(1, 2,  0.088134765625, 1),
+            new VisionIOPhotonLib()
+            );
 
         }
         else {
 
             drivetrain = new Drivetrain(
-                new GyroIO(){},
-                new SwerveModuleIO(){},
-                new SwerveModuleIO(){},
-                new SwerveModuleIO(){},
-                new SwerveModuleIO(){},
+                new GyroIOSim(){},
+                new SwerveModuleIOSim(){},
+                new SwerveModuleIOSim(){},
+                new SwerveModuleIOSim(){},
+                new SwerveModuleIOSim(){},
                 new VisionIO() {}
             );
         }
@@ -77,6 +83,9 @@ public class RobotContainer {
     private void realBindings() {
         CommandXboxController controller = charlie.getXboxController();
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
+
+        controller.rightBumper().whileTrue(
+            new AlignWithReef(drivetrain, charlie::getRequestedFieldOrientedVelocity, FieldElement.ReefFace.FRONT));
 
     }
 
