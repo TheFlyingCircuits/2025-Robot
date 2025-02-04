@@ -5,7 +5,6 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import frc.robot.Constants.PlacerGrabberConstants;
 import frc.robot.VendorWrappers.Neo;
 
 public class PlacerGrabberIONeo implements PlacerGrabberIO {
@@ -34,9 +33,10 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
 
     @Override
     public void setFrontNeoVolts(double volts) {
-        if (frontNeo.getMotorTemperature() > PlacerGrabberConstants.motorMaxTempCelsius) {
+        if (frontNeo.getMotorTemperature() > 70) {
             // need to change the max temp because I don't know what it should be
             //TODO: add error message for overheating
+            //TODO: make motor temperature universal constraint
             volts = 0;
         }
 
@@ -45,7 +45,7 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
 
     @Override
     public void setSideNeoVolts(double volts) {
-        if (sideNeo.getMotorTemperature() > PlacerGrabberConstants.motorMaxTempCelsius) {
+        if (sideNeo.getMotorTemperature() > 70) {
             volts = 0;
         }
 

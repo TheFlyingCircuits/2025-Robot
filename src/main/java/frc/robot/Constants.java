@@ -261,14 +261,20 @@ public final class Constants {
 
 
         public final static AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.tagLayout;
-                                                                      
+                                                       
+        //TODO: UPDATE TRANSFORMS TO ACTUAL ROBOT
         public final static Transform3d robotToShooterCamera = new Transform3d(
             new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
             new Rotation3d(0, Math.toRadians(35.5), 0)
         );
 
-        public final static String[] cameraNames = {
-            "shooterCamera",
+        public final static Transform3d robotToCoralCamera = new Transform3d(
+            new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
+            new Rotation3d(0, Math.toRadians(35.5), 0)
+        );
+
+        public final static String[] tagCameraNames = {
+            "shooterCamera"
         };
 
         public final static Transform3d tagCameraTransforms[] = {

@@ -84,7 +84,7 @@ public interface VisionIO {
          * <p>
          * Positive Z is up
          */
-        public List<Translation3d> detectedNotesRobotFrame = new ArrayList<Translation3d>();
+        public List<Translation3d> detectedCoralsRobotFrame = new ArrayList<Translation3d>();
 
     }
 
@@ -110,11 +110,11 @@ public interface VisionIO {
 
             }
 
-            for (int i = 0; i < detectedNotesRobotFrame.size(); i++) {
+            for (int i = 0; i < detectedCoralsRobotFrame.size(); i++) {
 
-                Translation3d note = detectedNotesRobotFrame.get(i);
+                Translation3d coral = detectedCoralsRobotFrame.get(i);
 
-                table.put("DetectedNoteRobotFrame" + Integer.toString(i), note);
+                table.put("DetectedCoralRobotFrame" + Integer.toString(i), coral);
             }
         }
 
@@ -124,7 +124,7 @@ public interface VisionIO {
 
 
             for (int i = 0;;i++) {
-                String rootString = VisionConstants.cameraNames[i]+"VisionMeasurement";
+                String rootString = VisionConstants.tagCameraNames[i]+"VisionMeasurement";
 
                 //hacky way to check if this vision measurement doesn't exist
                 if (table.get(rootString+"/RobotFieldPose", 0) == 0)
@@ -147,14 +147,14 @@ public interface VisionIO {
 
             for (int i = 0;; i++) {
 
-                String entryName = "DetectedNoteRobotFrame" + Integer.toString(i);
+                String entryName = "DetectedCoralRobotFrame" + Integer.toString(i);
 
                 if (table.get(entryName, 0) == 0) {
                     break;
                 }
 
-                Translation3d note = table.get("DetectedNoteRobotFrame" + Integer.toString(i), new Translation3d());
-                detectedNotesRobotFrame.add(note);
+                Translation3d coral = table.get("DetectedCoralRobotFrame" + Integer.toString(i), new Translation3d());
+                detectedCoralsRobotFrame.add(coral);
 
             }
             

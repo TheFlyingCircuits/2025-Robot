@@ -41,27 +41,27 @@ public class RobotContainer {
 
         /**** INITIALIZE SUBSYSTEMS ****/
         if (RobotBase.isReal()) {
-            drivetrain = new Drivetrain( 
-                new GyroIO(){},
-                new SwerveModuleIO(){},
-                new SwerveModuleIO(){},
-                new SwerveModuleIO(){},
-                new SwerveModuleIO(){},
-                new VisionIOPhotonLib()
-            );
+            // drivetrain = new Drivetrain( 
+            //     new GyroIO(){},
+            //     new SwerveModuleIO(){},
+            //     new SwerveModuleIO(){},
+            //     new SwerveModuleIO(){},
+            //     new SwerveModuleIO(){},
+            //     new VisionIOPhotonLib()
+            // );
 
             arm = new Arm(new ArmIO(){});
 
             
             /****** FOR NOODLE *******/
-            // drivetrain = new Drivetrain( // fr 0.092041015625, br , 0.0419921875, fl -0.178955078125, bl -0.332763671875
-            //     new GyroIOPigeon(),
-            //     new SwerveModuleIONeo(7, 8, -0.184814453125, 0), 
-            //     new SwerveModuleIONeo(5, 6, 0.044677734375, 3),
-            //     new SwerveModuleIONeo(3, 4, -0.3349609375, 2),
-            //     new SwerveModuleIONeo(1, 2,  0.088134765625, 1),
-            //     new VisionIOPhotonLib()
-            // );
+            drivetrain = new Drivetrain( // fr 0.092041015625, br , 0.0419921875, fl -0.178955078125, bl -0.332763671875
+                new GyroIOPigeon(),
+                new SwerveModuleIONeo(7, 8, -0.184814453125, 0), 
+                new SwerveModuleIONeo(5, 6, 0.044677734375, 3),
+                new SwerveModuleIONeo(3, 4, -0.3349609375, 2),
+                new SwerveModuleIONeo(1, 2,  0.088134765625, 1),
+                new VisionIOPhotonLib()
+            );
 
         }
         else {
