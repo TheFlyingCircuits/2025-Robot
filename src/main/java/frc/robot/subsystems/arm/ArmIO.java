@@ -5,6 +5,8 @@
 package frc.robot.subsystems.arm;
 
 import org.littletonrobotics.junction.AutoLog;
+
+import frc.robot.Constants.ArmConstants;
 public interface ArmIO {
 
     @AutoLog
@@ -13,38 +15,43 @@ public interface ArmIO {
          * Angle of the arm in degrees. An angle of 0 represents a perfectly horizontal, forward facing arm.
          * Raising the arm from this position will make the angle positive, while lowering it will be negative.
          */
-        public double armAngleDegrees = 0.0;
+        public double shoulderAngleDegrees = 0.0;
 
         /**
          * Velocity of the arm in degrees per second.
          * Follows the same direction as armAngleDegrees.
          */
-        public double armVelocityDegreesPerSecond = 0.0;
+        public double shoulderVelocityDegreesPerSecond = 0.0;
+        public double shoulderAccelerationDegreesPerSecondSquared = 0.0;
+        public double shoulderAppliedCurrent = 0.0;
 
+        public double extensionLengthMeters = ArmConstants.minExtensionMeters;
+        public double extensionLengthMetersPerSecond = 0.0;
 
-        public double armLengthMeters = 0.0;
+        public double extensionAppliedVolts = 0.0;
 
-        public double armLengthMetersPerSecond = 0.0;
-
-
-        public boolean atUpperAngleLimit = false;
-        public boolean atLowerAngleLimit = false;
-
-        public boolean atUpperLengthLimit = false;
-        public boolean atLowerLengthLimit = false;
     }
 
     /** Updates the set of loggable inputs. */
     public default void updateInputs(ArmIOInputs inputs) {};
 
-    public default void setArmAccelerationDegreesPerSecondSquared(double degreesPerSecondSquared) {};
+    /** Sets the torquecurrent that the shoulder motors get. A positive value will raise the arm. */
+    public default void setShoulderMotorAmps(double amps) {};
+
+    
 
     /** 
      * Run the two arm motors at the specified voltage.
      * A positive value will raise the arm, while a negative value will lower it.
     */
-    public default void setArmMotorVolts(double volts) {};
+    public default void setShoulderMotorVolts(double volts) {};
 
+    /**
+     * Sets the voltage that the extension motor gets. A positive value will extend the arm.
+     */
+    public default void setExtensionMotorVolts(double volts) {};
+
+    
 
 
 }
