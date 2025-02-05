@@ -10,9 +10,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
 import frc.robot.Constants.LEDConstants;
-import frc.robot.subsystems.drivetrain.Drivetrain;
 
 public class Leds extends SubsystemBase {
     private AddressableLED leds;
@@ -61,43 +59,41 @@ public class Leds extends SubsystemBase {
 
     //scoirng
     
-    public void right() { // red
-        base = red;
+    public Command rightCommand() { // red
+        return this.runOnce(() -> {base = red;});
     }
 
-    public void left() { // blue
-       base = blue;
+    public Command leftCommand() { // blue
+        return this.runOnce(() -> {base = blue;});
     }
 
     //TODO: change this to just sides of the hexagon
 
-    public void intakeRunningScoreComplete() { // Blink White
-        // 1.5 seconds on, 1.5 seconds off, for a total period of 3 seconds
-        base = white.blink(Seconds.of(1.5));
+    public Command scoreCompleteCommand() { // Blink White
+        return this.runOnce(() -> {base = white.blink(Seconds.of(1.5));});        
     }
 
-    public void coralControlled() { // white 
-        base = white;
+    public Command coralControlledCommand() { // white 
+        return this.runOnce(() -> {base = white;});
     }
 
     // Arm
 
-    public void armDown() { // orange
-        base = orange;
+    public Command armDownCommand() { // orange
+        return this .runOnce(() -> {base = orange;});
     }
     
   
-    public void climbAligned() { // green
-        base = green;
+    public Command climbAlignedCommand() { // green
+        return this.runOnce(() -> {base = green;});
     }
 
-    public void climbing() { // orange blink
-        base = orange.blink(Seconds.of(.6));
-
+    public Command climbingCommand() { // orange blink
+        return this.runOnce(() -> {base = orange.blink(Seconds.of(.6));});
     }
 
-    public void error() { // red blink fast
-        base = red.blink(Seconds.of(0.125));
+    public Command errorCommand() { // red blink fast
+        return this.runOnce(() -> {base = red.blink(Seconds.of(0.125));});
     }
 
 
@@ -107,22 +103,22 @@ public class Leds extends SubsystemBase {
         leds.setData(buffer);
 
         if (controller.getAButtonPressed()) { // blink white
-            intakeRunningScoreComplete();
+            scoreCompleteCommand();
         }
         else if (controller.getBButtonPressed()) { // white
-            coralControlled();
+            coralControlledCommand();
         }
         else if (controller.getXButtonPressed()) { // orange
-            armDown();
+            armDownCommand();
         }
         else if (controller.getYButtonPressed()) { // green
-            climbAligned();
+            climbAlignedCommand();
         }
         else if (controller.getLeftBumperButtonPressed()) { // blink orange
-            climbing();
+            climbingCommand();
         }
         else if (controller.getRightBumperButtonPressed()) { // red
-            error();
+            errorCommand();
         }
     }
 }

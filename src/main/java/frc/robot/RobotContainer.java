@@ -74,7 +74,7 @@ public class RobotContainer {
         
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
-
+        leds.setDefaultCommand(leds.defaultCommand());
 
         realBindings();
 
