@@ -4,11 +4,15 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import frc.robot.Constants.LEDConstants;
+import frc.robot.subsystems.drivetrain.Drivetrain;
 
 public class Leds extends SubsystemBase {
     private AddressableLED leds;
@@ -42,62 +46,57 @@ public class Leds extends SubsystemBase {
         
         leds.setData(buffer);
         leds.start();
-
-   
-
-
-
-        controller = new XboxController(0);
     }
+    
+    //TODO: FOR ALL, make them into commands
 
     //mode 
 
-    
+    public Command defaultCommand() {
+        return DriverStation.isAutonomous() ? this.runOnce(() -> {base = blue;}).until(null) : this.runOnce(() -> {base = black;}).until(null); // auto: blue, tele: off
+        
+    }
 
-    public void Auto() { // blue
-        base = blue;
-    }
-    public void Tele() {  // black
-        base = black;
-    }
+
 
     //scoirng
     
-    public void Right() { // red
+    public void right() { // red
         base = red;
     }
 
-    public void Left() { // blue
+    public void left() { // blue
        base = blue;
     }
 
-    public void IntakeRunningScoreComplete() { // Blink White
+    //TODO: change this to just sides of the hexagon
+
+    public void intakeRunningScoreComplete() { // Blink White
         // 1.5 seconds on, 1.5 seconds off, for a total period of 3 seconds
         base = white.blink(Seconds.of(1.5));
     }
 
-    public void CoralControlled() { // white 
+    public void coralControlled() { // white 
         base = white;
     }
 
     // Arm
 
-    public void ArmDown() { // orange
+    public void armDown() { // orange
         base = orange;
     }
     
   
-    public void ClimbAligned() { // green
+    public void climbAligned() { // green
         base = green;
     }
 
-    public void Climbing() { // orange blink
+    public void climbing() { // orange blink
         base = orange.blink(Seconds.of(.6));
 
     }
 
-
-    public void Error() { // red blink fast
+    public void error() { // red blink fast
         base = red.blink(Seconds.of(0.125));
     }
 
@@ -108,22 +107,22 @@ public class Leds extends SubsystemBase {
         leds.setData(buffer);
 
         if (controller.getAButtonPressed()) { // blink white
-            IntakeRunningScoreComplete();
+            intakeRunningScoreComplete();
         }
         else if (controller.getBButtonPressed()) { // white
-            CoralControlled();
+            coralControlled();
         }
         else if (controller.getXButtonPressed()) { // orange
-            ArmDown();
+            armDown();
         }
         else if (controller.getYButtonPressed()) { // green
-            ClimbAligned();
+            climbAligned();
         }
         else if (controller.getLeftBumperButtonPressed()) { // blink orange
-            Climbing();
+            climbing();
         }
         else if (controller.getRightBumperButtonPressed()) { // red
-            Error();
+            error();
         }
     }
 }

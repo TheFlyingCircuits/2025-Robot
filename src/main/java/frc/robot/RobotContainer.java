@@ -74,8 +74,6 @@ public class RobotContainer {
         
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
-        // leds.setDefaultCommand(leds.heartbeatCommand(1.5).andThen(leds.heartbeatCommand(1.0)).ignoringDisable(true));
-        // leds.setDefaultCommand(leds.fasterHeartbeatSequence().ignoringDisable(true));
 
 
         realBindings();
@@ -85,6 +83,9 @@ public class RobotContainer {
     private void realBindings() {
         CommandXboxController controller = charlie.getXboxController();
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
+
+
+
 
     }
 
