@@ -70,20 +70,14 @@ public class Leds extends SubsystemBase {
     //TODO: change this to just sides of the hexagon
 
     public Command scoreCompleteCommand() { // Blink White
-        return this.runOnce(() -> {base = white.blink(Seconds.of(1.5));});        
+        return this.runOnce(() -> {base = white.blink(Seconds.of(0.125));}).withTimeout(1);        
     }
 
     public Command coralControlledCommand() { // white 
         return this.runOnce(() -> {base = white;});
     }
 
-    // Arm
-
-    public Command armDownCommand() { // orange
-        return this .runOnce(() -> {base = orange;});
-    }
-    
-  
+    // Arm  
     public Command climbAlignedCommand() { // green
         return this.runOnce(() -> {base = green;});
     }
@@ -101,24 +95,5 @@ public class Leds extends SubsystemBase {
     public void periodic() {
         base.applyTo(buffer);
         leds.setData(buffer);
-
-        if (controller.getAButtonPressed()) { // blink white
-            scoreCompleteCommand();
-        }
-        else if (controller.getBButtonPressed()) { // white
-            coralControlledCommand();
-        }
-        else if (controller.getXButtonPressed()) { // orange
-            armDownCommand();
-        }
-        else if (controller.getYButtonPressed()) { // green
-            climbAlignedCommand();
-        }
-        else if (controller.getLeftBumperButtonPressed()) { // blink orange
-            climbingCommand();
-        }
-        else if (controller.getRightBumperButtonPressed()) { // red
-            errorCommand();
-        }
     }
 }
