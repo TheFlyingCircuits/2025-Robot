@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.HumanDriver;
+import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIO;
 import frc.robot.subsystems.drivetrain.SwerveModuleIO;
@@ -28,17 +29,20 @@ public class RobotContainer {
 
     public final Drivetrain drivetrain;
     
+    public final Leds leds;
+
+
     public RobotContainer() {
 
         /**** INITIALIZE SUBSYSTEMS ****/
         if (RobotBase.isReal()) {
-        drivetrain = new Drivetrain( // fr 0.092041015625, br , 0.0419921875, fl -0.178955078125, bl -0.332763671875
-            new GyroIO(){},
-            new SwerveModuleIO(){},
-            new SwerveModuleIO(){},
-            new SwerveModuleIO(){},
-            new SwerveModuleIO(){},
-            new VisionIOPhotonLib()
+            drivetrain = new Drivetrain( // fr 0.092041015625, br , 0.0419921875, fl -0.178955078125, bl -0.332763671875
+                new GyroIO(){},
+                new SwerveModuleIO(){},
+                new SwerveModuleIO(){},
+                new SwerveModuleIO(){},
+                new SwerveModuleIO(){},
+                new VisionIO(){}
             );
 
             /****** FOR NOODLE *******/
@@ -51,6 +55,8 @@ public class RobotContainer {
             //     new VisionIOPhotonLib()
             // );
 
+            leds = new Leds();
+
         }
         else {
 
@@ -62,6 +68,8 @@ public class RobotContainer {
                 new SwerveModuleIO(){},
                 new VisionIO() {}
             );
+
+            leds = new Leds();
         }
         
         

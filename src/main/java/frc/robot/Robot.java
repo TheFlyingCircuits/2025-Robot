@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import java.util.ArrayList;
 
 import org.littletonrobotics.junction.LoggedRobot;
@@ -14,6 +16,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Reefscape.FieldElement;
@@ -23,6 +26,9 @@ import frc.robot.Reefscape.FieldElement.ReefStalk;
 
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
+  XboxController controller;
+
+
 
   private void initAdvantageKit() {
     Logger.recordMetadata("projectName", "2025Robot");
@@ -43,6 +49,7 @@ public class Robot extends LoggedRobot {
     initAdvantageKit();
     m_robotContainer = new RobotContainer();
     DriverStation.silenceJoystickConnectionWarning(true);
+    controller = new XboxController(0);
   }
 
   @Override
@@ -103,7 +110,8 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+  }
 
   @Override
   public void teleopExit() {}
