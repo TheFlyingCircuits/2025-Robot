@@ -32,6 +32,10 @@ public class RobotContainer {
     public final HumanDriver ben = new HumanDriver(1);
 
     public final Drivetrain drivetrain;
+
+    // using ints because the list for getting stalk and branch level uses ints from the field element stuff
+    public int leftOrRightStalk = 0;
+    public int branchLevel = 2;
     
     public RobotContainer() {
 
@@ -85,7 +89,7 @@ public class RobotContainer {
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
 
         controller.rightBumper().whileTrue(
-            new AlignWithReef(drivetrain, charlie::getRequestedFieldOrientedVelocity, FieldElement.ReefFace.FRONT));
+            new AlignWithReef(drivetrain, charlie::getRequestedFieldOrientedVelocity, leftOrRightStalk, branchLevel));
 
     }
 

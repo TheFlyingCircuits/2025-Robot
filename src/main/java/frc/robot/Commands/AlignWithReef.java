@@ -13,11 +13,11 @@ import frc.robot.subsystems.drivetrain.Drivetrain;
 public class AlignWithReef extends Command{
     private Drivetrain drivetrain;
     private Supplier<ChassisSpeeds> translationController;
-    private FieldElement target;\
     private int stalk;
+    private int branch;
 
 
-    private final FieldElement[] reefFaces = {ReefFace.FRONT, ReefFace.FRONT_LEFT, ReefFace.FRONT_RIGHT, ReefFace.BACK, ReefFace.BACK_LEFT, ReefFace.BACK_RIGHT};
+    private final FieldElement.ReefFace[] reefFaces = {ReefFace.FRONT, ReefFace.FRONT_LEFT, ReefFace.FRONT_RIGHT, ReefFace.BACK, ReefFace.BACK_LEFT, ReefFace.BACK_RIGHT};
 
     /**
      *  @param translationController
@@ -26,14 +26,15 @@ public class AlignWithReef extends Command{
     public FieldElement.ReefFace getClosestReefFace() {
 
         double closestDistance = 100000000000000.00;
-        FieldElement closestReefFace = reefFaces[0];
-        for(int i=1; i<5; i++) {
+        FieldElement.ReefFace closestReefFace = reefFaces[0];
+        for(int i=0; i<5; i++) {
             // distance formula HAVE NOT TESTED
             double distance = Math.sqrt((Math.pow((drivetrain.getPoseMeters().getX() - reefFaces[i].getPose2d().getX()), 2) 
             + Math.pow((drivetrain.getPoseMeters().getY() - reefFaces[i].getPose2d().getY()), 2)));
-
             if (distance < closestDistance) {
+                closestDistance = distance;
                 closestReefFace = reefFaces[i];
+                System.out.println(distance);
             }
         }
 
@@ -44,8 +45,8 @@ public class AlignWithReef extends Command{
     
         this.drivetrain = drivetrain;
         this.translationController = translationController;
-        this.target = target;
-        .stalk=stalk;
+        this.stalk=stalk;
+        this.branch=branch;
 
         if (translationController != null) {
             super.addRequirements(drivetrain);
@@ -54,8 +55,8 @@ public class AlignWithReef extends Command{
 
     @Override
     public void execute() {
-        FieldElement.ReefFace closestFace = getClosestReefFace();
-        Pose2d targetPose = closestFace.stalks[stalk].branches[branch];
+        FieldElement.ReefFace face = getClosestReefFace();
+        Pose2d targetPose = face.stalks[stalk].branches[branch].getPose2d();
 
         Rotation2d adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
         drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
