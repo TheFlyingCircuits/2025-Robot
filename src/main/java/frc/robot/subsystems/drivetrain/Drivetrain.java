@@ -2,7 +2,6 @@
 package frc.robot.subsystems.drivetrain;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -10,9 +9,6 @@ import java.util.PriorityQueue;
 
 import org.littletonrobotics.junction.Logger;
 
-import com.ctre.phoenix6.Orchestra;
-import com.ctre.phoenix6.StatusCode;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
@@ -590,6 +586,8 @@ public class Drivetrain extends SubsystemBase {
      * Returns the best (largest) note that is valid (within the field boundary and within a certain distance).
      * Returns an empty optional if no such note is detected.
      */
+
+    // need to change this function
     public Optional<Translation2d> getBestCoralLocation() {
         for (Translation3d coralRobotFram3d : visionInputs.detectedCoralsRobotFrame) {
             Translation2d coralRobotFrame = coralRobotFram3d.toTranslation2d();
@@ -597,7 +595,7 @@ public class Drivetrain extends SubsystemBase {
 
             boolean closeToRobot = coralRobotFrame.getNorm() < 2.5;
             boolean inField = !FlyingCircuitUtils.isOutsideOfField(coralFieldFrame, 0.5);
-            if (closeToRobot && inField) {
+            if (1==1) {
                 return Optional.of(coralFieldFrame);
             }
         }
@@ -610,12 +608,12 @@ public class Drivetrain extends SubsystemBase {
      * Drives towards the given location while pointing the intake at that location
      * @param noteLocation
      */
-    public void driveTowardsNote(Translation2d noteLocation) {
+    public void driveTowardsCoral(Translation2d coralLocation) {
 
-        Translation2d noteToRobot = getPoseMeters().getTranslation().minus(noteLocation);
+        Translation2d coralToRobot = getPoseMeters().getTranslation();
 
         // orient the robot to point away from the note, because the intake is in the back of the robot.
-        this.beeLineToPose(new Pose2d(noteLocation, noteToRobot.getAngle()));
+        this.beeLineToPose(new Pose2d(coralLocation, coralToRobot.getAngle()));
     }
 
 
