@@ -2,11 +2,15 @@ package frc.robot.Commands;
 
 import java.util.function.Supplier;
 
+import javax.xml.crypto.dsig.Transform;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Reefscape.FieldElement;
+import frc.robot.Reefscape.FieldConstants;
 import frc.robot.Reefscape.FieldElement.ReefFace;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 
@@ -15,38 +19,27 @@ public class AlignWithReef extends Command{
     private Supplier<ChassisSpeeds> translationController;
     private int stalk;
     private int branch;
+    private ReefFace reefFace;
 
-
-    private final FieldElement.ReefFace[] reefFaces = {ReefFace.FRONT, ReefFace.FRONT_LEFT, ReefFace.FRONT_RIGHT, ReefFace.BACK, ReefFace.BACK_LEFT, ReefFace.BACK_RIGHT};
 
     /**
      *  @param translationController
      */
-
-    public FieldElement.ReefFace getClosestReefFace() {
-
-        double closestDistance = 100000000000000.00;
-        FieldElement.ReefFace closestReefFace = reefFaces[0];
-        for(int i=0; i<5; i++) {
-            // distance formula HAVE NOT TESTED
-            double distance = Math.sqrt((Math.pow((drivetrain.getPoseMeters().getX() - reefFaces[i].getPose2d().getX()), 2) 
-            + Math.pow((drivetrain.getPoseMeters().getY() - reefFaces[i].getPose2d().getY()), 2)));
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestReefFace = reefFaces[i];
-                System.out.println(distance);
-            }
-        }
-
-        return closestReefFace;
+// bumper 37 inches
+    public Pose2d adjustedReefScoringPose(Pose2d stalkPose) {
+        double adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(37);
+        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, 0.0,new Rotation2d());
+        stalkPose.plus(targetPoseToRobotRelativeToStalk);
+        return stalkPose;
     }
 
-    public AlignWithReef(Drivetrain drivetrain, Supplier<ChassisSpeeds> translationController, int stalk, int branch) {
+    public AlignWithReef(Drivetrain drivetrain, Supplier<ChassisSpeeds> translationController, int stalk, int branch, ReefFace reefFace ) {
     
         this.drivetrain = drivetrain;
         this.translationController = translationController;
         this.stalk=stalk;
         this.branch=branch;
+        this.reefFace=reefFace;
 
         if (translationController != null) {
             super.addRequirements(drivetrain);
@@ -55,10 +48,10 @@ public class AlignWithReef extends Command{
 
     @Override
     public void execute() {
-        FieldElement.ReefFace face = getClosestReefFace();
-        Pose2d targetPose = face.stalks[stalk].branches[branch].getPose2d();
-
+        Pose2d targetPose = reefFace.stalks[stalk].branches[branch].getPose2d();
+        targetPose = adjustedReefScoringPose(targetPose);
         Rotation2d adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
-        drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
+        //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
+        drivetrain.beeLineToPose(new Pose2d(targetPose.getTranslation(), adjustedRotation));
     }
 }

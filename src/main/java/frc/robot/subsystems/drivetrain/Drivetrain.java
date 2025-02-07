@@ -294,7 +294,7 @@ public class Drivetrain extends SubsystemBase {
         // 7) Now rotate the robot so it's facing in the same direction as the line
         this.fieldOrientedDriveWhileAiming(desiredVelocity, lineToDriveOn.getRotation());
     }
-
+    
     /**
      * TODO: documentation
      * @param targetPose
@@ -595,7 +595,7 @@ public class Drivetrain extends SubsystemBase {
 
             boolean closeToRobot = coralRobotFrame.getNorm() < 2.5;
             boolean inField = !FlyingCircuitUtils.isOutsideOfField(coralFieldFrame, 0.5);
-            if (1==1) {
+            if (closeToRobot) {
                 return Optional.of(coralFieldFrame);
             }
         }
@@ -610,7 +610,7 @@ public class Drivetrain extends SubsystemBase {
      */
     public void driveTowardsCoral(Translation2d coralLocation) {
 
-        Translation2d coralToRobot = getPoseMeters().getTranslation();
+        Translation2d coralToRobot = coralLocation.minus(getPoseMeters().getTranslation());
 
         // orient the robot to point away from the note, because the intake is in the back of the robot.
         this.beeLineToPose(new Pose2d(coralLocation, coralToRobot.getAngle()));

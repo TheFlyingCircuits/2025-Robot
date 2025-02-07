@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Commands.AlignWithReef;
+import frc.robot.Reefscape.FieldElement.ReefFace;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -41,6 +42,7 @@ public class RobotContainer {
     public int leftOrRightStalk = 1;
     public int branchLevel = 1;
 
+    private final ReefFace[] reefFaces = {ReefFace.FRONT, ReefFace.FRONT_LEFT, ReefFace.FRONT_RIGHT, ReefFace.BACK, ReefFace.BACK_LEFT, ReefFace.BACK_RIGHT};
     public RobotContainer() {
 
         /**** INITIALIZE SUBSYSTEMS ****/
@@ -95,7 +97,7 @@ public class RobotContainer {
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
 
         controller.rightBumper().whileTrue(
-            new AlignWithReef(drivetrain, charlie::getRequestedFieldOrientedVelocity, leftOrRightStalk, branchLevel));
+            new AlignWithReef(drivetrain, charlie::getRequestedFieldOrientedVelocity, leftOrRightStalk, branchLevel, getClosestReefFace()));
 
         controller.rightTrigger()
             .whileTrue(
@@ -105,7 +107,25 @@ public class RobotContainer {
             );
 
     }
-         
+
+    public ReefFace getClosestReefFace() {
+
+        double closestDistance = 100000000000000.00;
+        ReefFace closestReefFace = reefFaces[0];
+        for(int i=0; i<5; i++) {
+            // distance formula HAVE NOT TESTED
+            double distance = Math.sqrt((Math.pow((drivetrain.getPoseMeters().getX() - reefFaces[i].getPose2d().getX()), 2) 
+                + Math.pow((drivetrain.getPoseMeters().getY() - reefFaces[i].getPose2d().getY()), 2)));
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestReefFace = reefFaces[i];
+                System.out.println(distance);
+            }
+        }
+
+        return closestReefFace;
+    }
+
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
         return drivetrain.run(() -> {
 
