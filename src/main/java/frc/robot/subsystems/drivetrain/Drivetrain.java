@@ -1,28 +1,20 @@
 
 package frc.robot.subsystems.drivetrain;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
-import com.ctre.phoenix6.Orchestra;
-import com.ctre.phoenix6.StatusCode;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.controllers.PPLTVController;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.util.PathPlannerLogging;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -40,17 +32,13 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import frc.robot.FlyingCircuitUtils;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.FlyingCircuitUtils;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
 import frc.robot.subsystems.vision.VisionIO.VisionMeasurement;
@@ -82,14 +70,6 @@ public class Drivetrain extends SubsystemBase {
     });
     private VisionMeasurement mostRecentSpeakerTagMeasurement = null;
 
-    private static Orchestra orchestra;
-    private String[] songs = {
-        "overworld.chrp",
-        "pokemon.chrp"
-    };
-    private String currentSong = "";
-    private String lastSong = "";
-
     /** error measured in degrees, output is in degrees per second. */
     private PIDController angleController;
 
@@ -104,9 +84,6 @@ public class Drivetrain extends SubsystemBase {
         SwerveModuleIO brSwerveModuleIO,
         VisionIO visionIO
     ) {
-
-        orchestra = new Orchestra();
-
         this.gyroIO = gyroIO;
         gyroInputs = new GyroIOInputsAutoLogged();
 
@@ -146,12 +123,12 @@ public class Drivetrain extends SubsystemBase {
             new Pose2d());
 
         //angleController = new PIDController(11, 0, 0.5); // kP has units of degreesPerSecond per degree of error.
-        angleController = new PIDController(8, 0, 0);
+        angleController = new PIDController(5, 0, 0.3);// 1 too high???? 5 very agressive too high
         angleController.enableContinuousInput(-180, 180);
-        angleController.setTolerance(2.0, 3.0); // degrees, degreesPerSecond.
+        angleController.setTolerance(1); // degrees, degreesPerSecond.
 
-        translationController = new PIDController(4.0, 0, 0); // kP has units of metersPerSecond per meter of error.
-        translationController.setTolerance(0.05); // 5 centimeters
+        translationController = new PIDController(5, 0, 0.1); // kP has units of metersPerSecond per meter of error.
+        translationController.setTolerance(0.01); // 5 centimeters
 
         //configPathPlanner();
     }
@@ -193,9 +170,6 @@ public class Drivetrain extends SubsystemBase {
             },
             this // Reference to this subsystem to set requirements
         );
-
-        // Enable custom rotation targets during auto for note & speaker tracking
-        PPHolonomicDriveController.setRotationTargetOverride(this::getAutoRotationOverride);
 
         // Register logging callbacks so that PathPlanner data shows up in advantage scope.
         PathPlannerLogging.setLogActivePathCallback( (activePath) -> {
@@ -256,12 +230,15 @@ public class Drivetrain extends SubsystemBase {
         // Use PID controller to generate a desired angular velocity based on the desired angle
         double measuredAngle = getPoseMeters().getRotation().getDegrees();
         double desiredAngleDegrees = desiredAngle.getDegrees();
-        double desiredRadiansPerSecond = Math.toRadians(angleController.calculate(measuredAngle, desiredAngleDegrees));
+        double desiredRadiansPerSeconds =  Math.toRadians(angleController.calculate(measuredAngle, desiredAngleDegrees));
+        if (angleController.atSetpoint()) {
+            desiredRadiansPerSeconds = 0;
+        }
 
         ChassisSpeeds desiredSpeeds = new ChassisSpeeds(
             desiredTranslationalSpeeds.vxMetersPerSecond,
             desiredTranslationalSpeeds.vyMetersPerSecond,
-            desiredRadiansPerSecond
+            desiredRadiansPerSeconds
         );
 
         this.fieldOrientedDrive(desiredSpeeds, true);
@@ -294,6 +271,9 @@ public class Drivetrain extends SubsystemBase {
         // 3) Use a proportional controller to decide how quickly we should drive
         //    towards the line based on our perpendicular distance to the line.
         double speedTowardsLine = Math.abs(translationController.calculate(distanceFromRobotToLine, 0));
+        if (translationController.atSetpoint()) {
+            speedTowardsLine = 0;
+        }
 
         // 4) Find the direction we should travel when driving at that speed
         ChassisSpeeds directionTowardsLine = new ChassisSpeeds();
@@ -499,10 +479,6 @@ public class Drivetrain extends SubsystemBase {
         List<Pose2d> trackedTags = new ArrayList<Pose2d>();
         for (VisionMeasurement visionMeasurement : visionInputs.visionMeasurements) {
 
-            // disregard shooter camera when lining up for a trap. We only want to trust the trap camera then.
-            if (onlyUseTrapCamera && !visionMeasurement.cameraName.equals("trapCamera")) {
-                continue;
-            }
 
             Translation2d visionTranslation = visionMeasurement.robotFieldPose.getTranslation();
             Translation2d estimatedTranslation = fusedPoseEstimator.getEstimatedPosition().getTranslation();
@@ -610,15 +586,17 @@ public class Drivetrain extends SubsystemBase {
      * Returns the best (largest) note that is valid (within the field boundary and within a certain distance).
      * Returns an empty optional if no such note is detected.
      */
-    public Optional<Translation2d> getBestNoteLocationFieldFrame() {
-        for (Translation3d noteRobotFrame3d : visionInputs.detectedNotesRobotFrame) {
-            Translation2d noteRobotFrame = noteRobotFrame3d.toTranslation2d();
-            Translation2d noteFieldFrame = fieldCoordsFromRobotCoords(noteRobotFrame);
 
-            boolean closeToRobot = noteRobotFrame.getNorm() < 2.5;
-            boolean inField = !FlyingCircuitUtils.isOutsideOfField(noteFieldFrame, 0.5);
-            if (closeToRobot && inField) {
-                return Optional.of(noteFieldFrame);
+    // need to change this function
+    public Optional<Translation2d> getBestCoralLocation() {
+        for (Translation3d coralRobotFram3d : visionInputs.detectedCoralsRobotFrame) {
+            Translation2d coralRobotFrame = coralRobotFram3d.toTranslation2d();
+            Translation2d coralFieldFrame = fieldCoordsFromRobotCoords(coralRobotFrame);
+
+            boolean closeToRobot = coralRobotFrame.getNorm() < 2.5;
+            boolean inField = !FlyingCircuitUtils.isOutsideOfField(coralFieldFrame, 0.5);
+            if (1==1) {
+                return Optional.of(coralFieldFrame);
             }
         }
 
@@ -626,73 +604,17 @@ public class Drivetrain extends SubsystemBase {
     }
 
 
-    public Optional<Rotation2d> getAutoRotationOverride() {
-        // if (isTrackingSpeakerInAuto) {
-        //     Translation2d speakerLocation = Constants.FieldElement.SPEAKER.getLocation().toTranslation2d();
-        //     Translation2d robotLocation = getPoseMeters().getTranslation();
-        //     Rotation2d angle = speakerLocation.minus(robotLocation).getAngle();
-        //     Logger.recordOutput("PathPlanner/rotationTargetOverride", angle);
-        //     return Optional.of(angle);
-        // }
-        // else {
-        //     Logger.recordOutput("PathPlanner/rotationTargetOverride", new Rotation2d(0));
-        //     return Optional.empty();
-        // }
-        return Optional.empty();
-    }
-
     /**
      * Drives towards the given location while pointing the intake at that location
      * @param noteLocation
      */
-    public void driveTowardsNote(Translation2d noteLocation) {
+    public void driveTowardsCoral(Translation2d coralLocation) {
 
-        Translation2d noteToRobot = getPoseMeters().getTranslation().minus(noteLocation);
+        Translation2d coralToRobot = getPoseMeters().getTranslation();
 
         // orient the robot to point away from the note, because the intake is in the back of the robot.
-        this.beeLineToPose(new Pose2d(noteLocation, noteToRobot.getAngle()));
+        this.beeLineToPose(new Pose2d(coralLocation, coralToRobot.getAngle()));
     }
-
-
-    //**************** MUSIC ****************/
-
-    private void addInstrument(TalonFX kraken) {
-        orchestra.addInstrument(kraken);
-    }
-
-    public static Orchestra getOrchestra() {
-        return orchestra;
-    }
-
-    private StatusCode[] playOrchestra() {
-        List<String> shuffledMusicFiles = new ArrayList<String>(List.of(songs));
-        Collections.shuffle(shuffledMusicFiles);
-        currentSong = shuffledMusicFiles.get(0);
-        while(currentSong.equals(lastSong)) {
-            System.out.println("prev song: " + lastSong
-            +"\n== queued  : " + currentSong);
-            Collections.shuffle(shuffledMusicFiles);
-            currentSong = shuffledMusicFiles.get(0);
-        };
-        System.out.println("song queued: " + currentSong);
-        lastSong = currentSong;
-
-        StatusCode loadStatus = orchestra.loadMusic(currentSong);
-        StatusCode playStatus = orchestra.play();
-        StatusCode[] codes = {loadStatus, playStatus};
-        return codes;
-    }
-    private StatusCode stopOrchestra() {
-        StatusCode stopCode = orchestra.stop();
-        return stopCode;
-    }
-    public boolean isSongPlaying() {
-        return orchestra.isPlaying();
-    }
-    private int songTimestamp() {
-        return ((int)orchestra.getCurrentTime());
-    }
-
 
 
     public boolean isAligned() {
@@ -747,13 +669,13 @@ public class Drivetrain extends SubsystemBase {
 
 
         // Note tracking visualization
-        if (getBestNoteLocationFieldFrame().isPresent()) {
-            Translation2d noteFieldFrame = getBestNoteLocationFieldFrame().get();
-            Logger.recordOutput("drivetrain/trackedNotePose", new Pose2d(noteFieldFrame, new Rotation2d()));
-            Logger.recordOutput("drivetrain/trackedNoteDistance", noteFieldFrame.getNorm());
+        if (getBestCoralLocation().isPresent()) {
+            Translation2d noteFieldFrame = getBestCoralLocation().get();
+            Logger.recordOutput("drivetrain/trackedCoralPose", new Pose2d(noteFieldFrame, new Rotation2d()));
+            Logger.recordOutput("drivetrain/trackedCoralDistance", noteFieldFrame.getNorm());
         }
         else {
-            Logger.recordOutput("drivetrain/trackedNotePose", getPoseMeters());
+            Logger.recordOutput("drivetrain/trackedCoralPose", getPoseMeters());
         }
 
         ChassisSpeeds v = DrivetrainConstants.swerveKinematics.toChassisSpeeds(getModuleStates());

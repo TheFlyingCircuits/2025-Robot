@@ -4,21 +4,10 @@
 
 package frc.robot;
 
-import java.util.List;
-import java.util.Optional;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import com.pathplanner.lib.path.PathConstraints;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -26,10 +15,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Unit;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Reefscape.FieldConstants;
 
 /**
@@ -276,45 +261,25 @@ public final class Constants {
 
 
         public final static AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.tagLayout;
-                                                                      
+                                                       
+        //TODO: UPDATE TRANSFORMS TO ACTUAL ROBOT
         public final static Transform3d robotToShooterCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(9.25), 0, Units.inchesToMeters(10.625)),
-            new Rotation3d(0, Math.toRadians(-28), 0)
+            new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
+            new Rotation3d(0, Math.toRadians(35.5), 0)
         );
 
-        public final static Transform3d robotToTrapCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(-9.625), 0, Units.inchesToMeters(10.63)),
-            new Rotation3d(0, Math.toRadians(-32), Math.toRadians(180))
+        public final static Transform3d robotToCoralCamera = new Transform3d(
+            new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
+            new Rotation3d(0, Math.toRadians(35.5), 0)
         );
 
-        public final static Transform3d robotToLeftCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(-5.438), Units.inchesToMeters(12.375), Units.inchesToMeters((16.875))),
-            new Rotation3d(0, Math.toRadians(-27), Math.toRadians(90))
-        );
-        
-        public final static Transform3d robotToRightCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(-5.438), Units.inchesToMeters(-12), Units.inchesToMeters(16.025)),
-            new Rotation3d(0, Math.toRadians(-27), Math.toRadians(-90))
-        );
-
-        public final static String[] cameraNames = {
-            "shooterCamera",
-            "trapCamera",
-            "leftCamera",
-            "rightCamera"
+        public final static String[] tagCameraNames = {
+            "shooterCamera"
         };
 
         public final static Transform3d tagCameraTransforms[] = {
-            robotToShooterCamera,
-            robotToTrapCamera,
-            robotToLeftCamera,
-            robotToRightCamera
+            robotToShooterCamera
         };
-
-        public final static Transform3d robotToNoteCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(-10.437), 0, Units.inchesToMeters(14.325)),
-            new Rotation3d(0, Math.toRadians(23), Math.toRadians(180))
-        );
 
     }
 

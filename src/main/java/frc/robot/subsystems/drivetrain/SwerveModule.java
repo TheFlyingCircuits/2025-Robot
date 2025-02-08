@@ -45,7 +45,6 @@ public class SwerveModule {
             SwerveModuleConstants.drivekAVoltsSecondsSquaredPerMeter);
 
         anglePID.enableContinuousInput(-180, 180);
-        io.configOrchestra(Drivetrain.getOrchestra());
     }
 
     public void periodic() {
