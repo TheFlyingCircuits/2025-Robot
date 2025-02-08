@@ -51,7 +51,9 @@ public interface ArmIO {
      */
     public default void setExtensionMotorVolts(double volts) {};
 
-    
+    public default void setShoulderTargetAngle(double degrees) {};
+
+    public default void setExtensionTargetLength(double meters) {};
 
 
 }

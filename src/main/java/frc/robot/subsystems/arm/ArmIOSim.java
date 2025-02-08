@@ -5,6 +5,12 @@ import static edu.wpi.first.units.Units.Degrees;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.ctre.phoenix6.unmanaged.Unmanaged;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -24,6 +30,8 @@ import edu.wpi.first.math.system.NumericalIntegration;
 
 public class ArmIOSim implements ArmIO {
 
+    private TalonFX shoulderTalon = new TalonFX(0);
+    private TalonFX extensionTalon = new TalonFX(1);
     
     private DCMotor shoulderMotor = DCMotor.getKrakenX60(2).withReduction(ArmConstants.shoulderGearReduction);
     private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(ArmConstants.extensionGearReduction);
@@ -47,6 +55,10 @@ public class ArmIOSim implements ArmIO {
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
+        Unmanaged.feedEnable(100); //unlocks talons so we can hardware sim
+
+        this.systemInputs.set(1, 0, extensionTalon.getMotorVoltage().getValueAsDouble());
+        this.systemInputs.set(0, 0, shoulderTalon.getMotorVoltage().getValueAsDouble());
 
         Matrix<N4, N1> state = VecBuilder.fill(
             inputs.shoulderAngleDegrees,
@@ -63,10 +75,13 @@ public class ArmIOSim implements ArmIO {
         );
 
         inputs.shoulderAngleDegrees = nextState.get(0, 0);
+        shoulderTalon.setPosition(inputs.shoulderAngleDegrees);
         inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
         inputs.shoulderAppliedCurrent = this.systemInputs.get(0, 0);
 
         inputs.extensionLengthMeters = nextState.get(2, 0);
+        extensionTalon.setPosition(inputs.extensionLengthMeters);
+
         inputs.extensionLengthMetersPerSecond = nextState.get(3, 0);
         inputs.extensionAppliedVolts = this.systemInputs.get(1, 0);
     }
@@ -128,6 +143,18 @@ public class ArmIOSim implements ArmIO {
     private Translation2d calculateCenterOfMassMeters(double shoulderAngleDegrees, double armLengthMeters) {
         Translation2d armFrameMeters = new Translation2d(armLengthMeters/2, -ArmConstants.shoulderBracketLengthMeters);
         return armFrameMeters.rotateBy(Rotation2d.fromDegrees(shoulderAngleDegrees));
+    }
+
+    @Override
+    public void setShoulderTargetAngle(double degrees) {
+        MotionMagicTorqueCurrentFOC request = new MotionMagicTorqueCurrentFOC(degrees);
+        extensionTalon.setControl(request);
+    }
+
+    @Override
+    public void setExtensionTargetLength(double meters) {
+        MotionMagicVoltage request = new MotionMagicVoltage(meters);
+        extensionTalon.setControl(request);
     }
 
 
