@@ -4,20 +4,21 @@
 
 package frc.robot;
 
+import java.util.function.Supplier;
+
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Commands.AlignWithReef;
-import frc.robot.Reefscape.FieldElement;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOSim;
 import frc.robot.subsystems.drivetrain.Drivetrain;
-import frc.robot.subsystems.drivetrain.GyroIO;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
-import frc.robot.subsystems.drivetrain.SwerveModuleIO;
 import frc.robot.subsystems.drivetrain.SwerveModuleIONeo;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
 import frc.robot.subsystems.vision.VisionIO;
@@ -36,6 +37,9 @@ public class RobotContainer {
 
     public final Drivetrain drivetrain;
     public final Arm arm;
+
+    public int leftOrRightStalk = 1;
+    public int branchLevel = 1;
 
     public RobotContainer() {
 
@@ -91,7 +95,28 @@ public class RobotContainer {
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
 
         controller.rightBumper().whileTrue(
-            new AlignWithReef(drivetrain, charlie::getRequestedFieldOrientedVelocity, FieldElement.ReefFace.FRONT));
+            new AlignWithReef(drivetrain, charlie::getRequestedFieldOrientedVelocity, leftOrRightStalk, branchLevel));
 
+        controller.rightTrigger()
+            .whileTrue(
+                //intake after note if on other side of the field
+
+                intakeTowardsCoral(charlie::getRequestedFieldOrientedVelocity)
+            );
+
+    }
+         
+    private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
+        return drivetrain.run(() -> {
+
+            // have charlie stay in control when the noteCam doesn't see a note
+            if (drivetrain.getBestCoralLocation().isEmpty()) {
+                drivetrain.fieldOrientedDrive(howToDriveWhenNoCoralDetected.get(), true);
+                return;
+            }
+
+            // drive towards the note when the noteCam does see a note.
+            drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+        });
     }
 }
