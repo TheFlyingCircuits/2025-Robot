@@ -39,6 +39,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.FlyingCircuitUtils;
+import frc.robot.Reefscape.FieldElement.ReefFace;
+import frc.robot.Reefscape.FieldElement.ReefStalk;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
 import frc.robot.subsystems.vision.VisionIO.VisionMeasurement;
@@ -128,7 +130,7 @@ public class Drivetrain extends SubsystemBase {
         angleController.setTolerance(1); // degrees, degreesPerSecond.
 
         translationController = new PIDController(5, 0, 0.1); // kP has units of metersPerSecond per meter of error.
-        translationController.setTolerance(0.01); // 5 centimeters
+        translationController.setTolerance(0.01); // 1 centimeters
 
         //configPathPlanner();
     }
@@ -329,6 +331,30 @@ public class Drivetrain extends SubsystemBase {
         // Don't use fieldOrientedDriveOnALine because the direction we want to point the robot
         // may not be the same as the direction to drive in!
         this.fieldOrientedDriveWhileAiming(desiredVelocity, directionToPoint);
+    }
+
+    /**
+     * Uses PID control to reach a target pose2d.
+     */
+    public void pidToPose(Pose2d desired) {
+        Pose2d current = getPoseMeters();
+
+        Translation2d delta = desired.getTranslation().minus(current.getTranslation());
+        
+        double pidOutputMetersPerSecond = -translationController.calculate(delta.getNorm(), 0);
+
+        if (translationController.atSetpoint()) {
+            pidOutputMetersPerSecond = 0;
+        }
+
+        fieldOrientedDriveWhileAiming(
+            new ChassisSpeeds(
+                pidOutputMetersPerSecond*delta.getAngle().getCos(),
+                pidOutputMetersPerSecond*delta.getAngle().getSin(),
+                0
+            ),
+            desired.getRotation()
+        );
     }
 
     //could be used for a drivetrain command in the future; leave this as its own function
@@ -603,6 +629,36 @@ public class Drivetrain extends SubsystemBase {
         return Optional.empty();
     }
 
+    public ReefFace getClosestReefFace() {
+
+        ReefFace[] reefFaces = ReefFace.values();
+        ReefFace closestReefFace = reefFaces[0];
+        for (ReefFace reefFace : reefFaces) {
+            // distance formula 
+            double distance = reefFace.getLocation2d().getDistance(getPoseMeters().getTranslation());
+            double closestDistance = closestReefFace.getLocation2d().getDistance(getPoseMeters().getTranslation());
+            if (distance < closestDistance) {
+                closestReefFace = reefFace;
+            }
+        }
+
+        return closestReefFace;
+    }
+    public ReefStalk getClosestReefStalk() {
+
+        ReefStalk[] reefStalks = ReefStalk.values();
+        ReefStalk closestReefStalk = reefStalks[0];
+        for (ReefStalk reefStalk : reefStalks) {
+            // distance formula 
+            double distance = reefStalk.getLocation2d().getDistance(getPoseMeters().getTranslation());
+            double closestDistance = closestReefStalk.getLocation2d().getDistance(getPoseMeters().getTranslation());
+            if (distance < closestDistance) {
+                closestReefStalk = reefStalk;
+            }
+        }
+
+        return closestReefStalk;
+    }
 
     /**
      * Drives towards the given location while pointing the intake at that location
