@@ -38,7 +38,6 @@ public interface ArmIO {
     /** Sets the torquecurrent that the shoulder motors get. A positive value will raise the arm. */
     public default void setShoulderMotorAmps(double amps) {};
 
-    
 
     /** 
      * Run the two arm motors at the specified voltage.
@@ -50,6 +49,13 @@ public interface ArmIO {
      * Sets the voltage that the extension motor gets. A positive value will extend the arm.
      */
     public default void setExtensionMotorVolts(double volts) {};
+
+
+    public default void setShoulderTargetAngle(double degrees) {};
+
+    public default void setExtensionTargetLength(double meters) {};
+
+    
 
     
 

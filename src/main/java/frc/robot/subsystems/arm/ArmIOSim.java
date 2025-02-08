@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.Degrees;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+import com.ctre.phoenix6.hardware.TalonFX;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -24,6 +26,8 @@ import edu.wpi.first.math.system.NumericalIntegration;
 
 public class ArmIOSim implements ArmIO {
 
+    private TalonFX shoulderTalon = new TalonFX(0, "CTRENetwork");
+    private TalonFX extensionTalon = new TalonFX(1, "CTRENetwork");
     
     private DCMotor shoulderMotor = DCMotor.getKrakenX60(2).withReduction(ArmConstants.shoulderGearReduction);
     private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(ArmConstants.extensionGearReduction);
@@ -89,9 +93,6 @@ public class ArmIOSim implements ArmIO {
         double shoulderGravityRadiansPerSecondSquared = -UniversalConstants.gravityMetersPerSecondSquared
                                                         /centerOfMassMeters.getNorm()
                                                         *Math.cos(centerOfMassMeters.getAngle().getRadians());
-
-
-        Logger.recordOutput("arm/shoulderGravityRadiansPerSecondSquared", shoulderGravityRadiansPerSecondSquared);
 
         double shoulderRadiansPerSecondSquared = shoulderMotorRadiansPerSecondSquared + shoulderGravityRadiansPerSecondSquared;
         shoulderRadiansPerSecondSquared -= Math.signum(shoulderDegreesPerSecond)*5; //friction

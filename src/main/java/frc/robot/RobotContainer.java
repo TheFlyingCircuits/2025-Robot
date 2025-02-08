@@ -70,8 +70,11 @@ public class RobotContainer {
 
     }
 
+
     private void realBindings() {
         CommandXboxController controller = charlie.getXboxController();
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
+
+        controller.rightBumper().onTrue(arm.setShoulderTargetAngle(20));
     }
 }

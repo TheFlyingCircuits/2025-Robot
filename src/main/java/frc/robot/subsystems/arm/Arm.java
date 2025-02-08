@@ -19,6 +19,8 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 public class Arm extends SubsystemBase {
 
@@ -45,6 +47,9 @@ public class Arm extends SubsystemBase {
     }
 
 
+    public Command setShoulderTargetAngle(double degrees) {
+        return new InstantCommand(() -> {io.setShoulderTargetAngle(degrees);});
+    }
     
     @Override
     public void periodic() {
