@@ -343,6 +343,7 @@ public class Drivetrain extends SubsystemBase {
         
         double pidOutputMetersPerSecond = -translationController.calculate(delta.getNorm(), 0);
 
+
         if (translationController.atSetpoint()) {
             pidOutputMetersPerSecond = 0;
         }

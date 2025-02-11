@@ -283,6 +283,18 @@ public final class Constants {
 
     }
 
+    public final static class WristConstants {
+
+        // TODO: I need to change constants values to real values
+        public final static int wristCANcoderID = 0;
+
+        public final static double wristCANcoderOffset = 0.0;
+        // TODO: Need real feedforward values
+        public final static double kSArmVolts = 0.001;
+        public final static double kVArmVoltsSecondsPerRadian = 0.001;
+        public final static double kAArmVoltsSecondsSquaredPerRadian = 0.001;
+    }
+
 
     public final static class LEDConstants {
         public final static int ledPWMPort = 0;
