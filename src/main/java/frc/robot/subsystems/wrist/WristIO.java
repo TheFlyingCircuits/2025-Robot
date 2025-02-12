@@ -8,13 +8,11 @@ public interface WristIO {
 
         public double wristAngleRadians = 0.0;
         
-        public double wristRpm = 0.0;
+        public double wristRadiansPerSecond = 0.0;
     }
 
     public default void updateInputs(WristIOInputs inputs) {};
 
     public default void setWristNeoVolts(double volts) {};
-
-    public default void setWristEncoderPosition(double radians) {};
     
 }

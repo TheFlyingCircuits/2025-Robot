@@ -27,7 +27,7 @@ public class Wrist extends SubsystemBase{
 
         wristNeoFeedForward = new ArmFeedforward(0, 0,0,0);
 
-        wristNeoPID = new PIDController(1,0,0); // radians
+        wristNeoPID = new PIDController(1,0,0); // input radians output volts
         wristNeoPID.setTolerance(Units.degreesToRadians(1)); // radians
 
     }

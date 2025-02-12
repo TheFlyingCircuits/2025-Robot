@@ -38,7 +38,7 @@ public class WristIONeo implements WristIO{
 
     @Override
     public void updateInputs(WristIOInputs inputs){
-        inputs.wristRpm = wristNeo.getVelocity();
+        inputs.wristRadiansPerSecond = Units.rotationsPerMinuteToRadiansPerSecond(encoderBeingUsed.getVelocity());
 
         if (wristNeo.getLastError() == REVLibError.kOk) {
             encoderBeingUsed = encoder;
