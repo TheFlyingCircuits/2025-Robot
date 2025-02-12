@@ -1,27 +1,28 @@
 package frc.robot.subsystems.wrist;
 
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.revrobotics.REVLibError;
+import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import frc.robot.Constants.ArmConstants;
-import frc.robot.Constants.WristConstants;
+import edu.wpi.first.math.util.Units;
 import frc.robot.VendorWrappers.Neo;
 
 public class WristIONeo implements WristIO{
     
-    public Neo wristNeo;
+    private Neo wristNeo;
 
-    public CANcoder wristAbsoluteEncoder;
+    private SparkAbsoluteEncoder encoder ;
 
-    public WristIONeo() {
+    private SparkAbsoluteEncoder encoderBeingUsed;
 
-        wristAbsoluteEncoder = new CANcoder(WristConstants.wristCANcoderID, "CTRENetwork");
+    private SparkAbsoluteEncoder encoder2;
 
+    public WristIONeo(SparkAbsoluteEncoder encoder2) {
+
+        this.encoder2=encoder2;
         // configures both Neo's
         SparkMaxConfig config = new SparkMaxConfig();
         config.idleMode(IdleMode.kBrake);
@@ -32,19 +33,20 @@ public class WristIONeo implements WristIO{
 
         wristNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        CANcoderConfiguration wristCANCoderConfig = new CANcoderConfiguration();
-        wristCANCoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
-        wristCANCoderConfig.MagnetSensor.MagnetOffset = WristConstants.wristCANcoderOffset;
-        wristCANCoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
-
-        wristAbsoluteEncoder.getConfigurator().apply(wristCANCoderConfig);
+        encoder = wristNeo.getAbsoluteEncoder();
     }
 
     @Override
     public void updateInputs(WristIOInputs inputs){
         inputs.wristRpm = wristNeo.getVelocity();
 
-        inputs.wristAngleRadians = wristAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()*360;
+        if (wristNeo.getLastError() == REVLibError.kOk) {
+            encoderBeingUsed = encoder;
+        } else {
+            encoderBeingUsed = encoder2;
+        }
+
+        inputs.wristAngleRadians = Units.rotationsToRadians(encoderBeingUsed.getPosition());
     }
 
     @Override

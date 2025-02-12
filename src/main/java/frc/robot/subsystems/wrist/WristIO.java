@@ -15,6 +15,6 @@ public interface WristIO {
 
     public default void setWristNeoVolts(double volts) {};
 
-    public default void setWristEncoderPosition(double degrees) {};
+    public default void setWristEncoderPosition(double radians) {};
     
 }
