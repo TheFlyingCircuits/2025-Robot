@@ -6,6 +6,9 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -31,15 +34,46 @@ import edu.wpi.first.math.system.NumericalIntegration;
 
 public class ArmIOSim implements ArmIO {
 
-    private TalonFX shoulderTalon = new TalonFX(0, "CTRENetwork");
-    private TalonFX extensionTalon = new TalonFX(1, "CTRENetwork");
+    private TalonFX shoulderTalon = new TalonFX(0, "*");
+    private TalonFX extensionTalon = new TalonFX(1, "*");
     
     private DCMotor shoulderMotor = DCMotor.getKrakenX60(2).withReduction(ArmConstants.shoulderGearReduction);
     private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(ArmConstants.extensionGearReduction);
 
     Matrix<N2, N1> systemInputs = VecBuilder.fill(0, 0);
 
-    public ArmIOSim() {};
+    public ArmIOSim() {
+
+        
+
+        TalonFXConfiguration shoulderConfig = new TalonFXConfiguration();
+
+        shoulderConfig.MotionMagic.MotionMagicAcceleration = 10;
+        shoulderConfig.MotionMagic.MotionMagicCruiseVelocity = 10;
+        shoulderConfig.Slot0.kP = 2;
+        shoulderConfig.Slot0.kV = 1;
+        shoulderConfig.Slot0.kA = 1;
+
+        shoulderConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        shoulderConfig.CurrentLimits.StatorCurrentLimit = 45; // re-determined after firmware upgrade to prevent wheel slip. Feels pretty low though
+        shoulderConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+
+        shoulderTalon.getConfigurator().apply(shoulderConfig);
+
+        TalonFXConfiguration extensionConfig = new TalonFXConfiguration();
+
+        extensionConfig.MotionMagic.MotionMagicAcceleration = 10;
+        extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 10;
+        extensionConfig.Slot0.kP = 2;
+        extensionConfig.Slot0.kV = 1;
+        extensionConfig.Slot0.kA = 1;
+
+        extensionConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        extensionConfig.CurrentLimits.StatorCurrentLimit = 45; // re-determined after firmware upgrade to prevent wheel slip. Feels pretty low though
+        extensionConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+
+        extensionTalon.getConfigurator().apply(extensionConfig);
+    };
 
     /*
      *    STATE VECTOR
@@ -56,10 +90,8 @@ public class ArmIOSim implements ArmIO {
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
-        Unmanaged.feedEnable(100); //unlocks talons so we can hardware sim
-
         this.systemInputs.set(1, 0, extensionTalon.getMotorVoltage().getValueAsDouble());
-        this.systemInputs.set(0, 0, shoulderTalon.getMotorVoltage().getValueAsDouble());
+        this.systemInputs.set(0, 0, shoulderTalon.getTorqueCurrent().getValueAsDouble());
 
         Matrix<N4, N1> state = VecBuilder.fill(
             inputs.shoulderAngleDegrees,
@@ -146,7 +178,7 @@ public class ArmIOSim implements ArmIO {
     @Override
     public void setShoulderTargetAngle(double degrees) {
         MotionMagicTorqueCurrentFOC request = new MotionMagicTorqueCurrentFOC(degrees);
-        extensionTalon.setControl(request);
+        shoulderTalon.setControl(request);
     }
 
     @Override
