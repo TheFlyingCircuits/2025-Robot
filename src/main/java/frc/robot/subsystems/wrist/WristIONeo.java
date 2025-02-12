@@ -44,7 +44,7 @@ public class WristIONeo implements WristIO{
     public void updateInputs(WristIOInputs inputs){
         inputs.wristRpm = wristNeo.getVelocity();
 
-        inputs.wristAngleDegrees = wristAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()*360;
+        inputs.wristAngleRadians = wristAbsoluteEncoder.getAbsolutePosition().getValueAsDouble()*360;
     }
 
     @Override
@@ -57,11 +57,6 @@ public class WristIONeo implements WristIO{
         }
 
         wristNeo.setVoltage(volts);
-    }
-
-    @Override
-    public void setWristEncoderPosition(double degrees) {
-        wristAbsoluteEncoder.setPosition(degrees/360.);
     }
 
 
