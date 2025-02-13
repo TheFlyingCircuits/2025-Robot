@@ -17,8 +17,8 @@ public class ArmPosition {
         * 
         * @param shoulderAngleDegrees - Angle of the shoulder pivot of the arm. An angle of zero represents the arm pointing straight forward,
         *  with an upwards rotation begin positive.
-        * @param wristAngleDegrees - Angle of the wrist pivot of the arm. An angle of zero represents the end effector being parallel with the ground,
-        *  with an upwards rotation being positive.
+        * @param wristAngleDegrees - Angle of the wrist pivot of the arm. An angle of zero represents the end effector being parallel with the ground
+        *  (intake position), with an upwards rotation being positive.
         * @param extensionMeters - Total length of the arm, from the point on the arm aligning with the shoulder pivot center, to the end effector pivot center.
         */
     public ArmPosition(double shoulderAngleDegrees, double wristAngleDegrees, double extensionMeters) {
@@ -30,7 +30,7 @@ public class ArmPosition {
 
     /**
         * Returns a pose2d object representing the position of the end effector. The translation component represents
-        * the position of the end effector pulley relative to the robot center, while the angle component represents the angle of the wrist.
+        * the position of the end effector pivot relative to the robot center, while the angle component represents the angle of the wrist.
         */
     public Pose2d getEndEffectorPose() {
 
@@ -38,11 +38,18 @@ public class ArmPosition {
 
         return new Pose2d(
             armTranslationMeters.rotateBy(Rotation2d.fromDegrees(shoulderAngleDegrees)).plus(ArmConstants.shoulderPivotPositionMeters),
-            Rotation2d.fromDegrees(wristAngleDegrees) 
+            Rotation2d.fromDegrees(wristAngleDegrees)
         );
     }
     
 
+    /**
+     * Creates an arm position object given a desired pose of the end effector relative to the center of the robot.
+     * The translation component represent the position of the end effector pivot point relative to the robot center,
+     * while the angle component represents the angle of the wrist.
+     * @param endEffectorPose
+     * @return
+     */
     public static ArmPosition generateArmPosition(Pose2d endEffectorPose) {
 
         //make position relative to pivot

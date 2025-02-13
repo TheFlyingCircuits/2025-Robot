@@ -5,32 +5,26 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Reefscape.FieldConstants;
 import frc.robot.Reefscape.FieldElement.ReefBranch;
 import frc.robot.Reefscape.FieldElement.ReefFace;
+import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 
 public class AlignWithReef extends Command{
+
     private Drivetrain drivetrain;
     private Supplier<ChassisSpeeds> translationController;
-    private int stalk;
     private Supplier<ReefBranch> reefBranch;
-    private Supplier<ReefFace> reefFace;
-
 
     /**
      *  @param translationController
      */
-// bumper 37 inches
-    public Pose2d adjustedReefScoringPose(Pose2d stalkPose) {
-        double adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(22);
-        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, 0.0,new Rotation2d());
-        return  stalkPose.plus(targetPoseToRobotRelativeToStalk);
-    }
-
     public AlignWithReef(Drivetrain drivetrain, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
     
         this.drivetrain = drivetrain;
@@ -40,6 +34,41 @@ public class AlignWithReef extends Command{
         if (translationController != null) {
             super.addRequirements(drivetrain);
         }
+    }
+
+    // bumper 37 inches
+    private Pose2d adjustedReefScoringPose(Pose2d stalkPose) {
+        double adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(22);
+        //TODO: make this work for all sides
+        //TODO: adjust based on left/right intake in the grabby
+        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, 0.0,new Rotation2d());
+        return  stalkPose.plus(targetPoseToRobotRelativeToStalk);
+    }
+
+    /**
+     * Generates an ArmPosition object representing the position of the arm to score on the desired branch.
+     * This is calculated based on the position of the robot relative to the branch.
+     */
+    private ArmPosition calculateArmScoringPosition() {
+        Translation2d robotTranslation = drivetrain.getPoseMeters().getTranslation();
+        Translation3d branchTranslation = reefBranch.get().getLocation();
+
+        Translation2d horizontalTranslation = robotTranslation.minus(branchTranslation.toTranslation2d());
+        double horizontalExtensionMeters = horizontalTranslation.getNorm();
+
+        double verticalExtensionMeters = branchTranslation.getZ();
+
+        horizontalExtensionMeters -= 0.05; //TODO: tweak these
+        verticalExtensionMeters += 0.2;
+
+        return ArmPosition.generateArmPosition(
+            new Pose2d(
+                horizontalExtensionMeters,
+                verticalExtensionMeters,
+                Rotation2d.fromDegrees(-40)
+            )
+        );
+
     }
 
     @Override

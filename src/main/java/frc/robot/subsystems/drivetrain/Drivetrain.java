@@ -58,10 +58,6 @@ public class Drivetrain extends SubsystemBase {
     private SwerveDrivePoseEstimator fusedPoseEstimator;
     private SwerveDrivePoseEstimator wheelsOnlyPoseEstimator;
 
-    public boolean isTrackingSpeakerInAuto = false;
-    /** True after a bump but before odometry has been corrected, false once a vision target is used to reset odometry. */
-    private boolean hasBeenBumped = false;
-    public boolean onlyUseTrapCamera = false;
     private PriorityQueue<VisionMeasurement> mostRecentSpeakerTagMeasurements = new PriorityQueue<VisionMeasurement>(new Comparator<VisionMeasurement>() {
         // Front of the queue will be the smallest timestamp
         // i.e. the timestamp that's closest to 0 (when the robot was turned on)
