@@ -16,7 +16,7 @@ import frc.robot.Reefscape.FieldElement.ReefFace;
 import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 
-public class AlignWithReef extends Command{
+public class ScoreOnReef extends Command{
 
     private Drivetrain drivetrain;
     private Supplier<ChassisSpeeds> translationController;
@@ -25,7 +25,7 @@ public class AlignWithReef extends Command{
     /**
      *  @param translationController
      */
-    public AlignWithReef(Drivetrain drivetrain, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
+    public ScoreOnReef(Drivetrain drivetrain, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
     
         this.drivetrain = drivetrain;
         this.translationController = translationController;
