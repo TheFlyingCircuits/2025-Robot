@@ -8,7 +8,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Wrist extends SubsystemBase{
+public class Wrist extends SubsystemBase {
     
     private WristIO io;
     private WristIOInputsAutoLogged inputs;
