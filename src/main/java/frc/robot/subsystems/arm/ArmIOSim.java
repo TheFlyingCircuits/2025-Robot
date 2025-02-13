@@ -55,7 +55,7 @@ public class ArmIOSim implements ArmIO {
         shoulderConfig.Slot0.kA = 1;
 
         shoulderConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        shoulderConfig.CurrentLimits.StatorCurrentLimit = 45; // re-determined after firmware upgrade to prevent wheel slip. Feels pretty low though
+        shoulderConfig.CurrentLimits.StatorCurrentLimit = 45;
         shoulderConfig.CurrentLimits.StatorCurrentLimitEnable = true;
 
         shoulderTalon.getConfigurator().apply(shoulderConfig);
@@ -69,7 +69,7 @@ public class ArmIOSim implements ArmIO {
         extensionConfig.Slot0.kA = 1;
 
         extensionConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        extensionConfig.CurrentLimits.StatorCurrentLimit = 45; // re-determined after firmware upgrade to prevent wheel slip. Feels pretty low though
+        extensionConfig.CurrentLimits.StatorCurrentLimit = 45;
         extensionConfig.CurrentLimits.StatorCurrentLimitEnable = true;
 
         extensionTalon.getConfigurator().apply(extensionConfig);
