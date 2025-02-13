@@ -12,7 +12,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Reefscape.FieldConstants;
 import frc.robot.Reefscape.FieldElement.ReefBranch;
-import frc.robot.Reefscape.FieldElement.ReefFace;
 import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 

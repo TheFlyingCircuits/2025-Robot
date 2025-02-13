@@ -57,7 +57,6 @@ public class Neo extends SparkMax {
     public Neo(String name, int canID) {
         super(canID, MotorType.kBrushless);
         this.name = name;
-        int encoderCountsPerMotorRev = 42; // comes from Neo Docs
         encoder = super.getEncoder();
     }
 

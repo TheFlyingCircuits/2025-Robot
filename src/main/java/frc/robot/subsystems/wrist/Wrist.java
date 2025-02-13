@@ -2,7 +2,6 @@ package frc.robot.subsystems.wrist;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -13,8 +12,6 @@ public class Wrist extends SubsystemBase {
     private WristIO io;
     private WristIOInputsAutoLogged inputs;
 
-    private ArmFeedforward  wristNeoFeedForward;
-
     private PIDController wristNeoPID;
     // might need arm feedforward because of gravity???
     // private SimpleMotorFeedforward wristFeedForward = new SimpleMotorFeedforward(WristConstants.kSArmVolts,WristConstants.kVArmVoltsSecondsPerRadian,WristConstants.kSArmVolts);
@@ -24,8 +21,6 @@ public class Wrist extends SubsystemBase {
     public Wrist(WristIO io) {
         this.io = io;
         inputs = new WristIOInputsAutoLogged();
-
-        wristNeoFeedForward = new ArmFeedforward(0, 0,0,0);
 
         wristNeoPID = new PIDController(1,0,0); // input radians output volts
         wristNeoPID.setTolerance(Units.degreesToRadians(1)); // radians
@@ -53,7 +48,6 @@ public class Wrist extends SubsystemBase {
     private void moveToTargetPosition(double targetRadians) {
         
         double outputVolts = (wristNeoPID.calculate(inputs.wristAngleRadians, desiredWristPositionRadians));
-        //+ wristNeoFeedForward.calculate(desiredWristPositionRadians)
 
         // if (wristNeoPID.atSetpoint()) {
         //     return;

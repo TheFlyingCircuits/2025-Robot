@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Commands.AlignWithReef;
+import frc.robot.Commands.ScoreOnReef;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -37,11 +37,6 @@ public class RobotContainer {
 
     public final Drivetrain drivetrain;
     public final Arm arm;
-
-    
-    private int leftOrRightStalk = 1;
-    private int branchLevel = 1;
-
 
     public RobotContainer() {
 
@@ -99,19 +94,16 @@ public class RobotContainer {
 
         // controllerTwo.a().onTrue(new InstantCommand(() -> {this.leftOrRightStalk = 2;})); for duncan
 
-        // () -> {return drivetrain.getClosestReefFace().stalks[leftOrRightStalk].branches[branchLevel];}
         controller.rightBumper().whileTrue(
-            new AlignWithReef(
+            new ScoreOnReef(
                 drivetrain,
                 charlie::getRequestedFieldOrientedVelocity,
-                () -> {return drivetrain.getClosestReefStalk().branches[branchLevel];}
+                () -> {return drivetrain.getClosestReefStalk().branches[1];}
             )
         );
 
         controller.rightTrigger()
             .whileTrue(
-                //intake after note if on other side of the field
-
                 intakeTowardsCoral(charlie::getRequestedFieldOrientedVelocity)
             );
 
@@ -120,13 +112,13 @@ public class RobotContainer {
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
         return drivetrain.run(() -> {
 
-            // have charlie stay in control when the noteCam doesn't see a note
+            // have driver stay in control when the intake camera doesn't see a note
             if (drivetrain.getBestCoralLocation().isEmpty()) {
                 drivetrain.fieldOrientedDrive(howToDriveWhenNoCoralDetected.get(), true);
                 return;
             }
 
-            // drive towards the note when the noteCam does see a note.
+            // drive towards the note when the intake camera does see a note.
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         });
     }

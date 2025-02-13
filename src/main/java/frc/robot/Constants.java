@@ -214,7 +214,7 @@ public final class Constants {
         public static final double anglekDVoltsPerDegreePerSecond = 0.;
 
         public static final double drivekSVolts = 0.2383;
-        public static final double drivekVVoltsSecondsPerMeter = 2.2859; // TODO: add desmos link
+        public static final double drivekVVoltsSecondsPerMeter = 2.2859;
         public static final double drivekAVoltsSecondsSquaredPerMeter = 0.;
         
         // Motor configs
@@ -288,10 +288,6 @@ public final class Constants {
         public final static double ledsPerMeter = (1.0 * ledsPerStrip) / stripLengthMeters;
 
         public final static double metersPerLed = 1/ledsPerMeter;
-
-        /** TODO: documentation */
-        public final static double topThirdBreakpoint = stripLengthMeters - 0.24;
-        public final static double bottomThirdBreakpoint = 0.29;
 
         /**
          * Hues for specific colors
