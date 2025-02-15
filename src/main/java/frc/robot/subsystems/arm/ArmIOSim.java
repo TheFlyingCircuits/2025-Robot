@@ -9,6 +9,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DynamicMotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -40,8 +42,22 @@ public class ArmIOSim implements ArmIO {
     private DCMotor shoulderMotor = DCMotor.getKrakenX60(2).withReduction(ArmConstants.shoulderGearReduction);
     private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(ArmConstants.extensionGearReduction);
 
+    private MotionMagicTorqueCurrentFOC shoulderRequest;
+    private MotionMagicVoltage extensionRequest;
+
     Matrix<N2, N1> systemInputs = VecBuilder.fill(0, 0);
 
+    //configs
+    //shoulder
+    double shoulderkP = 2;
+    double shoulderkV = 1;
+    double shoulderkA = 1;
+
+    //extenstion
+    double extensionkP = 2;
+    double extensionkV = 1;
+    double extensionkA = 1;
+     
     public ArmIOSim() {
 
         
@@ -92,6 +108,8 @@ public class ArmIOSim implements ArmIO {
     public void updateInputs(ArmIOInputs inputs) {
         this.systemInputs.set(1, 0, extensionTalon.getMotorVoltage().getValueAsDouble());
         this.systemInputs.set(0, 0, shoulderTalon.getTorqueCurrent().getValueAsDouble());
+        //this.systemInputs.set(1, 0,)
+
 
         Matrix<N4, N1> state = VecBuilder.fill(
             inputs.shoulderAngleDegrees,
@@ -177,14 +195,14 @@ public class ArmIOSim implements ArmIO {
 
     @Override
     public void setShoulderTargetAngle(double degrees) {
-        MotionMagicTorqueCurrentFOC request = new MotionMagicTorqueCurrentFOC(degrees);
-        shoulderTalon.setControl(request);
+        shoulderRequest = new MotionMagicTorqueCurrentFOC(degrees); //TODO units issue? param is rotation we give degrees
+        shoulderTalon.setControl(shoulderRequest);
     }
 
     @Override
     public void setExtensionTargetLength(double meters) {
-        MotionMagicVoltage request = new MotionMagicVoltage(meters);
-        extensionTalon.setControl(request);
+        extensionRequest = new MotionMagicVoltage(meters); //^Here too 
+        extensionTalon.setControl(extensionRequest);
     }
 
 
