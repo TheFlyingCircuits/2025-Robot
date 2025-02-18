@@ -28,7 +28,7 @@ public class Arm extends SubsystemBase {
     ArmIO io;
 
     LoggedMechanism2d mech2d = new LoggedMechanism2d(3, 3); //all units for mech2d are meters
-    LoggedMechanismRoot2d mech2dRoot = mech2d.getRoot("pivot", 0.5, Units.inchesToMeters(17.87));
+    LoggedMechanismRoot2d mech2dRoot = mech2d.getRoot("pivot", 1, 1);
     LoggedMechanismLigament2d shoulderBracket;
     LoggedMechanismLigament2d telescoper;
 
@@ -69,7 +69,7 @@ public class Arm extends SubsystemBase {
         //TODO: for some reason the @autologoutput annotation doesn't work
         Logger.recordOutput("arm/mech2d", this.mech2d);
 
-        shoulderBracket.setAngle(180+inputs.shoulderAngleDegrees);
+        shoulderBracket.setAngle(90+inputs.shoulderAngleDegrees);
         telescoper.setLength(inputs.extensionLengthMeters);
     }
 }

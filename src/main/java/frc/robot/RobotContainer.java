@@ -96,6 +96,7 @@ public class RobotContainer {
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
 
         controller.x().onTrue(arm.setShoulderTargetAngle(20));
+        controller.a().onTrue(arm.setExtensionTargetLength(1));
 
 
         controller.rightBumper().whileTrue(
