@@ -48,6 +48,14 @@ public class Arm extends SubsystemBase {
 
     }
 
+    /**
+     * Sets the taret extension and angle of the arm to be equal to the one in the armPosition object.
+     */
+    public void setArmPosition(ArmPosition armPosition) {
+        io.setShoulderTargetAngle(armPosition.shoulderAngleDegrees);
+        io.setExtensionTargetLength(armPosition.extensionMeters);
+    }
+
     public void setShoulderTargetAngle(double degrees) {
         io.setShoulderTargetAngle(degrees);
     }

@@ -23,6 +23,8 @@ import frc.robot.subsystems.drivetrain.SwerveModuleIONeo;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonLib;
+import frc.robot.subsystems.wrist.Wrist;
+import frc.robot.subsystems.wrist.WristIO;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -32,11 +34,12 @@ import frc.robot.subsystems.vision.VisionIOPhotonLib;
  */
 public class RobotContainer {
 
-    public final HumanDriver charlie = new HumanDriver(0);
-    public final HumanDriver ben = new HumanDriver(1);
+    private final HumanDriver charlie = new HumanDriver(0);
+    private final HumanDriver ben = new HumanDriver(1);
 
     public final Drivetrain drivetrain;
     public final Arm arm;
+    public final Wrist wrist;
 
     public RobotContainer() {
 
@@ -52,6 +55,7 @@ public class RobotContainer {
             // );
 
             arm = new Arm(new ArmIO(){});
+            wrist = new Wrist(new WristIO(){});
 
             
             /****** FOR NOODLE *******/
@@ -76,6 +80,7 @@ public class RobotContainer {
             );
 
             arm = new Arm(new ArmIOSim());
+            wrist = new Wrist(new WristIO(){});
 
         }
         
@@ -99,6 +104,8 @@ public class RobotContainer {
         controller.rightBumper().whileTrue(
             new ScoreOnReef(
                 drivetrain,
+                arm,
+                wrist,
                 charlie::getRequestedFieldOrientedVelocity,
                 () -> {return drivetrain.getClosestReefStalk().branches[1];}
             )

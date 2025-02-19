@@ -12,21 +12,27 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Reefscape.FieldConstants;
 import frc.robot.Reefscape.FieldElement.ReefBranch;
+import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
+import frc.robot.subsystems.wrist.Wrist;
 
 public class ScoreOnReef extends Command{
 
     private Drivetrain drivetrain;
+    private Arm arm;
+    private Wrist wrist;
     private Supplier<ChassisSpeeds> translationController;
     private Supplier<ReefBranch> reefBranch;
 
     /**
      *  @param translationController
      */
-    public ScoreOnReef(Drivetrain drivetrain, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
+    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
     
         this.drivetrain = drivetrain;
+        this.arm = arm;
+        this.wrist = wrist;
         this.translationController = translationController;
         this.reefBranch=reefBranch;
 
@@ -77,5 +83,9 @@ public class ScoreOnReef extends Command{
         Rotation2d adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
         drivetrain.pidToPose(new Pose2d(targetPose.getTranslation(), adjustedRotation));
+
+        ArmPosition desiredArmPosition = calculateArmScoringPosition();
+        arm.setArmPosition(desiredArmPosition);
+        wrist.setTargetPositionRadians(Math.toRadians(desiredArmPosition.wristAngleDegrees));
     }
 }
