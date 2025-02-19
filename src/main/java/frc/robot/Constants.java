@@ -68,12 +68,17 @@ public final class Constants {
 
 
 
-
-        public static final double pulleyRadiusMeters = 0.2;
         /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
         public final static double shoulderGearReduction = 100;
+        
 
+        /** Rotations of the motor per rotations of the belt pulley */
         public final static double extensionGearReduction = 15;
+        public static final double extensionPulleyRadiusMeters = 0.1;//TODO: fill with actual value
+        /** Circumference of the pulley that the extension belt runs on. */
+        public final static double beltPulleyCircumferenceMeters = 2*extensionPulleyRadiusMeters*Math.PI; 
+        public final static double extensionMetersPerMotorRotation = beltPulleyCircumferenceMeters / extensionGearReduction;
+
 
 
         
