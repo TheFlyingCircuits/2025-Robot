@@ -149,10 +149,6 @@ public class ArmIOSim implements ArmIO {
     }
 
 
-    @Override
-    public void setShoulderMotorAmps(double amps) {
-        systemInputs.set(0, 0, amps);
-    }
 
     @Override
     public void setShoulderMotorVolts(double volts) {

@@ -92,7 +92,9 @@ public class RobotContainer {
         CommandXboxController controller = charlie.getXboxController();
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
 
-        // controllerTwo.a().onTrue(new InstantCommand(() -> {this.leftOrRightStalk = 2;})); for duncan
+        controller.x().onTrue(arm.setShoulderTargetAngleCommand(20));
+        controller.a().onTrue(arm.setExtensionTargetLengthCommand(1));
+
 
         controller.rightBumper().whileTrue(
             new ScoreOnReef(
