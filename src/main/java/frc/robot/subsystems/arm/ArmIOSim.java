@@ -46,8 +46,6 @@ public class ArmIOSim implements ArmIO {
     private DCMotor shoulderMotor = DCMotor.getKrakenX60(2).withReduction(ArmConstants.shoulderGearReduction);
     private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(ArmConstants.extensionGearReduction);
 
-    private MotionMagicTorqueCurrentFOC shoulderRequest;
-    private MotionMagicVoltage extensionRequest;
 
     Matrix<N2, N1> systemInputs = VecBuilder.fill(0, 0);
 
@@ -105,9 +103,7 @@ public class ArmIOSim implements ArmIO {
 
         this.systemInputs.set(1, 0, extensionVoltage.getValueAsDouble());
         this.systemInputs.set(0, 0, shoulderCurrent.getValueAsDouble());
-        //this.systemInputs.set(1, 0,)
-
-
+    
         Matrix<N4, N1> state = VecBuilder.fill(
             inputs.shoulderAngleDegrees,
             inputs.shoulderVelocityDegreesPerSecond,
@@ -167,7 +163,7 @@ public class ArmIOSim implements ArmIO {
 
 
         //double extensionMetersPerSecondSquared = extensionKv * extensionVoltage;
-        double extensionMetersPerSecondSquared = extensionTorqueNM / ArmConstants.pulleyRadiusMeters;
+        double extensionMetersPerSecondSquared = extensionTorqueNM / ArmConstants.extensionPulleyRadiusMeters;
         
 
         //return null; 

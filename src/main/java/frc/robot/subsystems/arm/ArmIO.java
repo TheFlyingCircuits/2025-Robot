@@ -22,7 +22,6 @@ public interface ArmIO {
          * Follows the same direction as armAngleDegrees.
          */
         public double shoulderVelocityDegreesPerSecond = 0.0;
-        public double shoulderAccelerationDegreesPerSecondSquared = 0.0;
         public double shoulderAppliedCurrent = 0.0;
 
         public double extensionLengthMeters = ArmConstants.minExtensionMeters;

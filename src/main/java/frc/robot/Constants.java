@@ -68,12 +68,17 @@ public final class Constants {
 
 
 
-
-        public static final double pulleyRadiusMeters = 0.2;
         /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
         public final static double shoulderGearReduction = 100;
+        
 
+        /** Rotations of the motor per rotations of the belt pulley */
         public final static double extensionGearReduction = 15;
+        public static final double extensionPulleyRadiusMeters = 0.1;//TODO: fill with actual value
+        /** Circumference of the pulley that the extension belt runs on. */
+        public final static double beltPulleyCircumferenceMeters = 2*extensionPulleyRadiusMeters*Math.PI; 
+        public final static double extensionMetersPerMotorRotation = beltPulleyCircumferenceMeters / extensionGearReduction;
+
 
 
         
@@ -237,25 +242,6 @@ public final class Constants {
         public static final double mountPoseRollDegrees = -1.0425487756729126;
     }
 
-    public final static class ClimbConstants {
-        
-        /**
-         * temp motor ids for climbing motors
-         */
-        public final static int leftMotorID = 9;
-        public final static int rightMotorID = 10;
-
-        /**
-         * Use this value as the conversion factor between the motors rotations and meters that the climb arms have extended.
-         * A positive rotation will result in a positive extension.
-         * This is plugged directly into the climb encoders' setPositionConversionFactor method.
-         */
-        public final static double climberArmMetersPerMotorRotation = Units.inchesToMeters(2.256*Math.PI/21.);
-
-        public final static double climbMaxPosMeters = .53;
-        public final static double climbMinPosMeters = -0.14;
-
-    }
 
     public final static class VisionConstants {
 
