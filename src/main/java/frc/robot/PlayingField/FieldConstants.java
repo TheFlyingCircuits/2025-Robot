@@ -2,8 +2,6 @@ package frc.robot.PlayingField;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
@@ -13,15 +11,6 @@ public class FieldConstants {
     public static final double maxX = tagLayout.getFieldLength();
     public static final double maxY = tagLayout.getFieldWidth();
     public static final Translation2d midField = new Translation2d(maxX / 2.0, maxY / 2.0);
-
-    public static Pose3d tagPose(int tagID) {
-        return tagLayout.getTagPose(tagID).get();
-    }
-
-    public static Transform3d tagPoseAsTransform(int tagID) {
-        Pose3d pose = tagLayout.getTagPose(tagID).get();
-        return new Transform3d(pose.getTranslation(), pose.getRotation());
-    }
 
     // Reef Geometry taken from the official field drawings (pages 102-106)
     // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-GameSpecific.pdf
