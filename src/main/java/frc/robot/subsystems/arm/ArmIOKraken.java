@@ -27,7 +27,8 @@ public class ArmIOKraken implements ArmIO{
     TalonFX leftShoulder = new TalonFX(99);//TODO add device IDs and such
     TalonFX rightShoulder = new TalonFX(99);
 
-    TalonFX extensionMotor = new TalonFX(99);
+    TalonFX frontExtensionMotor = new TalonFX(99);
+    TalonFX backExtensionMotor = new TalonFX(99);
 
     CANcoder leftPivotEncoder = new CANcoder(0);
     CANcoder rightPivotEncoder = new CANcoder(0);
@@ -59,7 +60,13 @@ public class ArmIOKraken implements ArmIO{
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
         extensionConfig.Feedback.SensorToMechanismRatio = ArmConstants.extensionMetersPerMotorRotation;
-        extensionMotor.getConfigurator().apply(extensionConfig);
+
+        extensionConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
+        frontExtensionMotor.getConfigurator().apply(extensionConfig);
+
+        extensionConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        backExtensionMotor.getConfigurator().apply(extensionConfig);
+
 
 
         TalonFXConfiguration shoulderConfig = new TalonFXConfiguration();
@@ -69,6 +76,8 @@ public class ArmIOKraken implements ArmIO{
         shoulderConfig.MotionMagic.MotionMagicCruiseVelocity = 1; //rps of the motor
         shoulderConfig.MotionMagic.MotionMagicAcceleration = 1; //rotations per second squared
         shoulderConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+
+        
 
 
         shoulderConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -83,9 +92,9 @@ public class ArmIOKraken implements ArmIO{
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
-        inputs.extensionLengthMeters = extensionMotor.getPosition().getValueAsDouble();
-        inputs.extensionLengthMetersPerSecond = extensionMotor.getVelocity().getValueAsDouble();
-        inputs.extensionAppliedVolts = extensionMotor.getMotorVoltage().getValueAsDouble();
+        inputs.extensionLengthMeters = frontExtensionMotor.getPosition().getValueAsDouble();
+        inputs.extensionLengthMetersPerSecond = frontExtensionMotor.getVelocity().getValueAsDouble();
+        inputs.extensionAppliedVolts = frontExtensionMotor.getMotorVoltage().getValueAsDouble();
 
         if (leftPivotEncoder.getAbsolutePosition().getStatus() == StatusCode.OK) {
             inputs.shoulderAngleDegrees = leftPivotEncoder.getAbsolutePosition().getValueAsDouble();
@@ -115,8 +124,9 @@ public class ArmIOKraken implements ArmIO{
 
     @Override
     public void setExtensionTargetLength(double meters) {
-        extensionMotor.setControl(
+        frontExtensionMotor.setControl(
             new MotionMagicVoltage(meters));
+        backExtensionMotor.setControl(new Follower(99, true));
     }
 
 
@@ -129,6 +139,6 @@ public class ArmIOKraken implements ArmIO{
     //climbing only
     @Override
     public void setExtensionMotorVolts(double volts) {
-        extensionMotor.setVoltage(volts);
+        frontExtensionMotor.setVoltage(volts);
     }
 }
