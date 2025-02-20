@@ -7,7 +7,7 @@ import edu.wpi.first.math.util.Units;
 
 public class FieldConstants {
     
-    public static final AprilTagFieldLayout tagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+    public static final AprilTagFieldLayout tagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded); // See Team Update 12
     public static final double maxX = tagLayout.getFieldLength();
     public static final double maxY = tagLayout.getFieldWidth();
     public static final Translation2d midField = new Translation2d(maxX / 2.0, maxY / 2.0);
