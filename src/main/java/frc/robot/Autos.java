@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Commands.AlignWithReef;
-import frc.robot.Reefscape.FieldElement;
 
 public class Autos extends RobotContainer{
 
