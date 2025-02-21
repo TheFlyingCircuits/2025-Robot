@@ -16,6 +16,7 @@ import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOSim;
+import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
@@ -38,8 +39,10 @@ public class RobotContainer {
     private final HumanDriver ben = new HumanDriver(1);
 
     public final Drivetrain drivetrain;
+
     public final Arm arm;
     public final Wrist wrist;
+    public final Leds leds;
 
     public RobotContainer() {
 
@@ -68,6 +71,8 @@ public class RobotContainer {
                 new VisionIOPhotonLib()
             );
 
+            leds = new Leds();
+
         }
         else {
             drivetrain = new Drivetrain(
@@ -82,11 +87,12 @@ public class RobotContainer {
             arm = new Arm(new ArmIOSim());
             wrist = new Wrist(new WristIO(){});
 
+            leds = new Leds();
         }
         
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
-
+        leds.setDefaultCommand(leds.defaultCommand());
 
         realBindings();
 
