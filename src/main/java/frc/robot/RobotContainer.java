@@ -107,7 +107,7 @@ public class RobotContainer {
                 arm,
                 wrist,
                 charlie::getRequestedFieldOrientedVelocity,
-                () -> {return drivetrain.getClosestReefStalk().branches[1];}
+                () -> {return drivetrain.getClosestReefStalk().getBranch(3);}
             )
         );
 

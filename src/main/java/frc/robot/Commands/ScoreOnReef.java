@@ -10,8 +10,8 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Reefscape.FieldConstants;
-import frc.robot.Reefscape.FieldElement.ReefBranch;
+import frc.robot.PlayingField.FieldConstants;
+import frc.robot.PlayingField.ReefBranch;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
@@ -79,7 +79,7 @@ public class ScoreOnReef extends Command{
     @Override
     public void execute() {
         Pose2d targetPose;
-        targetPose = adjustedReefScoringPose(reefBranch.get().stalk.getPose2d());
+        targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d());
         Rotation2d adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
         drivetrain.pidToPose(new Pose2d(targetPose.getTranslation(), adjustedRotation));
