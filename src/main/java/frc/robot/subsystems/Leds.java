@@ -47,7 +47,7 @@ public class Leds extends SubsystemBase {
 
     //mode 
     public Command defaultCommand() {
-        return DriverStation.isAutonomous() ? this.runOnce(() -> {base = blue;}).until(null) : this.runOnce(() -> {base = black;}).until(null); // auto: blue, tele: off
+        return DriverStation.isAutonomous() ? this.runOnce(() -> {base = blue;}) : this.runOnce(() -> {base = black;}); // auto: blue, tele: off
         
     }
 
@@ -55,12 +55,12 @@ public class Leds extends SubsystemBase {
 
     //scoirng
     
-    public Command red() { // red
-        return this.runOnce(() -> {base = red;});
+    public void red() { // red
+       base = red;
     }
 
-    public Command blue() { // blue
-        return this.runOnce(() -> {base = blue;});
+    public void blue() { // blue
+        base = blue;
     }
 
     //TODO: change this to just sides of the hexagon
@@ -88,6 +88,10 @@ public class Leds extends SubsystemBase {
         return this.runOnce(() -> {base = red.blink(Seconds.of(0.125));});
     }
 
+    public void progressBar(double percent) {
+        LEDPattern bar = LEDPattern.progressMaskLayer(() -> percent);
+        base = bar;
+    }
 
     @Override
     public void periodic() {

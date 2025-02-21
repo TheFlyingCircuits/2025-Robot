@@ -125,7 +125,8 @@ public class RobotContainer {
                 arm,
                 wrist,
                 charlie::getRequestedFieldOrientedVelocity,
-                () -> {return drivetrain.getClosestReefStalk().getBranch(3);}
+                () -> {return drivetrain.getClosestReefStalk().getBranch(3);},
+                leds
             )
         );
 
@@ -141,16 +142,15 @@ public class RobotContainer {
             Transform2d distanceToNearestStalk = drivetrain.getClosestReefStalk().getPose2d().minus(drivetrain.getPoseMeters());
             return distanceToNearestStalk.getTranslation().getNorm() < 2;
         });
-
         inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
 
-        // Trigger hasCoral = new Trigger(() -> {
-        //     placerGrabber.
-        // })
+        Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
+        hasCoral.onTrue(leds.coralControlledCommand());
+        hasCoral.onFalse(leds.scoreCompleteCommand());
 
     }
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
-        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch);
+        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch,leds);
     }
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {

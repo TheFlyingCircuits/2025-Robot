@@ -48,6 +48,14 @@ public class Arm extends SubsystemBase {
 
     }
 
+    public double getShoulderAngleDegrees() {
+        return inputs.shoulderAngleDegrees;
+    }
+
+    public double getExtensionMeters() {
+        return inputs.extensionLengthMeters;
+    }
+
     /**
      * Sets the taret extension and angle of the arm to be equal to the one in the armPosition object.
      */

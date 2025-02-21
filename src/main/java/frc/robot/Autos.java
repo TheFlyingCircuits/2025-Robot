@@ -33,7 +33,7 @@ public class Autos extends RobotContainer{
     }
 
     private Command intakeIfDoesntHaveCoral() {
-        boolean doesHaveCoral = PlacerGrabber.doesHaveCoral();
+        boolean doesHaveCoral = placerGrabber.doesHaveCoral();
         if (doesHaveCoral) {
             return null;
         }

@@ -12,6 +12,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.ReefBranch;
+import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
@@ -24,18 +25,19 @@ public class ScoreOnReef extends Command {
     private Wrist wrist;
     private Supplier<ChassisSpeeds> translationController;
     private Supplier<ReefBranch> reefBranch;
+    private Leds leds;
 
     /**
      *  @param translationController
      */
-    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
+    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch,Leds leds) {
     
         this.drivetrain = drivetrain;
         this.arm = arm;
         this.wrist = wrist;
         this.translationController = translationController;
         this.reefBranch=reefBranch;
-
+        this.leds = leds;
         addRequirements(arm, wrist);
         if (translationController != null) {
             super.addRequirements(drivetrain);
@@ -88,5 +90,7 @@ public class ScoreOnReef extends Command {
         ArmPosition desiredArmPosition = calculateArmScoringPosition();
         arm.setArmPosition(desiredArmPosition);
         wrist.setTargetPositionRadians(Math.toRadians(desiredArmPosition.wristAngleDegrees));
+
+        leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
     }
 }

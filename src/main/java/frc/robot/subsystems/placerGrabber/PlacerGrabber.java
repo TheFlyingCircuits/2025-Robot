@@ -47,7 +47,7 @@ public class PlacerGrabber extends SubsystemBase {
         io.setFrontNeoVolts(feedforwardVolts + pidVolts);
     }
 
-    public static boolean doesHaveCoral() {
+    public boolean doesHaveCoral() {
         //TODO: need to change based on what canspark the censors are connected to
         
         if (inputs.censorOneSeesCoral || inputs.censorTwoSeesCoral) {
