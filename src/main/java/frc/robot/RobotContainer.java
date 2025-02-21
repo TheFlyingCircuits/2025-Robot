@@ -24,6 +24,8 @@ import frc.robot.subsystems.drivetrain.SwerveModuleIONeo;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonLib;
+import frc.robot.subsystems.wrist.Wrist;
+import frc.robot.subsystems.wrist.WristIO;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -33,11 +35,12 @@ import frc.robot.subsystems.vision.VisionIOPhotonLib;
  */
 public class RobotContainer {
 
-    public final HumanDriver charlie = new HumanDriver(0);
-    public final HumanDriver ben = new HumanDriver(1);
+    private final HumanDriver charlie = new HumanDriver(0);
+    private final HumanDriver ben = new HumanDriver(1);
 
     public final Drivetrain drivetrain;
     public final Arm arm;
+    public final Wrist wrist;
 
     public RobotContainer() {
 
@@ -53,6 +56,7 @@ public class RobotContainer {
             // );
 
             arm = new Arm(new ArmIO(){});
+            wrist = new Wrist(new WristIO(){});
 
             
             /****** FOR NOODLE *******/
@@ -77,6 +81,7 @@ public class RobotContainer {
             );
 
             arm = new Arm(new ArmIOSim());
+            wrist = new Wrist(new WristIO(){});
 
         }
         
@@ -93,13 +98,17 @@ public class RobotContainer {
         CommandXboxController controller = charlie.getXboxController();
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
 
-        // controllerTwo.a().onTrue(new InstantCommand(() -> {this.leftOrRightStalk = 2;})); for duncan
+        controller.x().onTrue(arm.setShoulderTargetAngleCommand(20));
+        controller.a().onTrue(arm.setExtensionTargetLengthCommand(1));
+
 
         controller.rightBumper().whileTrue(
             new ScoreOnReef(
                 drivetrain,
+                arm,
+                wrist,
                 charlie::getRequestedFieldOrientedVelocity,
-                () -> {return drivetrain.getClosestReefStalk().branches[1];}
+                () -> {return drivetrain.getClosestReefStalk().getBranch(3);}
             )
         );
 

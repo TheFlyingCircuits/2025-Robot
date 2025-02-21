@@ -2,11 +2,12 @@ package frc.robot.subsystems.arm;
 
 import org.littletonrobotics.junction.Logger;
 
-import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.unmanaged.Unmanaged;
-
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -15,21 +16,56 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.UniversalConstants;
 import edu.wpi.first.math.system.NumericalIntegration;
 
 public class ArmIOSim implements ArmIO {
 
-    private TalonFX shoulderTalon = new TalonFX(0);
-    private TalonFX extensionTalon = new TalonFX(1);
+    private TalonFX shoulderTalon = new TalonFX(0, "*");
+    private TalonFX extensionTalon = new TalonFX(1, "*");
     
     private DCMotor shoulderMotor = DCMotor.getKrakenX60(2).withReduction(ArmConstants.shoulderGearReduction);
     private DCMotor extensionMotor = DCMotor.getKrakenX60(1).withReduction(ArmConstants.extensionGearReduction);
 
+
     Matrix<N2, N1> systemInputs = VecBuilder.fill(0, 0);
 
-    public ArmIOSim() {};
+     
+    public ArmIOSim() {
+
+        
+
+        TalonFXConfiguration shoulderConfig = new TalonFXConfiguration();
+
+        shoulderConfig.MotionMagic.MotionMagicAcceleration = 1; //units of rotation per second squared
+        shoulderConfig.MotionMagic.MotionMagicCruiseVelocity = 5;
+        shoulderConfig.Slot0.kP = 0; //units of volts per rps
+        shoulderConfig.Slot0.kV = 0.5; //units of volts per rps
+        shoulderConfig.Slot0.kA = 0;
+
+        shoulderConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        shoulderConfig.CurrentLimits.StatorCurrentLimit = 45;
+        shoulderConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+
+        shoulderTalon.getConfigurator().apply(shoulderConfig);
+
+        TalonFXConfiguration extensionConfig = new TalonFXConfiguration();
+
+        extensionConfig.MotionMagic.MotionMagicAcceleration = 5;
+        extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 10;
+        extensionConfig.Slot0.kP = 0.5;
+        extensionConfig.Slot0.kV = 4;
+        extensionConfig.Slot0.kA = 0;
+
+        extensionConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        extensionConfig.CurrentLimits.StatorCurrentLimit = 45;
+        extensionConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+
+        extensionTalon.getConfigurator().apply(extensionConfig);
+    };
 
     /*
      *    STATE VECTOR
@@ -46,11 +82,12 @@ public class ArmIOSim implements ArmIO {
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
-        Unmanaged.feedEnable(100); //unlocks talons so we can hardware sim
+        StatusSignal<Voltage> extensionVoltage = extensionTalon.getMotorVoltage();
+        StatusSignal<Current> shoulderCurrent = shoulderTalon.getTorqueCurrent();
 
-        this.systemInputs.set(1, 0, extensionTalon.getMotorVoltage().getValueAsDouble());
-        this.systemInputs.set(0, 0, shoulderTalon.getMotorVoltage().getValueAsDouble());
-
+        this.systemInputs.set(1, 0, extensionVoltage.getValueAsDouble());
+        this.systemInputs.set(0, 0, shoulderCurrent.getValueAsDouble());
+    
         Matrix<N4, N1> state = VecBuilder.fill(
             inputs.shoulderAngleDegrees,
             inputs.shoulderVelocityDegreesPerSecond,
@@ -69,6 +106,8 @@ public class ArmIOSim implements ArmIO {
         shoulderTalon.setPosition(inputs.shoulderAngleDegrees);
         inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
         inputs.shoulderAppliedCurrent = this.systemInputs.get(0, 0);
+
+        Logger.recordOutput("arm/closedLoopReference", shoulderTalon.getClosedLoopReference().getValueAsDouble());
 
         inputs.extensionLengthMeters = nextState.get(2, 0);
         extensionTalon.setPosition(inputs.extensionLengthMeters);
@@ -94,10 +133,7 @@ public class ArmIOSim implements ArmIO {
         Translation2d centerOfMassMeters = calculateCenterOfMassMeters(shoulderDegrees, extensionMeters);
         double shoulderGravityRadiansPerSecondSquared = -UniversalConstants.gravityMetersPerSecondSquared
                                                         /centerOfMassMeters.getNorm()
-                                                        *Math.cos(centerOfMassMeters.getAngle().getRadians());
-
-
-        Logger.recordOutput("arm/shoulderGravityRadiansPerSecondSquared", shoulderGravityRadiansPerSecondSquared);
+                                                        *Math.sin(centerOfMassMeters.getAngle().getRadians());
 
         double shoulderRadiansPerSecondSquared = shoulderMotorRadiansPerSecondSquared + shoulderGravityRadiansPerSecondSquared;
         shoulderRadiansPerSecondSquared -= Math.signum(shoulderDegreesPerSecond)*5; //friction
@@ -111,7 +147,7 @@ public class ArmIOSim implements ArmIO {
 
 
         //double extensionMetersPerSecondSquared = extensionKv * extensionVoltage;
-        double extensionMetersPerSecondSquared = extensionTorqueNM / ArmConstants.pulleyRadiusMeters;
+        double extensionMetersPerSecondSquared = extensionTorqueNM / ArmConstants.extensionPulleyRadiusMeters;
         
 
         //return null; 
@@ -138,21 +174,18 @@ public class ArmIOSim implements ArmIO {
 
     @Override
     public void setShoulderTargetAngle(double degrees) {
-        MotionMagicTorqueCurrentFOC request = new MotionMagicTorqueCurrentFOC(degrees);
-        extensionTalon.setControl(request);
+        StatusCode code = shoulderTalon.setControl(new MotionMagicVoltage(degrees));
+        System.out.println("shoulder target angle set:" + code.getName());
     }
 
     @Override
     public void setExtensionTargetLength(double meters) {
-        MotionMagicVoltage request = new MotionMagicVoltage(meters);
-        extensionTalon.setControl(request);
+        //all units for extension are with meters
+        StatusCode code = extensionTalon.setControl(new MotionMagicVoltage(meters));
+        System.out.println("extension target length set:" + code.getName());
     }
 
 
-    @Override
-    public void setShoulderMotorAmps(double amps) {
-        systemInputs.set(0, 0, amps);
-    }
 
     @Override
     public void setShoulderMotorVolts(double volts) {

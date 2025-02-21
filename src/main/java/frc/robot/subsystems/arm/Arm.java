@@ -17,8 +17,12 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 public class Arm extends SubsystemBase {
 
@@ -26,7 +30,7 @@ public class Arm extends SubsystemBase {
     ArmIO io;
 
     LoggedMechanism2d mech2d = new LoggedMechanism2d(3, 3); //all units for mech2d are meters
-    LoggedMechanismRoot2d mech2dRoot = mech2d.getRoot("pivot", 0.5, Units.inchesToMeters(17.87));
+    LoggedMechanismRoot2d mech2dRoot = mech2d.getRoot("pivot", 1, 1);
     LoggedMechanismLigament2d shoulderBracket;
     LoggedMechanismLigament2d telescoper;
 
@@ -44,7 +48,35 @@ public class Arm extends SubsystemBase {
 
     }
 
+    /**
+     * Sets the taret extension and angle of the arm to be equal to the one in the armPosition object.
+     */
+    public void setArmPosition(ArmPosition armPosition) {
+        io.setShoulderTargetAngle(armPosition.shoulderAngleDegrees);
+        io.setExtensionTargetLength(armPosition.extensionMeters);
+    }
 
+    public void setShoulderTargetAngle(double degrees) {
+        io.setShoulderTargetAngle(degrees);
+    }
+
+    public void setExtensionTargetLength(double meters) {
+        io.setExtensionTargetLength(meters);
+    }
+
+    public Command setShoulderTargetAngleCommand(double degrees) {
+        return new InstantCommand(() -> {
+            System.out.println("echo X");
+            io.setShoulderTargetAngle(degrees);
+        });
+    }
+
+    public Command setExtensionTargetLengthCommand(double meters) {
+        return new InstantCommand(() -> {
+            System.out.println("echo A");
+            io.setExtensionTargetLength(meters);
+        });
+    }
     
     @Override
     public void periodic() {
@@ -54,7 +86,7 @@ public class Arm extends SubsystemBase {
         //TODO: for some reason the @autologoutput annotation doesn't work
         Logger.recordOutput("arm/mech2d", this.mech2d);
 
-        shoulderBracket.setAngle(180+inputs.shoulderAngleDegrees);
+        shoulderBracket.setAngle(90+inputs.shoulderAngleDegrees);
         telescoper.setLength(inputs.extensionLengthMeters);
     }
 }

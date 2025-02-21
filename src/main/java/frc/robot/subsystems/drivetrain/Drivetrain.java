@@ -39,8 +39,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.FlyingCircuitUtils;
-import frc.robot.Reefscape.FieldElement.ReefFace;
-import frc.robot.Reefscape.FieldElement.ReefStalk;
+import frc.robot.PlayingField.FieldElement;
+import frc.robot.PlayingField.ReefFace;
+import frc.robot.PlayingField.ReefStalk;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
 import frc.robot.subsystems.vision.VisionIO.VisionMeasurement;
@@ -635,7 +636,7 @@ public class Drivetrain extends SubsystemBase {
 
     public ReefFace getClosestReefFace() {
 
-        ReefFace[] reefFaces = ReefFace.values();
+        ReefFace[] reefFaces = FieldElement.ALL_REEF_FACES;
         ReefFace closestReefFace = reefFaces[0];
         for (ReefFace reefFace : reefFaces) {
             // distance formula 
@@ -650,7 +651,7 @@ public class Drivetrain extends SubsystemBase {
     }
     public ReefStalk getClosestReefStalk() {
 
-        ReefStalk[] reefStalks = ReefStalk.values();
+        ReefStalk[] reefStalks = FieldElement.ALL_STALKS;
         ReefStalk closestReefStalk = reefStalks[0];
         for (ReefStalk reefStalk : reefStalks) {
             // distance formula 

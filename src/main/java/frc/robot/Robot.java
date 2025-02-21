@@ -16,10 +16,10 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.Reefscape.FieldElement;
-import frc.robot.Reefscape.FieldElement.ReefBranch;
-import frc.robot.Reefscape.FieldElement.ReefFace;
-import frc.robot.Reefscape.FieldElement.ReefStalk;
+import frc.robot.PlayingField.FieldElement;
+import frc.robot.PlayingField.ReefBranch;
+import frc.robot.PlayingField.ReefFace;
+import frc.robot.PlayingField.ReefStalk;
 
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
@@ -48,19 +48,21 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
-    // FieldElementEnum.vizPoses();
-    // FieldElementInterface.ReefFace
+
+
+
+    
     ArrayList<Pose3d> facePoses = new ArrayList<>();
     ArrayList<Pose3d> stalkPoses = new ArrayList<>();
     ArrayList<Pose3d> branchPoses = new ArrayList<>();
 
-    for (ReefFace face : FieldElement.ReefFace.values()) {
+    for (ReefFace face : FieldElement.ALL_REEF_FACES) {
       facePoses.add(face.getPose());
     }
-    for (ReefStalk stalk : FieldElement.ReefStalk.values()) {
+    for (ReefStalk stalk : FieldElement.ALL_STALKS) {
       stalkPoses.add(stalk.getPose());
     }
-    for (ReefBranch branch : FieldElement.ReefBranch.values()) {
+    for (ReefBranch branch : FieldElement.ALL_BRANCHES) {
       branchPoses.add(branch.getPose());
     }
 

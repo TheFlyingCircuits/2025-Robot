@@ -15,7 +15,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Reefscape.FieldConstants;
+import frc.robot.PlayingField.FieldConstants;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -68,12 +68,17 @@ public final class Constants {
 
 
 
-
-        public static final double pulleyRadiusMeters = 0.2;
         /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
         public final static double shoulderGearReduction = 100;
+        
 
+        /** Rotations of the motor per rotations of the belt pulley */
         public final static double extensionGearReduction = 15;
+        public static final double extensionPulleyRadiusMeters = 0.1;//TODO: fill with actual value
+        /** Circumference of the pulley that the extension belt runs on. */
+        public final static double beltPulleyCircumferenceMeters = 2*extensionPulleyRadiusMeters*Math.PI; 
+        public final static double extensionMetersPerMotorRotation = beltPulleyCircumferenceMeters / extensionGearReduction;
+
 
 
         
