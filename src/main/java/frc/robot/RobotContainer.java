@@ -41,8 +41,8 @@ import frc.robot.subsystems.wrist.WristIO;
  */
 public class RobotContainer {
 
-    private final HumanDriver charlie = new HumanDriver(0);
-    private final HumanDriver ben = new HumanDriver(1);
+    protected final HumanDriver charlie = new HumanDriver(0);
+    protected final HumanDriver ben = new HumanDriver(1);
 
     public final Drivetrain drivetrain;
 
