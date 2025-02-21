@@ -44,11 +44,8 @@ public class Leds extends SubsystemBase {
         leds.setData(buffer);
         leds.start();
     }
-    
-    //TODO: FOR ALL, make them into commands
 
     //mode 
-
     public Command defaultCommand() {
         return DriverStation.isAutonomous() ? this.runOnce(() -> {base = blue;}).until(null) : this.runOnce(() -> {base = black;}).until(null); // auto: blue, tele: off
         
@@ -58,22 +55,24 @@ public class Leds extends SubsystemBase {
 
     //scoirng
     
-    public Command rightCommand() { // red
+    public Command red() { // red
         return this.runOnce(() -> {base = red;});
     }
 
-    public Command leftCommand() { // blue
+    public Command blue() { // blue
         return this.runOnce(() -> {base = blue;});
     }
 
     //TODO: change this to just sides of the hexagon
 
-    public Command scoreCompleteCommand() { // Blink White
-        return this.runOnce(() -> {base = white.blink(Seconds.of(0.125));}).withTimeout(1);        
+    public Command scoreCompleteCommand() { // Blink Yellow
+        LEDPattern yellow = LEDPattern.solid(Color.kYellow);
+        return this.run(() -> {base = yellow.blink(Seconds.of(0.125));}).withTimeout(1);        
     }
 
-    public Command coralControlledCommand() { // white 
-        return this.runOnce(() -> {base = white;});
+    public Command coralControlledCommand() { //Blink White 
+        white = LEDPattern.solid(Color.kWhite);
+        return this.run(() -> {base = white.blink(Seconds.of(0.125));}).withTimeout(1);
     }
 
     // Arm  

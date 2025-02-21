@@ -1,4 +1,4 @@
-package frc.robot.Commands;
+package frc.robot.commands;
 
 import java.util.function.Supplier;
 
@@ -17,7 +17,7 @@ import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.wrist.Wrist;
 
-public class ScoreOnReef extends Command{
+public class ScoreOnReef extends Command {
 
     private Drivetrain drivetrain;
     private Arm arm;
@@ -36,6 +36,7 @@ public class ScoreOnReef extends Command{
         this.translationController = translationController;
         this.reefBranch=reefBranch;
 
+        addRequirements(arm, wrist);
         if (translationController != null) {
             super.addRequirements(drivetrain);
         }

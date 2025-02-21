@@ -6,12 +6,15 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Commands.ScoreOnReef;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ScoreOnReef;
+import frc.robot.commands.leds.ReefFaceLED;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -22,6 +25,8 @@ import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
 import frc.robot.subsystems.drivetrain.SwerveModuleIONeo;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
+import frc.robot.subsystems.placerGrabber.PlacerGrabber;
+import frc.robot.subsystems.placerGrabber.PlacerGrabberIO;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonLib;
 import frc.robot.subsystems.wrist.Wrist;
@@ -43,7 +48,10 @@ public class RobotContainer {
     public final Arm arm;
     public final Wrist wrist;
     public final Leds leds;
+    public final PlacerGrabber placerGrabber;
 
+
+    
     public RobotContainer() {
 
         /**** INITIALIZE SUBSYSTEMS ****/
@@ -59,6 +67,7 @@ public class RobotContainer {
 
             arm = new Arm(new ArmIO(){});
             wrist = new Wrist(new WristIO(){});
+            placerGrabber = new PlacerGrabber(new PlacerGrabberIO(){});
 
             
             /****** FOR NOODLE *******/
@@ -86,6 +95,7 @@ public class RobotContainer {
 
             arm = new Arm(new ArmIOSim());
             wrist = new Wrist(new WristIO(){});
+            placerGrabber = new PlacerGrabber(new PlacerGrabberIO(){});
 
             leds = new Leds();
         }
@@ -95,6 +105,7 @@ public class RobotContainer {
         leds.setDefaultCommand(leds.defaultCommand());
 
         realBindings();
+        triggers();
 
     }
 
@@ -121,6 +132,20 @@ public class RobotContainer {
             .whileTrue(
                 intakeTowardsCoral(charlie::getRequestedFieldOrientedVelocity)
             );
+    
+    }
+
+    private void triggers() {
+        Trigger inScoringDistance = new Trigger(()-> { // becomes true when distance to nearest reef stalk is within x meters
+            Transform2d distanceToNearestStalk = drivetrain.getClosestReefStalk().getPose2d().minus(drivetrain.getPoseMeters());
+            return distanceToNearestStalk.getTranslation().getNorm() < 2;
+        });
+
+        inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
+
+        // Trigger hasCoral = new Trigger(() -> {
+        //     placerGrabber.
+        // })
 
     }
 
