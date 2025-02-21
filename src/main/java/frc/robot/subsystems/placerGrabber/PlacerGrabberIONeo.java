@@ -29,6 +29,10 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
     public void updateInputs(PlacerGrabberIOInputs inputs) {
         inputs.frontRollerRPM = frontNeo.getVelocity();
         inputs.sideRollerRPM = sideNeo.getVelocity();
+
+        inputs.censorOneSeesCoral = frontNeo.getForwardLimitSwitch().isPressed();
+        inputs.censorTwoSeesCoral = frontNeo.getReverseLimitSwitch().isPressed();
+
     }
 
     @Override

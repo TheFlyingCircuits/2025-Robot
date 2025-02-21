@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class PlacerGrabber extends SubsystemBase {
 
     private PlacerGrabberIO io;
-    private PlacerGrabberIOInputsAutoLogged inputs;
+    private static PlacerGrabberIOInputsAutoLogged inputs;
 
     private SimpleMotorFeedforward motorFeedforward;
 
@@ -46,6 +46,16 @@ public class PlacerGrabber extends SubsystemBase {
 
         io.setFrontNeoVolts(feedforwardVolts + pidVolts);
     }
+
+    public static boolean doesHaveCoral() {
+        //TODO: need to change based on what canspark the censors are connected to
+        
+        if (inputs.censorOneSeesCoral || inputs.censorTwoSeesCoral) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public void periodic() {
         io.updateInputs(inputs);
