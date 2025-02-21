@@ -627,6 +627,13 @@ public class Drivetrain extends SubsystemBase {
         return Optional.empty();
     }
 
+    public boolean doesSeeCoral() {
+        if (getBestCoralLocation().isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
     public ReefFace getClosestReefFace() {
 
         ReefFace[] reefFaces = FieldElement.ALL_REEF_FACES;

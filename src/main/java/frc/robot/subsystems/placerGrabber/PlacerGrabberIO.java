@@ -8,6 +8,9 @@ public interface PlacerGrabberIO {
 
         public double frontRollerRPM = 0.0;
         public double sideRollerRPM = 0.0;
+
+        public boolean censorOneSeesCoral = false;
+        public boolean censorTwoSeesCoral = false;
     }
 
     public default void updateInputs(PlacerGrabberIOInputs inputs) {};

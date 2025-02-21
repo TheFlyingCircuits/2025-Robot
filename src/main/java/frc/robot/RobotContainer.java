@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.ScoreOnReef;
 import frc.robot.commands.leds.ReefFaceLED;
 import frc.robot.subsystems.HumanDriver;
@@ -148,6 +149,9 @@ public class RobotContainer {
         // })
 
     }
+    public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
+        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch);
+    }
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
         return drivetrain.run(() -> {
@@ -159,6 +163,16 @@ public class RobotContainer {
             }
 
             // drive towards the note when the intake camera does see a note.
+            drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+        });
+    }
+
+    public Command sourceIntakeInAuto() { // need to do
+        return null;
+    }
+    
+    public Command intakeTowardsCoralInAuto() {
+        return drivetrain.run(() -> {
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         });
     }
