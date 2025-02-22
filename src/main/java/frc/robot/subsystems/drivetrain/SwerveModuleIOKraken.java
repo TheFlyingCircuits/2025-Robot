@@ -10,6 +10,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import frc.robot.Constants.SwerveModuleConstants;
+import frc.robot.Constants.UniversalConstants;
 import frc.robot.VendorWrappers.Kraken;
 import frc.robot.VendorWrappers.Neo;
 
@@ -34,7 +35,7 @@ public class SwerveModuleIOKraken implements SwerveModuleIO {
     public SwerveModuleIOKraken(int driveMotorID, int angleMotorID, double angleOffsetDegrees, int cancoderID, boolean isDriveMotorOnTop, boolean isAngleMotorOnTop, String name){
         
         /* Angle Encoder Config */
-        absoluteEncoder = new CANcoder(cancoderID, "CTRENetwork");
+        absoluteEncoder = new CANcoder(cancoderID, UniversalConstants.canivoreName);
         configCANCoder(angleOffsetDegrees);
 
         /* Angle Motor Config */
@@ -46,7 +47,7 @@ public class SwerveModuleIOKraken implements SwerveModuleIO {
         }
 
         /* Drive Motor Config */
-        driveMotor = new Kraken(name+"Drive", driveMotorID, "CTRENetwork");
+        driveMotor = new Kraken(name+"Drive", driveMotorID, UniversalConstants.canivoreName);
         if(isDriveMotorOnTop) {
             configDriveMotor(InvertedValue.CounterClockwise_Positive);
         } else {

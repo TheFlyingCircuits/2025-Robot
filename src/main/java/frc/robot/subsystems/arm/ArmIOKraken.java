@@ -20,18 +20,19 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.UniversalConstants;
 
 /** Add your docs here. */
 public class ArmIOKraken implements ArmIO{
 
-    TalonFX leftShoulder = new TalonFX(99);//TODO add device IDs and such
-    TalonFX rightShoulder = new TalonFX(99);
+    TalonFX leftShoulder = new TalonFX(99, UniversalConstants.canivoreName);//TODO add device IDs and such
+    TalonFX rightShoulder = new TalonFX(99, UniversalConstants.canivoreName);
 
-    TalonFX frontExtensionMotor = new TalonFX(99);
-    TalonFX backExtensionMotor = new TalonFX(99);
+    TalonFX frontExtensionMotor = new TalonFX(99, UniversalConstants.canivoreName);
+    TalonFX backExtensionMotor = new TalonFX(99, UniversalConstants.canivoreName);
 
-    CANcoder leftPivotEncoder = new CANcoder(0);
-    CANcoder rightPivotEncoder = new CANcoder(0);
+    CANcoder leftPivotEncoder = new CANcoder(0, UniversalConstants.canivoreName);
+    CANcoder rightPivotEncoder = new CANcoder(0, UniversalConstants.canivoreName);
     
     ArmFeedforward shoulderFeedforward = new ArmFeedforward(0, 0, 0);
 
@@ -44,11 +45,13 @@ public class ArmIOKraken implements ArmIO{
 
         /* CANCODER CONFIG */
         CANcoderConfiguration leftPivotConfig = new CANcoderConfiguration();
+        leftPivotConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
         leftPivotConfig.MagnetSensor.MagnetOffset = 0; //TODO: get angle offset
         leftPivotConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         leftPivotEncoder.getConfigurator().apply(leftPivotConfig);
 
         CANcoderConfiguration rightPivotConfig = new CANcoderConfiguration();
+        leftPivotConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
         rightPivotConfig.MagnetSensor.MagnetOffset = 0; //TODO: get angle offset
         rightPivotConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
         leftPivotEncoder.getConfigurator().apply(rightPivotConfig);
@@ -57,7 +60,7 @@ public class ArmIOKraken implements ArmIO{
         /* EXTENSION CONFIG */
         TalonFXConfiguration extensionConfig = new TalonFXConfiguration();
         extensionConfig.Feedback.SensorToMechanismRatio = ArmConstants.extensionMetersPerMotorRotation;
-        extensionConfig.CurrentLimits.StatorCurrentLimit = 60; //TODO: find a good value
+        extensionConfig.CurrentLimits.StatorCurrentLimit = 0.1; //TODO: find a good value
         extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.maxExtensionMeters / ArmConstants.extensionMetersPerMotorRotation;
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
@@ -75,7 +78,7 @@ public class ArmIOKraken implements ArmIO{
 
         /* SHOULDER CONFIG */
         TalonFXConfiguration shoulderConfig = new TalonFXConfiguration();
-        shoulderConfig.CurrentLimits.StatorCurrentLimit = 60; //TODO: find a good value
+        shoulderConfig.CurrentLimits.StatorCurrentLimit = 0.1; //TODO: find a good value
         shoulderConfig.Feedback.SensorToMechanismRatio = ArmConstants.shoulderGearReduction;
 
         shoulderConfig.MotionMagic.MotionMagicCruiseVelocity = 1; //rps of the motor

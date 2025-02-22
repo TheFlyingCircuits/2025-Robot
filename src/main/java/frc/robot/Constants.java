@@ -34,6 +34,8 @@ public final class Constants {
         public final static double gravityMetersPerSecondSquared = 9.81;
         public final static double defaultPeriodSeconds = 0.02;
 
+        public final static String canivoreName = "CTRENetwork";
+
     }
 
     public final static class ArmConstants {
