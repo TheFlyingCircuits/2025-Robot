@@ -14,39 +14,42 @@ public class WristIONeo implements WristIO{
     
     private Neo wristNeo;
 
-    private SparkAbsoluteEncoder encoder ;
+    private SparkAbsoluteEncoder leftEncoder;
+    private SparkAbsoluteEncoder rightEncoder;
 
-    private SparkAbsoluteEncoder encoderBeingUsed;
+    /**
+     * Creates a WristIONeo object.
+     * @param rightEncoder - The right side throughbore encoder object. This has to be obtained from the placerGrabber object.
+     */
+    public WristIONeo(SparkAbsoluteEncoder rightEncoder) {
 
-    private SparkAbsoluteEncoder encoder2;
+        this.rightEncoder=rightEncoder;
 
-    public WristIONeo(SparkAbsoluteEncoder encoder2) {
-
-        this.encoder2=encoder2;
         // configures both Neo's
         SparkMaxConfig config = new SparkMaxConfig();
-        config.idleMode(IdleMode.kBrake);
-        // config.smartCurrentLimit();
-        // config.inverted();
-        // config.absoluteEncoder.positionConversionFactor();
-        // config.absoluteEncoder.velocityConversionFactor(); need to see if I need all of this
+        config.idleMode(IdleMode.kBrake)
+            .smartCurrentLimit(60)
+            .inverted(true);
+        
+        leftEncoder = wristNeo.getAbsoluteEncoder();
+        config.absoluteEncoder.positionConversionFactor(2 * Math.PI)
+            .zeroCentered(true)
+            .inverted(false);
 
         wristNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        encoder = wristNeo.getAbsoluteEncoder();
     }
 
     @Override
     public void updateInputs(WristIOInputs inputs){
-        inputs.wristRadiansPerSecond = Units.rotationsPerMinuteToRadiansPerSecond(encoderBeingUsed.getVelocity());
-
         if (wristNeo.getLastError() == REVLibError.kOk) {
-            encoderBeingUsed = encoder;
+            inputs.wristRadiansPerSecond = Units.rotationsPerMinuteToRadiansPerSecond(leftEncoder.getVelocity());
+            inputs.wristAngleRadians = Units.rotationsToRadians(leftEncoder.getPosition());
         } else {
-            encoderBeingUsed = encoder2;
+            inputs.wristRadiansPerSecond = Units.rotationsPerMinuteToRadiansPerSecond(rightEncoder.getVelocity());
+            inputs.wristAngleRadians = Units.rotationsToRadians(rightEncoder.getPosition());;
         }
 
-        inputs.wristAngleRadians = Units.rotationsToRadians(encoderBeingUsed.getPosition());
     }
 
     @Override

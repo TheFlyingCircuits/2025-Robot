@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class PlacerGrabber extends SubsystemBase {
 
     private PlacerGrabberIO io;
-    private static PlacerGrabberIOInputsAutoLogged inputs;
+    private PlacerGrabberIOInputsAutoLogged inputs;
 
     private SimpleMotorFeedforward motorFeedforward;
 
@@ -23,14 +23,24 @@ public class PlacerGrabber extends SubsystemBase {
         this.io = io;
         inputs = new PlacerGrabberIOInputsAutoLogged();
 
-
         motorFeedforward = new SimpleMotorFeedforward(0, 0);
 
-        frontNeoPID = new PIDController(1,0,0);
+        frontNeoPID = new PIDController(0,0,0);
 
-        sideNeoPID = new PIDController(1,0,0);
+        sideNeoPID = new PIDController(0,0,0);
     }
 
+    /** Sets the voltage of the front motor without feedback control. A positive voltage represents an intake. */
+    public void setFrontRollerVolts(double volts) {
+        io.setFrontNeoVolts(volts);
+    }
+    
+    /** Sets the voltage of the side motor without feedback control. A positive voltage represents an intake. */
+    public void setSideRollerVolts(double volts) {
+        io.setSideNeoVolts(volts);
+    }
+
+    /** Sets the RPM of the front roller with feedback control. A positive rpm represents an intake. */
     public void setFrontRollerRPM(double rpm) {
 
         double feedforwardVolts = motorFeedforward.calculate(rpm);
@@ -39,6 +49,7 @@ public class PlacerGrabber extends SubsystemBase {
         io.setFrontNeoVolts(feedforwardVolts + pidVolts);
     }
 
+    /** Sets the RPM of the side roller with feedback control. A positive rpm represents an intake. */
     public void setSideRollerRPM(double rpm) {
 
         double feedforwardVolts = motorFeedforward.calculate(rpm);
@@ -50,7 +61,7 @@ public class PlacerGrabber extends SubsystemBase {
     public boolean doesHaveCoral() {
         //TODO: need to change based on what canspark the censors are connected to
         
-        if (inputs.censorOneSeesCoral || inputs.censorTwoSeesCoral) {
+        if (inputs.sensorOneSeesCoral || inputs.sensorTwoSeesCoral) {
             return true;
         }
         return false;

@@ -209,5 +209,14 @@ public class Neo extends SparkMax {
         super.setVoltage(getVoltsForTorque(newtonMeters));
     }
 
+    @Override
+    public void setVoltage(double volts) {
+        if (super.getMotorTemperature() > 70) {
+            System.out.println("SPARK motor with ID " + super.getDeviceId() + " overheating! Temperature: " + super.getMotorTemperature());
+            volts = 0;
+        }
+        super.setVoltage(volts);
+    }
+
     
 }

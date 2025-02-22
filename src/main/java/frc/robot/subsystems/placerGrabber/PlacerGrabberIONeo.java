@@ -1,5 +1,7 @@
 package frc.robot.subsystems.placerGrabber;
 
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -16,11 +18,16 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
         // configures both Neo's
         SparkMaxConfig config = new SparkMaxConfig();
         config.idleMode(IdleMode.kBrake);
-        // config.smartCurrentLimit();
-        // config.inverted();
-        // config.absoluteEncoder.positionConversionFactor();
-        // config.absoluteEncoder.velocityConversionFactor(); need to see if I need all of this
+        config.smartCurrentLimit(60);
+
+        config.inverted(true);
         frontNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        config.absoluteEncoder.positionConversionFactor(2 * Math.PI) //TODO: move this to frontneo config perhaps
+            .zeroCentered(true) 
+            .inverted(false);
+
+        config.inverted(false);
         sideNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     }
@@ -30,8 +37,8 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
         inputs.frontRollerRPM = frontNeo.getVelocity();
         inputs.sideRollerRPM = sideNeo.getVelocity();
 
-        inputs.censorOneSeesCoral = frontNeo.getForwardLimitSwitch().isPressed();
-        inputs.censorTwoSeesCoral = frontNeo.getReverseLimitSwitch().isPressed();
+        inputs.sensorOneSeesCoral = frontNeo.getForwardLimitSwitch().isPressed();
+        inputs.sensorTwoSeesCoral = frontNeo.getReverseLimitSwitch().isPressed();
 
     }
 
@@ -54,6 +61,11 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
         }
 
         sideNeo.setVoltage(volts);
+    }
+
+    /** Returns the right=side throughbore encoder that */
+    public SparkAbsoluteEncoder getRightThroughboreEncoder() {
+        return sideNeo.getAbsoluteEncoder(); //TODO: figure out if it's sideNeo or frontNeo
     }
 
 }

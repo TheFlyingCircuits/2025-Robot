@@ -28,10 +28,12 @@ import frc.robot.subsystems.drivetrain.SwerveModuleIONeo;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
 import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.placerGrabber.PlacerGrabberIO;
+import frc.robot.subsystems.placerGrabber.PlacerGrabberIONeo;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonLib;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.subsystems.wrist.WristIO;
+import frc.robot.subsystems.wrist.WristIONeo;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -67,8 +69,10 @@ public class RobotContainer {
             // );
 
             arm = new Arm(new ArmIO(){});
-            wrist = new Wrist(new WristIO(){});
-            placerGrabber = new PlacerGrabber(new PlacerGrabberIO(){});
+            
+            PlacerGrabberIONeo placerGrabberIO = new PlacerGrabberIONeo();
+            placerGrabber = new PlacerGrabber(placerGrabberIO);
+            wrist = new Wrist(new WristIONeo(placerGrabberIO.getRightThroughboreEncoder()));
 
             
             /****** FOR NOODLE *******/
