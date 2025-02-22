@@ -72,7 +72,7 @@ public class RobotContainer {
             
             PlacerGrabberIONeo placerGrabberIO = new PlacerGrabberIONeo();
             placerGrabber = new PlacerGrabber(placerGrabberIO);
-            wrist = new Wrist(new WristIONeo(placerGrabberIO.getRightThroughboreEncoder()));
+            wrist = new Wrist(new WristIONeo(placerGrabberIO.getLeftThroughboreEncoder()));
 
             
             /****** FOR NOODLE *******/

@@ -295,8 +295,8 @@ public class Drivetrain extends SubsystemBase {
     }
     
     /**
-     * TODO: documentation
-     * @param targetPose
+     * Follows a straight line to a Pose2d on the field. The path is determined by following the max
+     * acceleration that the robot can take to reach that pose (similar to a trapezoid profile).
      */
     public void beeLineToPose(Pose2d targetPose) {
 
@@ -315,7 +315,6 @@ public class Drivetrain extends SubsystemBase {
         // v_final = 0 (because we want to come to a controlled stop when arriving at the target)
         // after some algebra -> v_initial = sqrt(-2 * accel * displacement)
         double desiredSpeed = Math.sqrt(-2 * maxAccel * (0 - distanceToTarget));
-
 
         // direction to drive is towards the target
         Rotation2d directionToDrive = robotToTarget.getAngle();

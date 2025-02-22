@@ -274,10 +274,6 @@ public final class Constants {
         public final static int wristCANcoderID = 0;
 
         public final static double wristCANcoderOffset = 0.0;
-        // TODO: Need real feedforward values
-        public final static double kSArmVolts = 0.001;
-        public final static double kVArmVoltsSecondsPerRadian = 0.001;
-        public final static double kAArmVoltsSecondsSquaredPerRadian = 0.001;
     }
 
 

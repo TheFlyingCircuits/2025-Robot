@@ -182,7 +182,7 @@ public class Neo extends SparkMax {
          * I would need a feedforward that's a function of rotor velocity as well as amp setpoint,
          * but the controller only provides support for the latter.
          * Therefore, I just implement this in terms of voltage and compensate for the backEMF myself.
-         * TODO: I should probably also compare the desired current to the measured current to see how well
+         * Todo: I should probably also compare the desired current to the measured current to see how well
          *       this stragety is working / maybe even add a small proportional controller.
          *
          * T = kT * I

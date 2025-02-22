@@ -62,9 +62,7 @@ public class Leds extends SubsystemBase {
     public void blue() { // blue
         base = blue;
     }
-
-    //TODO: change this to just sides of the hexagon
-
+    
     public Command scoreCompleteCommand() { // Blink Yellow
         LEDPattern yellow = LEDPattern.solid(Color.kYellow);
         return this.run(() -> {base = yellow.blink(Seconds.of(0.125));}).withTimeout(1);        

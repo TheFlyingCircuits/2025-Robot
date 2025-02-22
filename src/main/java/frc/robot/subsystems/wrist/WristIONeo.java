@@ -19,11 +19,11 @@ public class WristIONeo implements WristIO{
 
     /**
      * Creates a WristIONeo object.
-     * @param rightEncoder - The right side throughbore encoder object. This has to be obtained from the placerGrabber object.
+     * @param leftEncoder - The left side throughbore encoder object. This has to be obtained from the placerGrabber object.
      */
-    public WristIONeo(SparkAbsoluteEncoder rightEncoder) {
+    public WristIONeo(SparkAbsoluteEncoder leftEncoder) {
 
-        this.rightEncoder=rightEncoder;
+        this.leftEncoder=leftEncoder;
 
         // configures both Neo's
         SparkMaxConfig config = new SparkMaxConfig();
@@ -31,7 +31,7 @@ public class WristIONeo implements WristIO{
             .smartCurrentLimit(60)
             .inverted(true);
         
-        leftEncoder = wristNeo.getAbsoluteEncoder();
+        rightEncoder = wristNeo.getAbsoluteEncoder();
         config.absoluteEncoder.positionConversionFactor(2 * Math.PI)
             .zeroCentered(true)
             .inverted(false);
@@ -54,13 +54,6 @@ public class WristIONeo implements WristIO{
 
     @Override
     public void setWristNeoVolts(double volts) {
-        if (wristNeo.getMotorTemperature() > 70) {
-            // need to change the max temp because I don't know what it should be
-            //TODO: add error message for overheating
-            //TODO: make motor temperature universal constraint
-            volts = 0;
-        }
-
         wristNeo.setVoltage(volts);
     }
 

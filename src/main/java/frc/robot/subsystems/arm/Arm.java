@@ -91,7 +91,6 @@ public class Arm extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("armInputs", this.inputs);
 
-        //TODO: for some reason the @autologoutput annotation doesn't work
         Logger.recordOutput("arm/mech2d", this.mech2d);
 
         shoulderBracket.setAngle(90+inputs.shoulderAngleDegrees);

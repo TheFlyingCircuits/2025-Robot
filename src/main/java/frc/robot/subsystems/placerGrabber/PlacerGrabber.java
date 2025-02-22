@@ -59,9 +59,7 @@ public class PlacerGrabber extends SubsystemBase {
     }
 
     public boolean doesHaveCoral() {
-        //TODO: need to change based on what canspark the censors are connected to
-        
-        if (inputs.sensorOneSeesCoral || inputs.sensorTwoSeesCoral) {
+        if (inputs.leftSensorSeesCoral || inputs.rightSensorSeesCoral) {
             return true;
         }
         return false;
