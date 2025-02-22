@@ -13,9 +13,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.ScoreOnReef;
 import frc.robot.commands.leds.ReefFaceLED;
-import frc.robot.PlayingField.ReefBranch;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
@@ -35,12 +35,7 @@ import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.subsystems.wrist.WristIO;
 import frc.robot.subsystems.wrist.WristIONeo;
 
-/**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic shoud actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instlead, the structure of the robot (including
- * subsystems, commands, and trigger mappings) should be declared here.
- */
+
 public class RobotContainer {
 
     protected final HumanDriver charlie = new HumanDriver(0);
@@ -69,6 +64,7 @@ public class RobotContainer {
             // );
 
             arm = new Arm(new ArmIO(){});
+
             
             wrist = new Wrist(new WristIO(){});
             placerGrabber = new PlacerGrabber(new PlacerGrabberIO(){});
@@ -78,6 +74,7 @@ public class RobotContainer {
             // placerGrabber = new PlacerGrabber(placerGrabberIO);
             // wrist = new Wrist(new WristIONeo(placerGrabberIO.getLeftThroughboreEncoder()));
 
+            leds = new Leds();
             
             /****** FOR NOODLE *******/
             drivetrain = new Drivetrain( // fr 0.092041015625, br , 0.0419921875, fl -0.178955078125, bl -0.332763671875
@@ -89,7 +86,6 @@ public class RobotContainer {
                 new VisionIOPhotonLib()
             );
 
-            leds = new Leds();
 
         }
         else {
@@ -112,6 +108,9 @@ public class RobotContainer {
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
         leds.setDefaultCommand(leds.defaultCommand());
+        arm.setDefaultCommand(arm.setShoulderTargetAngleCommand(30));
+        wrist.setDefaultCommand(wrist.setTargetPositionCommand(0));
+        placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
         // realBindings();
         testBindings();
@@ -148,8 +147,7 @@ public class RobotContainer {
 
         controller.rightTrigger()
             .whileTrue(
-                intakeTowardsCoral(charlie::getRequestedFieldOrientedVelocity).alongWith(
-                    setArmPositionDegrees(0)).alongWith(setWristTargetPositionRadians(0))
+                intakeTowardsCoral(charlie::getRequestedFieldOrientedVelocity).until(() -> placerGrabber.doesHaveCoral())
             );
     
     }
@@ -159,6 +157,7 @@ public class RobotContainer {
             Transform2d distanceToNearestStalk = drivetrain.getClosestReefStalk().getPose2d().minus(drivetrain.getPoseMeters());
             return distanceToNearestStalk.getTranslation().getNorm() < 2;
         });
+
         inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
 
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
@@ -167,12 +166,19 @@ public class RobotContainer {
     }
 
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
-        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch,leds);
+        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds);
+    }
+
+    private Command intake() {
+        return arm.setShoulderTargetAngleCommand(0)
+            .alongWith(
+                wrist.setTargetPositionCommand(0))
+            .alongWith(
+                setPlacerGrabberVolts(3, 3));
     }
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
         return drivetrain.run(() -> {
-
             // have driver stay in control when the intake camera doesn't see a note
             if (drivetrain.getBestCoralLocation().isEmpty()) {
                 drivetrain.fieldOrientedDrive(howToDriveWhenNoCoralDetected.get(), true);
@@ -181,14 +187,15 @@ public class RobotContainer {
 
             // drive towards the note when the intake camera does see a note.
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
-        });
-    }
-    private Command setArmPositionDegrees(double degrees) {
-        return arm.setShoulderTargetAngleCommand(degrees);
+        }).alongWith(intake());
     }
 
-    private Command setWristTargetPositionRadians(double radians) {
-        return wrist.setTargetPositionCommand(0);
+
+    private Command setPlacerGrabberVolts(double sideRollerVolts, double frontRollerVolts) {
+        return placerGrabber.run(() -> {
+            placerGrabber.setSideRollerVolts(sideRollerVolts);
+            placerGrabber.setFrontRollerVolts(frontRollerVolts);
+        });
     }
 
     public Command sourceIntakeInAuto() { // need to do
