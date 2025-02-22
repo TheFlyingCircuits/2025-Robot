@@ -109,11 +109,19 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
         leds.setDefaultCommand(leds.defaultCommand());
 
-        realBindings();
+        // realBindings();
+        testBindings();
         triggers();
 
     }
 
+    private void testBindings() {
+        CommandXboxController controller = charlie.getXboxController();
+        controller.a().onTrue(wrist.setTargetPositionCommand(0));
+        controller.b().onTrue(wrist.setTargetPositionCommand(Math.PI/2));
+        controller.x().onTrue(wrist.setTargetPositionCommand(-Math.PI/2));
+
+    }
 
     private void realBindings() {
         CommandXboxController controller = charlie.getXboxController();
@@ -152,8 +160,8 @@ public class RobotContainer {
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.coralControlledCommand());
         hasCoral.onFalse(leds.scoreCompleteCommand());
-
     }
+
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
         return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch,leds);
     }

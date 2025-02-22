@@ -682,7 +682,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public double getAngleError() {
-        return angleController.getPositionError();
+        return angleController.getError();
     }
 
 

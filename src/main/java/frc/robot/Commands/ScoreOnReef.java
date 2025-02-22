@@ -30,7 +30,7 @@ public class ScoreOnReef extends Command {
     /**
      *  @param translationController
      */
-    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch,Leds leds) {
+    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds) {
     
         this.drivetrain = drivetrain;
         this.arm = arm;
@@ -49,6 +49,7 @@ public class ScoreOnReef extends Command {
         double adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(22);
         //TODO: make this work for all sides
         //TODO: adjust based on left/right intake in the grabby
+        //TODO: make this potentially a pivot-side score
         Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, 0.0,new Rotation2d());
         return  stalkPose.plus(targetPoseToRobotRelativeToStalk);
     }
@@ -66,14 +67,31 @@ public class ScoreOnReef extends Command {
 
         double verticalExtensionMeters = branchTranslation.getZ();
 
-        horizontalExtensionMeters -= 0.05; //TODO: tweak these
+        horizontalExtensionMeters -= 0.1; //TODO: tweak these
         verticalExtensionMeters += 0.2;
+
+        double targetWristAngleDegrees = 0;
+        
+        switch (reefBranch.get().getLevel()) { //TODO: fill in with actual values and handle pivot-side scoring cases
+            case 1:
+                targetWristAngleDegrees = -40;
+                break;
+            case 2:
+                targetWristAngleDegrees = -40;
+                break;
+            case 3:
+                targetWristAngleDegrees = -40;
+                break;
+            case 4:
+                targetWristAngleDegrees = -40;
+                break;
+        }
 
         return ArmPosition.generateArmPosition(
             new Pose2d(
                 horizontalExtensionMeters,
                 verticalExtensionMeters,
-                Rotation2d.fromDegrees(-40)
+                Rotation2d.fromDegrees(targetWristAngleDegrees)
             )
         );
 

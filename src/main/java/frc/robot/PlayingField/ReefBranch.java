@@ -51,7 +51,7 @@ public class ReefBranch implements FieldElement {
             branchY_tagFrame *= -1;
         }
 
-        // // A branch's "locaiton" is at the branch's extremeties:
+        // // A branch's "location" is at the branch's extremeties:
         // // its highest point off the ground, and its furthest point out from the reef.
         // double branchX_tagFrame = -FieldConstants.branchInsetMeters[branchLevel];
         // double branchZ_tagFrame = FieldConstants.branchHeightMeters[branchLevel] - redTagPose_fieldFrame.getZ(); // subtract tag height cause we're in the tag frame.

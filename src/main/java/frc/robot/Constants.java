@@ -59,7 +59,7 @@ public final class Constants {
 
 
         /**Minimum angle of the arm, in degrees.*/
-        public final static double armMinAngleDegrees = 10;
+        public final static double armMinAngleDegrees = 0;
         /**Maximum angle of the arm, in degrees. This value should be positive and greater than 90, as it is beyond the vertical. */
         public final static double armMaxAngleDegrees = 170.0;  
 
@@ -274,6 +274,9 @@ public final class Constants {
         public final static int wristCANcoderID = 0;
 
         public final static double wristCANcoderOffset = 0.0;
+
+        public final static double maxAngleRadians = Math.toRadians(90);
+        public final static double minAngleDegrees = Math.toRadians(-90);
     }
 
 

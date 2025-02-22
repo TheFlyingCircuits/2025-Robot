@@ -66,10 +66,14 @@ public class Arm extends SubsystemBase {
 
     public void setShoulderTargetAngle(double degrees) {
         io.setShoulderTargetAngle(degrees);
+
+        shoulderBracket.setAngle(90+degrees);
     }
 
     public void setExtensionTargetLength(double meters) {
         io.setExtensionTargetLength(meters);
+
+        telescoper.setLength(meters);
     }
 
     public Command setShoulderTargetAngleCommand(double degrees) {
@@ -93,7 +97,8 @@ public class Arm extends SubsystemBase {
 
         Logger.recordOutput("arm/mech2d", this.mech2d);
 
-        shoulderBracket.setAngle(90+inputs.shoulderAngleDegrees);
-        telescoper.setLength(inputs.extensionLengthMeters);
+        // commenting these out because i want mech2d to display desired angle first
+        // shoulderBracket.setAngle(90+inputs.shoulderAngleDegrees);
+        // telescoper.setLength(inputs.extensionLengthMeters);
     }
 }

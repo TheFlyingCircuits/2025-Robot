@@ -42,6 +42,7 @@ public class ArmIOKraken implements ArmIO{
 
     private void configMotors() {
 
+        /* CANCODER CONFIG */
         CANcoderConfiguration leftPivotConfig = new CANcoderConfiguration();
         leftPivotConfig.MagnetSensor.MagnetOffset = 0; //TODO: get angle offset
         leftPivotConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
@@ -53,13 +54,14 @@ public class ArmIOKraken implements ArmIO{
         leftPivotEncoder.getConfigurator().apply(rightPivotConfig);
 
 
+        /* EXTENSION CONFIG */
         TalonFXConfiguration extensionConfig = new TalonFXConfiguration();
-        extensionConfig.CurrentLimits.SupplyCurrentLimit = 60; //TODO: find a good value
+        extensionConfig.Feedback.SensorToMechanismRatio = ArmConstants.extensionMetersPerMotorRotation;
+        extensionConfig.CurrentLimits.StatorCurrentLimit = 60; //TODO: find a good value
         extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.maxExtensionMeters / ArmConstants.extensionMetersPerMotorRotation;
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
-        extensionConfig.Feedback.SensorToMechanismRatio = ArmConstants.extensionMetersPerMotorRotation;
+        extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.minExtensionMeters / ArmConstants.extensionMetersPerMotorRotation;
 
         extensionConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
         frontExtensionMotor.getConfigurator().apply(extensionConfig);
@@ -67,18 +69,23 @@ public class ArmIOKraken implements ArmIO{
         extensionConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         backExtensionMotor.getConfigurator().apply(extensionConfig);
 
+        frontExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
+        backExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
 
 
+        /* SHOULDER CONFIG */
         TalonFXConfiguration shoulderConfig = new TalonFXConfiguration();
-        shoulderConfig.CurrentLimits.SupplyCurrentLimit = 60; //TODO: find a good value
+        shoulderConfig.CurrentLimits.StatorCurrentLimit = 60; //TODO: find a good value
         shoulderConfig.Feedback.SensorToMechanismRatio = ArmConstants.shoulderGearReduction;
 
         shoulderConfig.MotionMagic.MotionMagicCruiseVelocity = 1; //rps of the motor
         shoulderConfig.MotionMagic.MotionMagicAcceleration = 1; //rotations per second squared
         shoulderConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-
         
-
+        shoulderConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        shoulderConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.armMaxAngleDegrees * ArmConstants.shoulderGearReduction / 360;
+        shoulderConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        shoulderConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.armMinAngleDegrees * ArmConstants.shoulderGearReduction / 360;
 
         shoulderConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         leftShoulder.getConfigurator().apply(extensionConfig);
