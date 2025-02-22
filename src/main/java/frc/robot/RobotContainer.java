@@ -13,14 +13,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Commands.ScoreOnReef;
+import frc.robot.Commands.leds.ReefFaceLED;
 import frc.robot.PlayingField.ReefBranch;
-import frc.robot.commands.ScoreOnReef;
-import frc.robot.commands.leds.ReefFaceLED;
 import frc.robot.subsystems.HumanDriver;
+import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOSim;
-import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
@@ -132,7 +132,8 @@ public class RobotContainer {
 
         controller.rightTrigger()
             .whileTrue(
-                intakeTowardsCoral(charlie::getRequestedFieldOrientedVelocity)
+                intakeTowardsCoral(charlie::getRequestedFieldOrientedVelocity).alongWith(
+                    setArmPositionDegrees(0)).alongWith(setWristTargetPositionRadians(0))
             );
     
     }
@@ -165,6 +166,13 @@ public class RobotContainer {
             // drive towards the note when the intake camera does see a note.
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         });
+    }
+    private Command setArmPositionDegrees(double degrees) {
+        return arm.setShoulderTargetAngleCommand(degrees);
+    }
+
+    private Command setWristTargetPositionRadians(double radians) {
+        return wrist.setTargetPositionCommand(0);
     }
 
     public Command sourceIntakeInAuto() { // need to do
