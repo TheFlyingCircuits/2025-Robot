@@ -14,15 +14,11 @@ import frc.robot.Constants.UniversalConstants;
 import frc.robot.VendorWrappers.Kraken;
 import frc.robot.VendorWrappers.Neo;
 
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 public class SwerveModuleIOKraken implements SwerveModuleIO {
     private CANcoder absoluteEncoder;
-    private Neo angleMotor;
+    private Kraken angleMotor;
     private Kraken driveMotor;
+
     /**
      * 
      * @param driveMotorID - ID of the drive motor
@@ -39,11 +35,11 @@ public class SwerveModuleIOKraken implements SwerveModuleIO {
         configCANCoder(angleOffsetDegrees);
 
         /* Angle Motor Config */
-        angleMotor = new Neo(name+"Steer", angleMotorID);
+        angleMotor = new Kraken(name+"Steer", angleMotorID, UniversalConstants.canivoreName);
         if(isAngleMotorOnTop) {
-            configAngleMotor(false);
+            configAngleMotor(InvertedValue.CounterClockwise_Positive);
         } else {
-            configAngleMotor(true);
+            configAngleMotor(InvertedValue.Clockwise_Positive);
         }
 
         /* Drive Motor Config */
@@ -53,6 +49,10 @@ public class SwerveModuleIOKraken implements SwerveModuleIO {
         } else {
             configDriveMotor(InvertedValue.Clockwise_Positive);
         }
+    }
+
+    public SwerveModuleIOKraken(int driveMotorID, int angleMotorID, double angleOffsetDegrees, int cancoderID, String name) {
+        this(driveMotorID, angleMotorID, angleOffsetDegrees, cancoderID, false, false, name);
     }
 
     @Override
@@ -90,17 +90,16 @@ public class SwerveModuleIOKraken implements SwerveModuleIO {
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         config.CurrentLimits.StatorCurrentLimit = 45; // re-determined after firmware upgrade to prevent wheel slip. Feels pretty low though
         config.CurrentLimits.StatorCurrentLimitEnable = true;
-        config.Audio.AllowMusicDurDisable = true;
         driveMotor.applyConfig(config);
     }
 
-    private void configAngleMotor(boolean invertedValue) {
-        // Neo is automatically reset to factory defaults upon construction
-        SparkMaxConfig config = new SparkMaxConfig();
-        config.idleMode(IdleMode.kBrake);
-        config.smartCurrentLimit(SwerveModuleConstants.angleContinuousCurrentLimit);
-        config.inverted(invertedValue);
-        angleMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    private void configAngleMotor(InvertedValue invertedValue) {
+        TalonFXConfiguration config = new TalonFXConfiguration();
+        config.MotorOutput.Inverted = invertedValue;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.CurrentLimits.StatorCurrentLimit = 60;
+        config.CurrentLimits.StatorCurrentLimitEnable = true;
+        driveMotor.applyConfig(config);
     }
 
     @Override

@@ -24,6 +24,7 @@ import frc.robot.subsystems.arm.ArmIOSim;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
+import frc.robot.subsystems.drivetrain.SwerveModuleIOKraken;
 import frc.robot.subsystems.drivetrain.SwerveModuleIONeo;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
 import frc.robot.subsystems.placerGrabber.PlacerGrabber;
@@ -79,10 +80,10 @@ public class RobotContainer {
             /****** FOR NOODLE *******/
             drivetrain = new Drivetrain( // fr 0.092041015625, br , 0.0419921875, fl -0.178955078125, bl -0.332763671875
                 new GyroIOPigeon(),
-                new SwerveModuleIONeo(7, 8, -0.184814453125, 0), 
-                new SwerveModuleIONeo(5, 6, 0.044677734375, 3),
-                new SwerveModuleIONeo(3, 4, -0.3349609375, 2),
-                new SwerveModuleIONeo(1, 2,  0.088134765625, 1),
+                new SwerveModuleIOKraken(7, 8, -0.184814453125, 0, "FL"), 
+                new SwerveModuleIOKraken(5, 6, 0.044677734375, 3, "FR"),
+                new SwerveModuleIOKraken(3, 4, -0.3349609375, 2, "BL"),
+                new SwerveModuleIOKraken(1, 2,  0.088134765625, 1, "BR"),
                 new VisionIOPhotonLib()
             );
 
