@@ -76,14 +76,15 @@ public class RobotContainer {
             // wrist = new Wrist(new WristIONeo(placerGrabberIO.getLeftThroughboreEncoder()));
 
             leds = new Leds();
+
+            // NOODLE OFFSETS: FL -0.184814453125, FR 0.044677734375, BL -0.3349609375, BR 0.088134765625
             
-            /****** FOR NOODLE *******/
-            drivetrain = new Drivetrain( // fr 0.092041015625, br , 0.0419921875, fl -0.178955078125, bl -0.332763671875
+            drivetrain = new Drivetrain( 
                 new GyroIOPigeon(),
-                new SwerveModuleIOKraken(7, 8, -0.184814453125, 0, "FL"), 
-                new SwerveModuleIOKraken(5, 6, 0.044677734375, 3, "FR"),
-                new SwerveModuleIOKraken(3, 4, -0.3349609375, 2, "BL"),
-                new SwerveModuleIOKraken(1, 2,  0.088134765625, 1, "BR"),
+                new SwerveModuleIOKraken(0, 1, -0.377686, 0, "FL"), 
+                new SwerveModuleIOKraken(2, 3, 0.397705, 1, "FR"),
+                new SwerveModuleIOKraken(4, 5, 0.238281, 2, "BL"),
+                new SwerveModuleIOKraken(6, 7,  -0.370850, 3, "BR"),
                 new VisionIOPhotonLib()
             );
 

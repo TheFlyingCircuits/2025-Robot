@@ -19,6 +19,11 @@ public class SwerveModuleIOKraken implements SwerveModuleIO {
     private Kraken angleMotor;
     private Kraken driveMotor;
 
+
+    public SwerveModuleIOKraken(int driveMotorID, int angleMotorID, double angleOffsetDegrees, int cancoderID, String name) {
+        this(driveMotorID, angleMotorID, angleOffsetDegrees, cancoderID, false, false, name);
+    }
+
     /**
      * 
      * @param driveMotorID - ID of the drive motor
@@ -29,7 +34,6 @@ public class SwerveModuleIOKraken implements SwerveModuleIO {
      * @param isAngleMotorOnTop - Is angle motor mounted on top
      */
     public SwerveModuleIOKraken(int driveMotorID, int angleMotorID, double angleOffsetDegrees, int cancoderID, boolean isDriveMotorOnTop, boolean isAngleMotorOnTop, String name){
-        
         /* Angle Encoder Config */
         absoluteEncoder = new CANcoder(cancoderID, UniversalConstants.canivoreName);
         configCANCoder(angleOffsetDegrees);
@@ -49,10 +53,6 @@ public class SwerveModuleIOKraken implements SwerveModuleIO {
         } else {
             configDriveMotor(InvertedValue.Clockwise_Positive);
         }
-    }
-
-    public SwerveModuleIOKraken(int driveMotorID, int angleMotorID, double angleOffsetDegrees, int cancoderID, String name) {
-        this(driveMotorID, angleMotorID, angleOffsetDegrees, cancoderID, false, false, name);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class SwerveModuleIOKraken implements SwerveModuleIO {
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         config.CurrentLimits.StatorCurrentLimit = 60;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
-        driveMotor.applyConfig(config);
+        angleMotor.applyConfig(config);
     }
 
     @Override

@@ -25,14 +25,14 @@ import frc.robot.Constants.UniversalConstants;
 /** Add your docs here. */
 public class ArmIOKraken implements ArmIO{
 
-    TalonFX leftShoulder = new TalonFX(99, UniversalConstants.canivoreName);//TODO add device IDs and such
-    TalonFX rightShoulder = new TalonFX(99, UniversalConstants.canivoreName);
+    TalonFX leftShoulder = new TalonFX(8, UniversalConstants.canivoreName);//TODO add device IDs and such
+    TalonFX rightShoulder = new TalonFX(9, UniversalConstants.canivoreName);
 
-    TalonFX frontExtensionMotor = new TalonFX(99, UniversalConstants.canivoreName);
-    TalonFX backExtensionMotor = new TalonFX(99, UniversalConstants.canivoreName);
+    TalonFX frontExtensionMotor = new TalonFX(10, UniversalConstants.canivoreName);
+    TalonFX backExtensionMotor = new TalonFX(11, UniversalConstants.canivoreName);
 
-    CANcoder leftPivotEncoder = new CANcoder(0, UniversalConstants.canivoreName);
-    CANcoder rightPivotEncoder = new CANcoder(0, UniversalConstants.canivoreName);
+    CANcoder leftPivotEncoder = new CANcoder(4, UniversalConstants.canivoreName);
+    CANcoder rightPivotEncoder = new CANcoder(5, UniversalConstants.canivoreName);
     
     ArmFeedforward shoulderFeedforward = new ArmFeedforward(0, 0, 0);
 

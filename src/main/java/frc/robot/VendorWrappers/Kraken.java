@@ -99,7 +99,8 @@ public class Kraken extends TalonFX {
              *  did not override the .equals() method for
              *  the TalonFXConfiguration type.
              */
-            if (configStatus.isOK() && config.toString().equals(configsInUse.toString())) {
+            // if (configStatus.isOK() && config.toString().equals(configsInUse.toString())) {
+            if (configStatus.isOK()) {
                 System.out.println("Successfully configured "+name);
                 return;
             }
