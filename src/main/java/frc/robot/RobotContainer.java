@@ -14,8 +14,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.PlayingField.ReefBranch;
-import frc.robot.commands.ScoreOnReef;
-import frc.robot.commands.leds.ReefFaceLED;
+import frc.robot.Commands.ScoreOnReef;
+import frc.robot.Commands.leds.ReefFaceLED;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
@@ -53,7 +53,7 @@ public class RobotContainer {
     public RobotContainer() {
 
         /**** INITIALIZE SUBSYSTEMS ****/
-        if (RobotBase.isReal()) {
+        if (1==2) {
             // drivetrain = new Drivetrain( 
             //     new GyroIO(){},
             //     new SwerveModuleIO(){},
@@ -102,11 +102,11 @@ public class RobotContainer {
         }
         
         
-        drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
+        // drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
         leds.setDefaultCommand(leds.defaultCommand());
-        arm.setDefaultCommand(arm.setShoulderTargetAngleCommand(30));
-        wrist.setDefaultCommand(wrist.setTargetPositionCommand(0));
-        placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
+        // arm.setDefaultCommand(arm.setShoulderTargetAngleCommand(30));
+        // wrist.setDefaultCommand(wrist.setTargetPositionCommand(0));
+        // placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
         realBindings();
         triggers();
@@ -148,9 +148,16 @@ public class RobotContainer {
 
         inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
 
+<<<<<<< Updated upstream
         // Trigger hasCoral = new Trigger(() -> {
         //     placerGrabber.
         // })
+=======
+        Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
+        // hasCoral.onTrue(leds.coralControlledCommand());
+        // hasCoral.onFalse(leds.scoreCompleteCommand());
+    }
+>>>>>>> Stashed changes
 
     }
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {

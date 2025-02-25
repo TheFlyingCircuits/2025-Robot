@@ -1,4 +1,4 @@
-package frc.robot.commands;
+package frc.robot.Commands;
 
 import java.util.function.Supplier;
 
@@ -91,6 +91,6 @@ public class ScoreOnReef extends Command {
         arm.setArmPosition(desiredArmPosition);
         wrist.setTargetPositionRadians(Math.toRadians(desiredArmPosition.wristAngleDegrees));
 
-        leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
+        // leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
     }
 }
