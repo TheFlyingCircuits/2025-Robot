@@ -6,9 +6,9 @@ public interface WristIO {
     @AutoLog
      public class WristIOInputs {
 
-        public double wristAngleRadians = 0.0;
+        public double wristAngleDegrees = 0.0;
         
-        public double wristRadiansPerSecond = 0.0;
+        public double wristDegreesPerSecond = 0.0;
     }
 
     public default void updateInputs(WristIOInputs inputs) {};

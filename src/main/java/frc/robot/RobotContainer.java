@@ -25,7 +25,6 @@ import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOKraken;
-import frc.robot.subsystems.drivetrain.SwerveModuleIONeo;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
 import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.placerGrabber.PlacerGrabberIO;
@@ -66,14 +65,10 @@ public class RobotContainer {
 
             arm = new Arm(new ArmIO(){});
 
-            
-            wrist = new Wrist(new WristIO(){});
-            placerGrabber = new PlacerGrabber(new PlacerGrabberIO(){});
 
-            // temporarily commented out while electrical is being finished
-            // PlacerGrabberIONeo placerGrabberIO = new PlacerGrabberIONeo();
-            // placerGrabber = new PlacerGrabber(placerGrabberIO);
-            // wrist = new Wrist(new WristIONeo(placerGrabberIO.getLeftThroughboreEncoder()));
+            PlacerGrabberIONeo placerGrabberIO = new PlacerGrabberIONeo();
+            placerGrabber = new PlacerGrabber(placerGrabberIO);
+            wrist = new Wrist(new WristIONeo(placerGrabberIO.getLeftThroughboreEncoder()));
 
             leds = new Leds();
 
@@ -123,8 +118,10 @@ public class RobotContainer {
     private void testBindings() {
         CommandXboxController controller = charlie.getXboxController();
         controller.a().onTrue(wrist.setTargetPositionCommand(0));
-        controller.b().onTrue(wrist.setTargetPositionCommand(Math.PI/2));
-        controller.x().onTrue(wrist.setTargetPositionCommand(-Math.PI/2));
+        controller.b().onTrue(wrist.setTargetPositionCommand(45));
+        controller.x().onTrue(wrist.setTargetPositionCommand(90));
+
+        controller.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(1, 1));
 
     }
 
@@ -132,8 +129,6 @@ public class RobotContainer {
         CommandXboxController controller = charlie.getXboxController();
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
 
-        controller.x().onTrue(arm.setShoulderTargetAngleCommand(20));
-        controller.a().onTrue(arm.setExtensionTargetLengthCommand(1));
 
 
         controller.rightBumper().whileTrue(

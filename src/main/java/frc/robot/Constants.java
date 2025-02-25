@@ -75,8 +75,8 @@ public final class Constants {
         
 
         /** Rotations of the motor per rotations of the belt pulley */
-        public final static double extensionGearReduction = 15;
-        public static final double extensionPulleyRadiusMeters = 0.1;//TODO: fill with actual value
+        public final static double extensionGearReduction = 5;
+        public static final double extensionPulleyRadiusMeters = Units.inchesToMeters(1.504/2);
         /** Circumference of the pulley that the extension belt runs on. */
         public final static double beltPulleyCircumferenceMeters = 2*extensionPulleyRadiusMeters*Math.PI; 
         public final static double extensionMetersPerMotorRotation = beltPulleyCircumferenceMeters / extensionGearReduction;
@@ -271,14 +271,8 @@ public final class Constants {
     }
 
     public final static class WristConstants {
-
-        // TODO: I need to change constants values to real values
-        public final static int wristCANcoderID = 0;
-
-        public final static double wristCANcoderOffset = 0.0;
-
-        public final static double maxAngleRadians = Math.toRadians(90);
-        public final static double minAngleDegrees = Math.toRadians(-90);
+        public final static double maxAngleDegrees = 166;
+        public final static double minAngleDegrees = 0;
     }
 
 

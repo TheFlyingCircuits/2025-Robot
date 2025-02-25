@@ -1,6 +1,7 @@
 package frc.robot.subsystems.wrist;
 
 import com.revrobotics.REVLibError;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -15,48 +16,56 @@ public class WristIONeo implements WristIO{
     
     private Neo wristNeo;
 
-    private SparkAbsoluteEncoder leftEncoder;
-    private SparkAbsoluteEncoder rightEncoder;
+    private RelativeEncoder leftEncoder;
+    private RelativeEncoder rightEncoder;
 
     /**
      * Creates a WristIONeo object.
      * @param leftEncoder - The left side throughbore encoder object. This has to be obtained from the placerGrabber object.
      */
-    public WristIONeo(SparkAbsoluteEncoder leftEncoder) {
+    public WristIONeo(RelativeEncoder leftEncoder) {
+
+        wristNeo = new Neo(1);
 
         this.leftEncoder=leftEncoder;
+        rightEncoder = wristNeo.getAlternateEncoder();
 
+        configMotors();
+    }
+
+    private void configMotors() {
         // configures both Neos
         SparkMaxConfig config = new SparkMaxConfig();
+        
+        config.alternateEncoder.positionConversionFactor(360) //rotations to degrees
+            .velocityConversionFactor(360/60) //rpm to deg/s
+            .inverted(true);
+
         config.idleMode(IdleMode.kBrake)
             .smartCurrentLimit(60)
             .inverted(true);
 
         config.softLimit.forwardSoftLimitEnabled(true)
-            .forwardSoftLimit(WristConstants.maxAngleRadians)
+            .forwardSoftLimit(WristConstants.maxAngleDegrees)
             .reverseSoftLimitEnabled(true)
             .reverseSoftLimit(WristConstants.minAngleDegrees);
 
-        config.absoluteEncoder.positionConversionFactor(2 * Math.PI)
-            .velocityConversionFactor(2 * Math.PI * 60)
-            .zeroCentered(true)
-            .inverted(false);
-
         wristNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        rightEncoder = wristNeo.getAbsoluteEncoder();
+
+        rightEncoder.setPosition(160);
+        leftEncoder.setPosition(160);
         
     }
 
     @Override
     public void updateInputs(WristIOInputs inputs){
         if (wristNeo.getLastError() == REVLibError.kOk) {
-            inputs.wristRadiansPerSecond = leftEncoder.getVelocity();
-            inputs.wristAngleRadians = leftEncoder.getPosition();
+            inputs.wristDegreesPerSecond = leftEncoder.getVelocity();
+            inputs.wristAngleDegrees = leftEncoder.getPosition();
         } else {
-            inputs.wristRadiansPerSecond = rightEncoder.getVelocity();
-            inputs.wristAngleRadians = rightEncoder.getPosition();
+            inputs.wristDegreesPerSecond = rightEncoder.getVelocity();
+            inputs.wristAngleDegrees = rightEncoder.getPosition();
         }
-
     }
 
     @Override

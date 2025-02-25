@@ -77,8 +77,8 @@ public class PlacerGrabber extends SubsystemBase {
 
     public Command setPlacerGrabberVoltsCommand(double frontRollerVolts, double sideRollervolts) {
         return this.run(() -> {
-            setFrontRollerVolts(0);
-            setSideRollerVolts(0);
+            setFrontRollerVolts(frontRollerVolts);
+            setSideRollerVolts(sideRollervolts);
         });
     }
 }

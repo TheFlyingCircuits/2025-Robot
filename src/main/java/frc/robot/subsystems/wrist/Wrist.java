@@ -13,17 +13,15 @@ public class Wrist extends SubsystemBase {
     private WristIOInputsAutoLogged inputs;
 
     private PIDController wristNeoPID;
-    // might need arm feedforward because of gravity???
-    // private SimpleMotorFeedforward wristFeedForward = new SimpleMotorFeedforward(WristConstants.kSArmVolts,WristConstants.kVArmVoltsSecondsPerRadian,WristConstants.kSArmVolts);
 
-    private double desiredWristPositionRadians;
+    private double desiredWristPositionDegrees;
 
     public Wrist(WristIO io) {
         this.io = io;
         inputs = new WristIOInputsAutoLogged();
 
-        wristNeoPID = new PIDController(1,0,0); // input radians output volts
-        wristNeoPID.setTolerance(Units.degreesToRadians(1)); // radians
+        wristNeoPID = new PIDController(0,0,0); // input degrees output volts
+        wristNeoPID.setTolerance(1); // degrees
 
     }
 
@@ -37,17 +35,17 @@ public class Wrist extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("WristInputs", inputs);
 
-        moveToTargetPosition(desiredWristPositionRadians);
+        moveToTargetPosition(desiredWristPositionDegrees);
     }
 
-    public void setTargetPositionRadians(double targetAngleRadians) {
+    public void setTargetPositionDegrees(double targetAngleDegrees) {
         
-        desiredWristPositionRadians = targetAngleRadians;
+        desiredWristPositionDegrees = targetAngleDegrees;
     }
 
-    private void moveToTargetPosition(double targetRadians) {
+    private void moveToTargetPosition(double targetDegrees) {
         
-        double outputVolts = (wristNeoPID.calculate(inputs.wristAngleRadians, desiredWristPositionRadians));
+        double outputVolts = (wristNeoPID.calculate(inputs.wristAngleDegrees, desiredWristPositionDegrees));
 
         // if (wristNeoPID.atSetpoint()) {
         //     return;
@@ -57,7 +55,7 @@ public class Wrist extends SubsystemBase {
 
     }
 
-    public Command setTargetPositionCommand (double targetRad) {
-        return this.run(() -> {this.setTargetPositionRadians(targetRad);});
+    public Command setTargetPositionCommand (double targetDegrees) {
+        return this.run(() -> {this.setTargetPositionDegrees(targetDegrees);});
     }
 }

@@ -28,7 +28,7 @@ public class ScoreOnReef extends Command {
     private Leds leds;
 
     /**
-     *  @param translationController
+     *  @param translationController - ChassisSpeeds supplier for driver input while scoring.
      */
     public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds) {
     
@@ -38,10 +38,7 @@ public class ScoreOnReef extends Command {
         this.translationController = translationController;
         this.reefBranch=reefBranch;
         this.leds = leds;
-        addRequirements(arm, wrist);
-        if (translationController != null) {
-            super.addRequirements(drivetrain);
-        }
+        addRequirements(drivetrain, arm, wrist);
     }
 
     // bumper 37 inches
@@ -74,16 +71,16 @@ public class ScoreOnReef extends Command {
         
         switch (reefBranch.get().getLevel()) { //TODO: fill in with actual values and handle pivot-side scoring cases
             case 1:
-                targetWristAngleDegrees = -40;
+                targetWristAngleDegrees = 40;
                 break;
             case 2:
-                targetWristAngleDegrees = -40;
+                targetWristAngleDegrees = 40;
                 break;
             case 3:
-                targetWristAngleDegrees = -40;
+                targetWristAngleDegrees = 40;
                 break;
             case 4:
-                targetWristAngleDegrees = -40;
+                targetWristAngleDegrees = 40;
                 break;
         }
 
@@ -107,7 +104,7 @@ public class ScoreOnReef extends Command {
 
         ArmPosition desiredArmPosition = calculateArmScoringPosition();
         arm.setArmPosition(desiredArmPosition);
-        wrist.setTargetPositionRadians(Math.toRadians(desiredArmPosition.wristAngleDegrees));
+        wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
 
         leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
     }
