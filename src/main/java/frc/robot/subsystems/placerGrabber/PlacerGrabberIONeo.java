@@ -30,19 +30,18 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
         // configures both Neos
         SparkMaxConfig config = new SparkMaxConfig();
         config.idleMode(IdleMode.kBrake);
-        config.smartCurrentLimit(10);
+        config.smartCurrentLimit(30);
 
         config.inverted(false);
         sideNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-            
-        config.inverted(true);
-
+        
         //config for the left alternate encoder, eventually used by the wristIO
         config.alternateEncoder.positionConversionFactor(360) //rotations to degrees
             .velocityConversionFactor(360/60) //rpm to deg/s
             .inverted(false);
 
-        frontNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        config.inverted(true);
+        frontNeo.configure(config.inverted(true), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     @Override
@@ -57,16 +56,11 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
 
     @Override
     public void setFrontNeoVolts(double volts) {
-
         frontNeo.setVoltage(volts);
     }
 
     @Override
     public void setSideNeoVolts(double volts) {
-        if (sideNeo.getMotorTemperature() > 70) {
-            volts = 0;
-        }
-
         sideNeo.setVoltage(volts);
     }
 

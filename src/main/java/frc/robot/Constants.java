@@ -50,7 +50,7 @@ public final class Constants {
         public final static Translation2d shoulderPivotPositionMeters = new Translation2d(-0.4, 0.4);
         
         /** Minimum length of the arm when fully retracted */
-        public final static double minExtensionMeters = 0.8;
+        public final static double minExtensionMeters = Units.inchesToMeters(25);
         /** Maximum length of the arm when fully extended */
         public final static double maxExtensionMeters = 2.4;
 

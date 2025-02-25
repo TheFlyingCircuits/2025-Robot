@@ -121,7 +121,7 @@ public class RobotContainer {
         controller.b().onTrue(wrist.setTargetPositionCommand(45));
         controller.x().onTrue(wrist.setTargetPositionCommand(90));
 
-        controller.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(1, 1));
+        controller.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6).until(() -> placerGrabber.doesHaveCoral()));
 
     }
 

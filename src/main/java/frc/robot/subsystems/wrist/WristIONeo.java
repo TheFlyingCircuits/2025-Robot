@@ -28,7 +28,6 @@ public class WristIONeo implements WristIO{
         wristNeo = new Neo(1);
 
         this.leftEncoder=leftEncoder;
-        rightEncoder = wristNeo.getAlternateEncoder();
 
         configMotors();
     }
@@ -37,11 +36,11 @@ public class WristIONeo implements WristIO{
         // configures both Neos
         SparkMaxConfig config = new SparkMaxConfig();
         
-        config.alternateEncoder.positionConversionFactor(360) //rotations to degrees
+        config.alternateEncoder.positionConversionFactor(1) //rotations to degrees
             .velocityConversionFactor(360/60) //rpm to deg/s
             .inverted(true);
 
-        config.idleMode(IdleMode.kBrake)
+        config.idleMode(IdleMode.kCoast)
             .smartCurrentLimit(60)
             .inverted(true);
 
@@ -52,20 +51,17 @@ public class WristIONeo implements WristIO{
 
         wristNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        rightEncoder.setPosition(160);
-        leftEncoder.setPosition(160);
+        rightEncoder = wristNeo.getAlternateEncoder();
+
+        rightEncoder.setPosition(WristConstants.maxAngleDegrees);
+        leftEncoder.setPosition(WristConstants.maxAngleDegrees);
         
     }
 
     @Override
     public void updateInputs(WristIOInputs inputs){
-        if (wristNeo.getLastError() == REVLibError.kOk) {
-            inputs.wristDegreesPerSecond = leftEncoder.getVelocity();
-            inputs.wristAngleDegrees = leftEncoder.getPosition();
-        } else {
-            inputs.wristDegreesPerSecond = rightEncoder.getVelocity();
-            inputs.wristAngleDegrees = rightEncoder.getPosition();
-        }
+        inputs.wristDegreesPerSecond = leftEncoder.getVelocity();
+        inputs.wristAngleDegrees = leftEncoder.getPosition();
     }
 
     @Override

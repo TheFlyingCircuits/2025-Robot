@@ -44,7 +44,6 @@ public class ScoreOnReef extends Command {
     // bumper 37 inches
     private Pose2d adjustedReefScoringPose(Pose2d stalkPose) {
         double adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(22);
-        //TODO: make this work for all sides
         //TODO: adjust based on left/right intake in the grabby
         //TODO: make this potentially a pivot-side score
         Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, 0.0,new Rotation2d());
