@@ -26,11 +26,13 @@ public class ScoreOnReef extends Command {
     private Supplier<ChassisSpeeds> translationController;
     private Supplier<ReefBranch> reefBranch;
     private Leds leds;
+    private String sideCoralIsIn;
+    private Boolean isFacingForward;
 
     /**
      *  @param translationController - ChassisSpeeds supplier for driver input while scoring.
      */
-    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds) {
+    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds, String sideCoralIsIn, Boolean isFacingForward) {
     
         this.drivetrain = drivetrain;
         this.arm = arm;
@@ -38,15 +40,25 @@ public class ScoreOnReef extends Command {
         this.translationController = translationController;
         this.reefBranch=reefBranch;
         this.leds = leds;
+        this.sideCoralIsIn=sideCoralIsIn;
+        this.isFacingForward=isFacingForward;
         addRequirements(drivetrain, arm, wrist);
     }
 
     // bumper 37 inches
-    private Pose2d adjustedReefScoringPose(Pose2d stalkPose) {
+    private Pose2d adjustedReefScoringPose(Pose2d stalkPose, String sideCoralIsIn, boolean isFacingForward) {
         double adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(22);
+        double adjustedY;
+        // 1.25 inches + 2 inches
+        if (((sideCoralIsIn == "left") & isFacingForward) || ((sideCoralIsIn == "right") & !isFacingForward)) {
+            adjustedY = FieldConstants.stalkInsetMeters + Units.inchesToMeters(3.25);
+        } else {
+            adjustedY = FieldConstants.stalkInsetMeters - Units.inchesToMeters(3.25);
+        }
+        //TODO: make this work for all sides
         //TODO: adjust based on left/right intake in the grabby
         //TODO: make this potentially a pivot-side score
-        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, 0.0,new Rotation2d());
+        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, new Rotation2d());
         return  stalkPose.plus(targetPoseToRobotRelativeToStalk);
     }
 
@@ -96,8 +108,13 @@ public class ScoreOnReef extends Command {
     @Override
     public void execute() {
         Pose2d targetPose;
-        targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d());
-        Rotation2d adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
+        targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), sideCoralIsIn, isFacingForward);
+        Rotation2d adjustedRotation;
+        if (isFacingForward) {
+            adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
+        } else {
+            adjustedRotation = targetPose.getRotation();
+        }
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
         drivetrain.pidToPose(new Pose2d(targetPose.getTranslation(), adjustedRotation));
 
