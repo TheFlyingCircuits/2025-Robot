@@ -48,6 +48,9 @@ public class RobotContainer {
     public final Leds leds;
     public final PlacerGrabber placerGrabber;
 
+    private boolean isFacingForward = true;
+    private String sideCoralIsIntaked = "left";
+
 
     
     public RobotContainer() {
@@ -138,7 +141,9 @@ public class RobotContainer {
                 wrist,
                 charlie::getRequestedFieldOrientedVelocity,
                 () -> {return drivetrain.getClosestReefStalk().getBranch(3);},
-                leds
+                leds,
+                sideCoralIsIntaked,
+                isFacingForward
             )
         );
 
@@ -163,7 +168,7 @@ public class RobotContainer {
     }
 
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
-        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds);
+        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, sideCoralIsIntaked, isFacingForward);
     }
 
     private Command intake() {
