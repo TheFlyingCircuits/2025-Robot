@@ -109,7 +109,12 @@ public class ScoreOnReef extends Command {
     public void execute() {
         Pose2d targetPose;
         targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), sideCoralIsIn, isFacingForward);
-        Rotation2d adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
+        Rotation2d adjustedRotation;
+        if (isFacingForward) {
+            adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
+        } else {
+            adjustedRotation = targetPose.getRotation();
+        }
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
         drivetrain.pidToPose(new Pose2d(targetPose.getTranslation(), adjustedRotation));
 
