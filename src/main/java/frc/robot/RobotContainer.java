@@ -20,6 +20,7 @@ import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
+import frc.robot.subsystems.arm.ArmIOKraken;
 import frc.robot.subsystems.arm.ArmIOSim;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
@@ -63,7 +64,7 @@ public class RobotContainer {
             //     new VisionIOPhotonLib()
             // );
 
-            arm = new Arm(new ArmIO(){});
+            arm = new Arm(new ArmIOKraken());
 
 
             PlacerGrabberIONeo placerGrabberIO = new PlacerGrabberIONeo();
@@ -80,7 +81,7 @@ public class RobotContainer {
                 new SwerveModuleIOKraken(2, 3, 0.397705, 1, "FR"),
                 new SwerveModuleIOKraken(4, 5, 0.238281, 2, "BL"),
                 new SwerveModuleIOKraken(6, 7,  -0.370850, 3, "BR"),
-                new VisionIOPhotonLib()
+                new VisionIO(){}
             );
 
 
@@ -120,9 +121,14 @@ public class RobotContainer {
         controller.a().onTrue(wrist.setTargetPositionCommand(0));
         controller.b().onTrue(wrist.setTargetPositionCommand(45));
         controller.x().onTrue(wrist.setTargetPositionCommand(90));
+        controller.y().onTrue(wrist.setTargetPositionCommand(135));
 
-        controller.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6).until(() -> placerGrabber.doesHaveCoral()));
 
+
+
+        controller.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(9, 6).until(placerGrabber::doesHaveCoral));
+        controller.rightBumper().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(-6, 0));
+        controller.leftBumper().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 0));
     }
 
     private void realBindings() {

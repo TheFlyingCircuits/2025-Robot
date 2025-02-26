@@ -21,26 +21,32 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.UniversalConstants;
 
 /** Add your docs here. */
 public class ArmIOKraken implements ArmIO{
 
-    TalonFX leftShoulder = new TalonFX(8, UniversalConstants.canivoreName);
-    TalonFX rightShoulder = new TalonFX(9, UniversalConstants.canivoreName);
+    TalonFX leftShoulder = new TalonFX(ArmConstants.leftShoulderMotorID, UniversalConstants.canivoreName);
+    TalonFX rightShoulder = new TalonFX(ArmConstants.rightShoulderMotorID, UniversalConstants.canivoreName);
 
-    TalonFX frontExtensionMotor = new TalonFX(10, UniversalConstants.canivoreName);
-    TalonFX backExtensionMotor = new TalonFX(11, UniversalConstants.canivoreName);
+    TalonFX frontExtensionMotor = new TalonFX(ArmConstants.frontExtensionMotorID, UniversalConstants.canivoreName);
+    TalonFX backExtensionMotor = new TalonFX(ArmConstants.backExtensionMotorID, UniversalConstants.canivoreName);
 
-    CANcoder leftPivotEncoder = new CANcoder(4, UniversalConstants.canivoreName);
-    CANcoder rightPivotEncoder = new CANcoder(5, UniversalConstants.canivoreName);
+    TalonFXConfiguration extensionConfig;
+
+    CANcoder leftPivotEncoder = new CANcoder(ArmConstants.leftPivotEncoderID, UniversalConstants.canivoreName);
+    CANcoder rightPivotEncoder = new CANcoder(ArmConstants.rightPivotEncoderID, UniversalConstants.canivoreName);
     
     ArmFeedforward shoulderFeedforward = new ArmFeedforward(0, 0, 0);
 
     public ArmIOKraken() {
+
+        SmartDashboard.putNumber("extensionkS", 0);
+        SmartDashboard.putNumber("extensionkV", 0);
+        SmartDashboard.putNumber("extensionkA", 0);
+        SmartDashboard.putNumber("extensionkP", 0);
 
         configMotors();
     }
@@ -62,7 +68,7 @@ public class ArmIOKraken implements ArmIO{
 
 
         /* EXTENSION CONFIG */
-        TalonFXConfiguration extensionConfig = new TalonFXConfiguration();
+        extensionConfig = new TalonFXConfiguration();
 
         extensionConfig.Feedback.SensorToMechanismRatio = ArmConstants.extensionMetersPerMotorRotation;
 
@@ -76,10 +82,10 @@ public class ArmIOKraken implements ArmIO{
         extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 1;
         extensionConfig.MotionMagic.MotionMagicAcceleration = 1;
 
-        extensionConfig.Slot0.kS = 0;
-        extensionConfig.Slot0.kV = 0;
-        extensionConfig.Slot0.kA = 0;
-        extensionConfig.Slot0.kP = 0;
+        extensionConfig.Slot0.kS = SmartDashboard.getNumber("extensionkS", 0);
+        extensionConfig.Slot0.kV = SmartDashboard.getNumber("extensionkV", 0);
+        extensionConfig.Slot0.kA = SmartDashboard.getNumber("extensionkA", 0);
+        extensionConfig.Slot0.kP = SmartDashboard.getNumber("extensionkP", 0);
 
         extensionConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
         frontExtensionMotor.getConfigurator().apply(extensionConfig);
@@ -153,14 +159,14 @@ public class ArmIOKraken implements ArmIO{
     public void setShoulderTargetAngle(double degrees) {
         leftShoulder.setControl(
             new MotionMagicTorqueCurrentFOC(degrees));
-        rightShoulder.setControl(new Follower(8, true));
+        rightShoulder.setControl(new Follower(ArmConstants.leftShoulderMotorID, true));
     }
 
     @Override
     public void setExtensionTargetLength(double meters) {
         frontExtensionMotor.setControl(
             new MotionMagicVoltage(meters));
-        backExtensionMotor.setControl(new Follower(10, true));
+        backExtensionMotor.setControl(new Follower(ArmConstants.frontExtensionMotorID, true));
     }
 
 
@@ -174,5 +180,13 @@ public class ArmIOKraken implements ArmIO{
     @Override
     public void setExtensionMotorVolts(double volts) {
         frontExtensionMotor.setVoltage(volts);
+    }
+
+    /** TEMPORARY, used to update the feedforward/feedback gains from smartdashboard while tuning. */
+    public void updateTuningGains() {
+        extensionConfig.Slot0.kS = SmartDashboard.getNumber("extensionkS", 0);
+        extensionConfig.Slot0.kV = SmartDashboard.getNumber("extensionkV", 0);
+        extensionConfig.Slot0.kA = SmartDashboard.getNumber("extensionkA", 0);
+        extensionConfig.Slot0.kP = SmartDashboard.getNumber("extensionkP", 0);
     }
 }

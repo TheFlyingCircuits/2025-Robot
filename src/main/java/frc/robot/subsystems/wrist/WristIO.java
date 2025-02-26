@@ -9,6 +9,8 @@ public interface WristIO {
         public double wristAngleDegrees = 0.0;
         
         public double wristDegreesPerSecond = 0.0;
+        
+        public double motorOutputCurrentAmps = 0.0;
     }
 
     public default void updateInputs(WristIOInputs inputs) {};

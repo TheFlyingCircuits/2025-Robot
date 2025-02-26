@@ -60,10 +60,7 @@ public class PlacerGrabber extends SubsystemBase {
     }
 
     public boolean doesHaveCoral() {
-        if (inputs.leftSensorSeesCoral || inputs.rightSensorSeesCoral) {
-            return true;
-        }
-        return false;
+        return inputs.leftSensorSeesCoral || inputs.rightSensorSeesCoral;
     }
 
     @Override

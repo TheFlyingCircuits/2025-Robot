@@ -107,6 +107,15 @@ public final class Constants {
             armMaxVelDegreesPerSecond, armMaxAccelDegreesPerSecondSquared
         );
 
+        //Motor IDs
+        public final static int leftShoulderMotorID = 8;
+        public final static int rightShoulderMotorID = 9;
+        public final static int frontExtensionMotorID = 10;
+        public final static int backExtensionMotorID = 11;
+        public final static int leftPivotEncoderID = 4;
+        public final static int rightPivotEncoderID = 5;
+        
+
 
         
     }
@@ -271,8 +280,11 @@ public final class Constants {
     }
 
     public final static class WristConstants {
-        public final static double maxAngleDegrees = 166;
+        public final static double maxAngleDegrees = 160;
         public final static double minAngleDegrees = 0;
+
+        /**rotations of the wrist motor per rotations of the wrist */
+        public final static double gearReduction = 9. * (52./12.) * (37./15.);
     }
 
 

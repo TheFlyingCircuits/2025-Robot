@@ -15,6 +15,7 @@ import frc.robot.VendorWrappers.Kraken;
 import frc.robot.VendorWrappers.Neo;
 
 public class SwerveModuleIOKraken implements SwerveModuleIO {
+    
     private CANcoder absoluteEncoder;
     private Kraken angleMotor;
     private Kraken driveMotor;
