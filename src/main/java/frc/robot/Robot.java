@@ -50,6 +50,7 @@ public class Robot extends LoggedRobot {
     m_robotContainer = new RobotContainer();
     DriverStation.silenceJoystickConnectionWarning(true);
     controller = new XboxController(0);
+    System.gc();
   }
 
   @Override

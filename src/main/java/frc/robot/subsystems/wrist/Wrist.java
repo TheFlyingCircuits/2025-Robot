@@ -33,7 +33,7 @@ public class Wrist extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
-        Logger.processInputs("WristInputs", inputs);
+        Logger.processInputs("wristInputs", inputs);
 
         moveToTargetPosition(desiredWristPositionDegrees);
     }
