@@ -6,13 +6,21 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.ScoreOnReef;
 import frc.robot.commands.leds.ReefFaceLED;
@@ -43,11 +51,13 @@ public class RobotContainer {
     protected final HumanDriver ben = new HumanDriver(1);
 
     public final Drivetrain drivetrain;
-
+    private ArmIOKraken armIO;
     public final Arm arm;
     public final Wrist wrist;
     public final Leds leds;
     public final PlacerGrabber placerGrabber;
+
+    private DigitalInput coastModeButton;
 
     private boolean isFacingForward = true;
     private String sideCoralIsIntaked = "left";
@@ -67,7 +77,8 @@ public class RobotContainer {
             //     new VisionIOPhotonLib()
             // );
 
-            arm = new Arm(new ArmIOKraken());
+            armIO = new ArmIOKraken();
+            arm = new Arm(armIO);
 
 
             PlacerGrabberIONeo placerGrabberIO = new PlacerGrabberIONeo();
@@ -86,6 +97,8 @@ public class RobotContainer {
                 new SwerveModuleIOKraken(6, 7,  -0.370850, 3, "BR"),
                 new VisionIO(){}
             );
+
+            coastModeButton = new DigitalInput(0);
 
 
         }
@@ -109,8 +122,8 @@ public class RobotContainer {
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
         leds.setDefaultCommand(leds.defaultCommand());
-        arm.setDefaultCommand(arm.setShoulderTargetAngleCommand(30));
-        wrist.setDefaultCommand(wrist.setTargetPositionCommand(0));
+        arm.setDefaultCommand(arm.setShoulderTargetAngleCommand(0));
+        wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees));
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
         // realBindings();
@@ -121,12 +134,16 @@ public class RobotContainer {
 
     private void testBindings() {
         CommandXboxController controller = charlie.getXboxController();
-        controller.a().onTrue(wrist.setTargetPositionCommand(0));
-        controller.b().onTrue(wrist.setTargetPositionCommand(45));
-        controller.x().onTrue(wrist.setTargetPositionCommand(90));
-        controller.y().onTrue(wrist.setTargetPositionCommand(135));
+        // controller.a().onTrue(wrist.setTargetPositionCommand(0));
+        // controller.b().onTrue(wrist.setTargetPositionCommand(45));
+        // controller.x().onTrue(wrist.setTargetPositionCommand(90));
+        // controller.y().onTrue(wrist.setTargetPositionCommand(135));
 
 
+        controller.a().onTrue(arm.setExtensionTargetLengthCommand(ArmConstants.minExtensionMeters+0.05));
+        controller.b().onTrue(arm.setExtensionTargetLengthCommand(ArmConstants.minExtensionMeters+0.3));
+        controller.x().onTrue(arm.setExtensionTargetLengthCommand(ArmConstants.maxExtensionMeters-0.3));
+        controller.y().onTrue(arm.setExtensionTargetLengthCommand(ArmConstants.maxExtensionMeters-0.05));
 
 
         controller.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(9, 6).until(placerGrabber::doesHaveCoral));
@@ -171,6 +188,23 @@ public class RobotContainer {
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.coralControlledCommand());
         hasCoral.onFalse(leds.scoreCompleteCommand());
+
+
+
+        Trigger coastModeLimitSwitch = new Trigger(() -> coastModeButton.get());
+        coastModeLimitSwitch.toggleOnTrue( //toggles between coast mode and brake mode
+            Commands.run(() -> {
+                armIO.setIdleMode(NeutralModeValue.Coast);
+            }).finallyDo(() -> {
+                System.out.println("set to brake mode");
+                armIO.setIdleMode(NeutralModeValue.Brake);
+            }).ignoringDisable(true)
+        );
+    }
+
+    /** Called by Robot.java, brief convenience function. */
+    public void periodic() {
+        Logger.recordOutput("coastModeLimitSwitch", coastModeButton.get());
     }
 
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
@@ -215,4 +249,5 @@ public class RobotContainer {
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         });
     }
+
 }

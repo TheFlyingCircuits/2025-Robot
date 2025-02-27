@@ -18,6 +18,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -35,6 +36,7 @@ public class ArmIOKraken implements ArmIO{
     TalonFX backExtensionMotor = new TalonFX(ArmConstants.backExtensionMotorID, UniversalConstants.canivoreName);
 
     TalonFXConfiguration extensionConfig;
+    TalonFXConfiguration shoulderConfig;
 
     CANcoder leftPivotEncoder = new CANcoder(ArmConstants.leftPivotEncoderID, UniversalConstants.canivoreName);
     CANcoder rightPivotEncoder = new CANcoder(ArmConstants.rightPivotEncoderID, UniversalConstants.canivoreName);
@@ -69,23 +71,24 @@ public class ArmIOKraken implements ArmIO{
 
         /* EXTENSION CONFIG */
         extensionConfig = new TalonFXConfiguration();
+        extensionConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        extensionConfig.Feedback.SensorToMechanismRatio = ArmConstants.extensionMetersPerMotorRotation;
+        extensionConfig.Feedback.SensorToMechanismRatio = 1./ArmConstants.extensionMetersPerMotorRotation;
 
-        extensionConfig.CurrentLimits.StatorCurrentLimit = 0.1; //TODO: find a good value
+        extensionConfig.CurrentLimits.StatorCurrentLimit = 50; //TODO: find a good value
 
         extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.maxExtensionMeters / ArmConstants.extensionMetersPerMotorRotation;
+        extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.maxExtensionMeters;
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.minExtensionMeters / ArmConstants.extensionMetersPerMotorRotation;
+        extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.minExtensionMeters;
 
         extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 1;
         extensionConfig.MotionMagic.MotionMagicAcceleration = 1;
 
-        extensionConfig.Slot0.kS = SmartDashboard.getNumber("extensionkS", 0);
-        extensionConfig.Slot0.kV = SmartDashboard.getNumber("extensionkV", 0);
-        extensionConfig.Slot0.kA = SmartDashboard.getNumber("extensionkA", 0);
-        extensionConfig.Slot0.kP = SmartDashboard.getNumber("extensionkP", 0);
+        extensionConfig.Slot0.kS = 0.5;
+        extensionConfig.Slot0.kV = 3.2;
+        extensionConfig.Slot0.kA = 0;
+        extensionConfig.Slot0.kP = 0;
 
         extensionConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
         frontExtensionMotor.getConfigurator().apply(extensionConfig);
@@ -98,10 +101,12 @@ public class ArmIOKraken implements ArmIO{
 
 
         /* SHOULDER CONFIG */
-        TalonFXConfiguration shoulderConfig = new TalonFXConfiguration();
+        shoulderConfig = new TalonFXConfiguration();
         shoulderConfig.CurrentLimits.StatorCurrentLimit = 0.1; //TODO: find a good value
-        shoulderConfig.Feedback.SensorToMechanismRatio = ArmConstants.shoulderGearReduction;
 
+        shoulderConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+        shoulderConfig.Feedback.SensorToMechanismRatio = ArmConstants.shoulderGearReduction;
         shoulderConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.SyncCANcoder;
         shoulderConfig.Feedback.FeedbackRemoteSensorID = 4;
 
@@ -182,11 +187,10 @@ public class ArmIOKraken implements ArmIO{
         frontExtensionMotor.setVoltage(volts);
     }
 
-    /** TEMPORARY, used to update the feedforward/feedback gains from smartdashboard while tuning. */
-    public void updateTuningGains() {
-        extensionConfig.Slot0.kS = SmartDashboard.getNumber("extensionkS", 0);
-        extensionConfig.Slot0.kV = SmartDashboard.getNumber("extensionkV", 0);
-        extensionConfig.Slot0.kA = SmartDashboard.getNumber("extensionkA", 0);
-        extensionConfig.Slot0.kP = SmartDashboard.getNumber("extensionkP", 0);
+    public void setIdleMode(NeutralModeValue mode) {
+        frontExtensionMotor.setNeutralMode(mode);
+        backExtensionMotor.setNeutralMode(mode);
+        leftShoulder.setNeutralMode(mode);
+        rightShoulder.setNeutralMode(mode);
     }
 }

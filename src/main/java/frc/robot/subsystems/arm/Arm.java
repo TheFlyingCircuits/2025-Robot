@@ -87,7 +87,7 @@ public class Arm extends SubsystemBase {
             io.setExtensionTargetLength(meters);
         });
     }
-    
+
     @Override
     public void periodic() {
         io.updateInputs(inputs);

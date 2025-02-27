@@ -56,7 +56,7 @@ public class WristIONeo implements WristIO{
 
         rightEncoder = wristNeo.getAlternateEncoder();
 
-        wristNeo.setPosition(WristConstants.minAngleDegrees);
+        wristNeo.setPosition(WristConstants.maxAngleDegrees);
         rightEncoder.setPosition(WristConstants.maxAngleDegrees);
         leftEncoder.setPosition(WristConstants.maxAngleDegrees);
         

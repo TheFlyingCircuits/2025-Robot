@@ -49,10 +49,10 @@ public final class Constants {
         public final static double shoulderBracketLengthMeters = -0.2;
         public final static Translation2d shoulderPivotPositionMeters = new Translation2d(-0.4, 0.4);
         
-        /** Minimum length of the arm when fully retracted */
+        /** Minimum length of the arm when fully retracted, 0.64 meters*/
         public final static double minExtensionMeters = Units.inchesToMeters(25);
-        /** Maximum length of the arm when fully extended */
-        public final static double maxExtensionMeters = 2.4;
+        /** Maximum length of the arm when fully extended, 1.6 meters*/
+        public final static double maxExtensionMeters = Units.inchesToMeters(38)+minExtensionMeters;
 
 
 
@@ -79,7 +79,10 @@ public final class Constants {
         public static final double extensionPulleyRadiusMeters = Units.inchesToMeters(1.504/2);
         /** Circumference of the pulley that the extension belt runs on. */
         public final static double beltPulleyCircumferenceMeters = 2*extensionPulleyRadiusMeters*Math.PI; 
-        public final static double extensionMetersPerMotorRotation = beltPulleyCircumferenceMeters / extensionGearReduction;
+        /** How far the belt of the extension moves per rotation of the motor. */
+        public final static double beltMetersPerMotorRotation = beltPulleyCircumferenceMeters / extensionGearReduction;
+        /** How far the tip of the arm extends per rotation of the motor. */
+        public final static double extensionMetersPerMotorRotation = beltMetersPerMotorRotation * 2;
 
 
 

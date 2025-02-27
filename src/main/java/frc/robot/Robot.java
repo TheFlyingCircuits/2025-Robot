@@ -57,7 +57,7 @@ public class Robot extends LoggedRobot {
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
 
-
+    m_robotContainer.periodic();
 
     
     ArrayList<Pose3d> facePoses = new ArrayList<>();
@@ -77,6 +77,8 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("facePoses", facePoses.toArray(new Pose3d[0]));
     Logger.recordOutput("stalkPoses", stalkPoses.toArray(new Pose3d[0]));
     Logger.recordOutput("branchPoses", branchPoses.toArray(new Pose3d[0]));
+
+    
   }
 
   @Override
