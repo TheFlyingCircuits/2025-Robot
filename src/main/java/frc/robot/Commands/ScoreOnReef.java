@@ -26,13 +26,13 @@ public class ScoreOnReef extends Command {
     private Supplier<ChassisSpeeds> translationController;
     private Supplier<ReefBranch> reefBranch;
     private Leds leds;
-    private String sideCoralIsIn;
-    private Boolean isFacingForward;
+    private Supplier<String> sideCoralIsIn;
+    private Supplier<Boolean> isFacingForward;
 
     /**
      *  @param translationController - ChassisSpeeds supplier for driver input while scoring.
      */
-    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds, String sideCoralIsIn, Boolean isFacingForward) {
+    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds, Supplier<String> sideCoralIsIn, Supplier<Boolean> isFacingForward) {
     
         this.drivetrain = drivetrain;
         this.arm = arm;
@@ -108,9 +108,9 @@ public class ScoreOnReef extends Command {
     @Override
     public void execute() {
         Pose2d targetPose;
-        targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), sideCoralIsIn, isFacingForward);
+        targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), sideCoralIsIn.get(), isFacingForward.get());
         Rotation2d adjustedRotation;
-        if (isFacingForward) {
+        if (isFacingForward.get()) {
             adjustedRotation = targetPose.getRotation().rotateBy(Rotation2d.fromDegrees(180));
         } else {
             adjustedRotation = targetPose.getRotation();

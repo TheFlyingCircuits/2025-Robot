@@ -27,7 +27,6 @@ import frc.robot.commands.leds.ReefFaceLED;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
-import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOKraken;
 import frc.robot.subsystems.arm.ArmIOSim;
 import frc.robot.subsystems.drivetrain.Drivetrain;
@@ -39,7 +38,6 @@ import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.placerGrabber.PlacerGrabberIO;
 import frc.robot.subsystems.placerGrabber.PlacerGrabberIONeo;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonLib;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.subsystems.wrist.WristIO;
 import frc.robot.subsystems.wrist.WristIONeo;
@@ -126,8 +124,8 @@ public class RobotContainer {
         wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees));
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
-        // realBindings();
-        testBindings();
+        realBindings();
+        // testBindings();
         triggers();
 
     }
@@ -165,8 +163,8 @@ public class RobotContainer {
                 charlie::getRequestedFieldOrientedVelocity,
                 () -> {return drivetrain.getClosestReefStalk().getBranch(3);},
                 leds,
-                sideCoralIsIntaked,
-                isFacingForward
+                () -> placerGrabber.sideCoralIsIn(),
+                () -> isFacingReef()
             )
         );
 
@@ -205,10 +203,21 @@ public class RobotContainer {
     /** Called by Robot.java, brief convenience function. */
     public void periodic() {
         Logger.recordOutput("coastModeLimitSwitch", coastModeButton.get());
+    }    
+    public boolean isFacingReef() {
+        if((drivetrain.getClosestReefFace().getOrientation2d().getCos() *
+        drivetrain.getPoseMeters().getRotation().getCos()) + 
+        (drivetrain.getClosestReefFace().getOrientation2d().getSin() *
+        drivetrain.getPoseMeters().getRotation().getSin()) <= 0) {
+            return true;
+        } else {
+            return false;
+        }
+
     }
 
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
-        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, sideCoralIsIntaked, isFacingForward);
+        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), () -> isFacingReef());
     }
 
     private Command intake() {

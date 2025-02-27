@@ -63,6 +63,14 @@ public class PlacerGrabber extends SubsystemBase {
         return inputs.leftSensorSeesCoral || inputs.rightSensorSeesCoral;
     }
 
+    public String sideCoralIsIn() {
+        if (inputs.leftSensorSeesCoral) {
+            return("left");
+        } else {
+            return("right");
+        }
+    }
+
     @Override
     public void periodic() {
         io.updateInputs(inputs);
