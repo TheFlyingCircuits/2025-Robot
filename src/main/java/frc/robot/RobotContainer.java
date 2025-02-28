@@ -120,12 +120,12 @@ public class RobotContainer {
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
         leds.setDefaultCommand(leds.defaultCommand());
-        arm.setDefaultCommand(arm.setShoulderTargetAngleCommand(0));
+        arm.setDefaultCommand(arm.defaultCommand());
         wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees));
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
-        realBindings();
-        // testBindings();
+        // realBindings();
+        testBindings();
         triggers();
 
     }

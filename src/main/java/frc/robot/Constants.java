@@ -55,27 +55,9 @@ public final class Constants {
         public final static double maxExtensionMeters = Units.inchesToMeters(38)+minExtensionMeters;
 
 
-
-
-
-
-
-        /**Minimum angle of the arm, in degrees.*/
-        public final static double armMinAngleDegrees = 0;
-        /**Maximum angle of the arm, in degrees. This value should be positive and greater than 90, as it is beyond the vertical. */
-        public final static double armMaxAngleDegrees = 170.0;  
-
-        public final static double armMaxVelDegreesPerSecond = 360.;
-        public final static double armMaxAccelDegreesPerSecondSquared = 660.;
-
-
-
-        /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
-        public final static double shoulderGearReduction = 100;
-        
-
         /** Rotations of the motor per rotations of the belt pulley */
         public final static double extensionGearReduction = 5;
+        /** Radius of the pulley that the extension belt runs on. */
         public static final double extensionPulleyRadiusMeters = Units.inchesToMeters(1.504/2);
         /** Circumference of the pulley that the extension belt runs on. */
         public final static double beltPulleyCircumferenceMeters = 2*extensionPulleyRadiusMeters*Math.PI; 
@@ -86,29 +68,31 @@ public final class Constants {
 
 
 
+        public final static double kSExtensionVolts = 0.25;
+        public final static double kGExtensionVolts = 0.48;
+        public final static double kVExtensionVoltsSecondsPerRadian = 3.2;
+        public final static double kAExtensionVoltsSecondsSquaredPerRadian = 0;
+        public final static double kPExtensionVoltsPerMeter = 0.;
+
+
+        /**Minimum angle of the arm, in degrees.*/
+        public final static double armMinAngleDegrees = 0;
+        /**Maximum angle of the arm, in degrees. This value should be positive and greater than 90, as it is beyond the vertical. */
+        public final static double armMaxAngleDegrees = 170.0;  
+
+
+
+        /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
+        public final static double shoulderGearReduction = 100;
         
 
-        /***** REAL CONSTANTS ******/
-        public final static double kSArmVolts = 0.005;
-        public final static double kGArmVolts = 0.32;
-        public final static double kVArmVoltsSecondsPerRadian = 3.1;
+
+        
+        public final static double kSArmVolts = 0.0;
+        public final static double kGArmVolts = 0.;
+        public final static double kVArmVoltsSecondsPerRadian = 0;
         public final static double kAArmVoltsSecondsSquaredPerRadian = 0;
 
-        public final static double kPArmVoltsPerDegree = 0.3;
-        public final static double kDArmVoltsSecondsPerDegree = 0.02;
-
-        /**** SIM CONSTANTS  ******/
-        // public final static double kSArmVolts = 0.0;
-        // public final static double kGArmVolts = 0.30;
-        // public final static double kVArmVoltsSecondsPerRadian = 3.5;
-        // public final static double kAArmVoltsSecondsSquaredPerRadian = 0;
-        // public final static double kPArmVoltsPerDegree = 0.3;
-        // public final static double kIArmVoltsPerDegreesSeconds = 0.;
-        // public final static double kDArmVoltsSecondsPerDegree = 0.1;
-
-        public final static TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(
-            armMaxVelDegreesPerSecond, armMaxAccelDegreesPerSecondSquared
-        );
 
         //Motor IDs
         public final static int leftShoulderMotorID = 8;

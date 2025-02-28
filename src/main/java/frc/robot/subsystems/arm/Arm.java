@@ -77,14 +77,21 @@ public class Arm extends SubsystemBase {
     }
 
     public Command setShoulderTargetAngleCommand(double degrees) {
-        return this.runOnce(() -> {
+        return this.run(() -> {
             io.setShoulderTargetAngle(degrees);
         });
     }
 
     public Command setExtensionTargetLengthCommand(double meters) {
-        return this.runOnce(() -> {
+        return this.run(() -> {
             io.setExtensionTargetLength(meters);
+        });
+    }
+
+    public Command defaultCommand() {
+        return this.run(() -> {
+            io.setExtensionTargetLength(ArmConstants.minExtensionMeters+0.1);
+            io.setShoulderTargetAngle(0);
         });
     }
 

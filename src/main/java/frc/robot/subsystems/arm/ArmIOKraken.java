@@ -9,6 +9,8 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 
 import javax.net.ssl.ExtendedSSLSession;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -22,9 +24,12 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.UniversalConstants;
+import frc.robot.VendorWrappers.Kraken;
 
 /** Add your docs here. */
 public class ArmIOKraken implements ArmIO{
@@ -42,6 +47,12 @@ public class ArmIOKraken implements ArmIO{
     CANcoder rightPivotEncoder = new CANcoder(ArmConstants.rightPivotEncoderID, UniversalConstants.canivoreName);
     
     ArmFeedforward shoulderFeedforward = new ArmFeedforward(0, 0, 0);
+
+    double targetExtensionMeters = ArmConstants.minExtensionMeters;
+    double extensionMeters = ArmConstants.minExtensionMeters;
+    double targetShoulderAngleDegrees = 0;
+    double shoulderAngleDegrees = 0;
+    
 
     public ArmIOKraken() {
 
@@ -66,7 +77,7 @@ public class ArmIOKraken implements ArmIO{
         leftPivotConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
         rightPivotConfig.MagnetSensor.MagnetOffset = 0.182861328125;
         rightPivotConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
-        leftPivotEncoder.getConfigurator().apply(rightPivotConfig);
+        rightPivotEncoder.getConfigurator().apply(rightPivotConfig);
 
 
         /* EXTENSION CONFIG */
@@ -82,13 +93,13 @@ public class ArmIOKraken implements ArmIO{
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.minExtensionMeters;
 
-        extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 1;
-        extensionConfig.MotionMagic.MotionMagicAcceleration = 1;
+        extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 2; //mps of the extension
+        extensionConfig.MotionMagic.MotionMagicAcceleration = 1; //m/s^2 of the extension
 
-        extensionConfig.Slot0.kS = 0.5;
-        extensionConfig.Slot0.kV = 3.2;
-        extensionConfig.Slot0.kA = 0;
-        extensionConfig.Slot0.kP = 0;
+        extensionConfig.Slot0.kS = ArmConstants.kSExtensionVolts;
+        extensionConfig.Slot0.kV = ArmConstants.kVExtensionVoltsSecondsPerRadian;
+        extensionConfig.Slot0.kA = ArmConstants.kAExtensionVoltsSecondsSquaredPerRadian;
+        extensionConfig.Slot0.kP = ArmConstants.kPExtensionVoltsPerMeter;
 
         extensionConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
         frontExtensionMotor.getConfigurator().apply(extensionConfig);
@@ -102,7 +113,7 @@ public class ArmIOKraken implements ArmIO{
 
         /* SHOULDER CONFIG */
         shoulderConfig = new TalonFXConfiguration();
-        shoulderConfig.CurrentLimits.StatorCurrentLimit = 0.1; //TODO: find a good value
+        shoulderConfig.CurrentLimits.StatorCurrentLimit = 2; //TODO: find a good value
 
         shoulderConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
@@ -126,10 +137,10 @@ public class ArmIOKraken implements ArmIO{
         shoulderConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
         shoulderConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        leftShoulder.getConfigurator().apply(extensionConfig);
+        leftShoulder.getConfigurator().apply(shoulderConfig);
 
         shoulderConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        rightShoulder.getConfigurator().apply(extensionConfig);
+        rightShoulder.getConfigurator().apply(shoulderConfig);
 
         leftShoulder.setPosition(leftPivotEncoder.getAbsolutePosition().getValueAsDouble());
         rightShoulder.setPosition(leftPivotEncoder.getAbsolutePosition().getValueAsDouble());
@@ -137,21 +148,25 @@ public class ArmIOKraken implements ArmIO{
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
-        inputs.extensionLengthMeters = frontExtensionMotor.getPosition().getValueAsDouble();
+        extensionMeters = frontExtensionMotor.getPosition().getValueAsDouble();
+        inputs.extensionLengthMeters = extensionMeters;
         inputs.extensionLengthMetersPerSecond = frontExtensionMotor.getVelocity().getValueAsDouble();
         inputs.extensionAppliedVolts = frontExtensionMotor.getMotorVoltage().getValueAsDouble();
 
         if (leftPivotEncoder.getAbsolutePosition().getStatus() == StatusCode.OK) {
-            inputs.shoulderAngleDegrees = leftPivotEncoder.getAbsolutePosition().getValueAsDouble();
-            inputs.shoulderVelocityDegreesPerSecond = leftPivotEncoder.getVelocity().getValueAsDouble();
+            shoulderAngleDegrees = leftPivotEncoder.getAbsolutePosition().getValueAsDouble() * 360;
+            inputs.shoulderAngleDegrees = shoulderAngleDegrees;
+            inputs.shoulderVelocityDegreesPerSecond = leftPivotEncoder.getVelocity().getValueAsDouble() * 360;
         }
         else if (rightPivotEncoder.getAbsolutePosition().getStatus() == StatusCode.OK) {
             System.out.println("Left pivot encoder not measuring! Using right instead");
-            inputs.shoulderAngleDegrees = rightPivotEncoder.getAbsolutePosition().getValueAsDouble();
-            inputs.shoulderVelocityDegreesPerSecond = leftPivotEncoder.getVelocity().getValueAsDouble();
+            shoulderAngleDegrees = rightPivotEncoder.getAbsolutePosition().getValueAsDouble() * 360;
+            inputs.shoulderAngleDegrees = shoulderAngleDegrees;
+            inputs.shoulderVelocityDegreesPerSecond = rightPivotEncoder.getVelocity().getValueAsDouble() * 360;
         }
         else {
             System.out.println("Both pivot encoders not measuring. Defaulting to shoulder angle of 0");
+            shoulderAngleDegrees = 0;
             inputs.shoulderAngleDegrees = 0;
             inputs.shoulderVelocityDegreesPerSecond = 0;
         }
@@ -162,15 +177,24 @@ public class ArmIOKraken implements ArmIO{
 
     @Override
     public void setShoulderTargetAngle(double degrees) {
+        this.targetShoulderAngleDegrees = degrees;
         leftShoulder.setControl(
-            new MotionMagicTorqueCurrentFOC(degrees));
+            new MotionMagicTorqueCurrentFOC(degrees).withFeedForward(calculateShoulderFeedForward()));
         rightShoulder.setControl(new Follower(ArmConstants.leftShoulderMotorID, true));
     }
 
     @Override
     public void setExtensionTargetLength(double meters) {
+        if (meters < ArmConstants.minExtensionMeters || meters > ArmConstants.maxExtensionMeters) {
+            System.out.println("Invalid extension length requested!");
+            return;
+        }
+
+        this.targetExtensionMeters = meters;
+        Logger.recordOutput("arm/extensionFeedforward", calculateExtensionFeedForwardVolts());
+
         frontExtensionMotor.setControl(
-            new MotionMagicVoltage(meters));
+            new MotionMagicVoltage(meters).withFeedForward(calculateExtensionFeedForwardVolts()).withEnableFOC(true));
         backExtensionMotor.setControl(new Follower(ArmConstants.frontExtensionMotorID, true));
     }
 
@@ -192,5 +216,25 @@ public class ArmIOKraken implements ArmIO{
         backExtensionMotor.setNeutralMode(mode);
         leftShoulder.setNeutralMode(mode);
         rightShoulder.setNeutralMode(mode);
+    }
+
+    /** Calculates an additional feedforward output to add ON TOP of the feedforwad calculated by MotionMagic. 
+     * In this case, it counteracts the force of gravity on the extension.
+    */
+    private double calculateExtensionFeedForwardVolts(){
+        double feedforwardVolts = 0;
+        feedforwardVolts += ArmConstants.kGExtensionVolts * Math.sin(Math.toRadians(shoulderAngleDegrees));
+
+        //35.59 is the newtons of 8 pounds
+        double constantForceSpringTorqueNm = 35.59*ArmConstants.extensionPulleyRadiusMeters/ArmConstants.extensionGearReduction/2; //force exerted by the constant force spring attached to the wire snake
+        feedforwardVolts += constantForceSpringTorqueNm * Kraken.windingResistance / Kraken.torquePerAmp;
+        return feedforwardVolts;
+    }
+
+    private double calculateShoulderFeedForward(){
+        double feedforwardAmps = 0;
+        // feedforwardAmps += ArmConstants.kSArmVolts * Math.signum(targetShoulderAngleDegrees - shoulderAngleDegrees);
+        // feedforwardAmps += ArmConstants.kGArmVolts * Math.cos(Math.toRadians(shoulderAngleDegrees)) * extensionMeters; //TODO could be more precise, may be unecessary
+        return feedforwardAmps;
     }
 }

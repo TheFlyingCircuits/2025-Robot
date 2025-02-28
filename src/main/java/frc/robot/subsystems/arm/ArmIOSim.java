@@ -36,8 +36,6 @@ public class ArmIOSim implements ArmIO {
      
     public ArmIOSim() {
 
-        
-
         TalonFXConfiguration shoulderConfig = new TalonFXConfiguration();
 
         shoulderConfig.MotionMagic.MotionMagicAcceleration = 1; //units of rotation per second squared
