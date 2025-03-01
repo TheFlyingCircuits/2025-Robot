@@ -664,6 +664,15 @@ public class Drivetrain extends SubsystemBase {
         return closestReefStalk;
     }
 
+    public FieldElement getClosestSourceSide() {
+        if (FieldElement.LEFT_LOADING_STATION.getLocation2d().getDistance(getPoseMeters().getTranslation()) < 
+                FieldElement.RIGHT_LOADING_STATION.getLocation2d().getDistance(getPoseMeters().getTranslation()) ) {
+            return FieldElement.LEFT_LOADING_STATION;
+        } else {
+            return FieldElement.RIGHT_LOADING_STATION;
+        }
+    }
+
     /**
      * Drives towards the given location while pointing the intake at that location
      * @param noteLocation
