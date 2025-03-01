@@ -47,6 +47,10 @@ public class Arm extends SubsystemBase {
             new LoggedMechanismLigament2d("telescoper", ArmConstants.minExtensionMeters, -90, 10, new Color8Bit(Color.kSilver)));
 
     }
+    
+    public void setShoulderVoltage(double volts) {
+        io.setShoulderMotorVolts(volts);
+    }
 
     public double getShoulderAngleDegrees() {
         return inputs.shoulderAngleDegrees;
@@ -57,7 +61,7 @@ public class Arm extends SubsystemBase {
     }
 
     /**
-     * Sets the taret extension and angle of the arm to be equal to the one in the armPosition object.
+     * Sets the target extension and angle of the arm to be equal to the one in the armPosition object.
      */
     public void setArmPosition(ArmPosition armPosition) {
         io.setShoulderTargetAngle(armPosition.shoulderAngleDegrees);
@@ -76,6 +80,12 @@ public class Arm extends SubsystemBase {
         telescoper.setLength(meters);
     }
 
+    public Command setArmPositionCommand(ArmPosition armPosition) {
+        return this.run(() -> {
+            setArmPosition(armPosition);
+        });
+    }
+
     public Command setShoulderTargetAngleCommand(double degrees) {
         return this.run(() -> {
             io.setShoulderTargetAngle(degrees);
@@ -90,7 +100,7 @@ public class Arm extends SubsystemBase {
 
     public Command defaultCommand() {
         return this.run(() -> {
-            io.setExtensionTargetLength(ArmConstants.minExtensionMeters+0.1);
+            io.setExtensionTargetLength(ArmConstants.minExtensionMeters);
             io.setShoulderTargetAngle(0);
         });
     }

@@ -69,21 +69,22 @@ public final class Constants {
 
 
         public final static double kSExtensionVolts = 0.25;
-        public final static double kGExtensionVolts = 0.48;
+        public final static double kGExtensionVolts = 0.52;
         public final static double kVExtensionVoltsSecondsPerRadian = 3.2;
         public final static double kAExtensionVoltsSecondsSquaredPerRadian = 0;
-        public final static double kPExtensionVoltsPerMeter = 0.;
+        public final static double kPExtensionVoltsPerMeter = 20.;
+        public final static double kDExtensionVoltsPerMeterPerSecond = 2;
 
 
         /**Minimum angle of the arm, in degrees.*/
         public final static double armMinAngleDegrees = 0;
         /**Maximum angle of the arm, in degrees. This value should be positive and greater than 90, as it is beyond the vertical. */
-        public final static double armMaxAngleDegrees = 170.0;  
+        public final static double armMaxAngleDegrees = 135.0;  
 
 
 
         /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
-        public final static double shoulderGearReduction = 100;
+        public final static double shoulderGearReduction = 246.67;
         
 
 
@@ -195,7 +196,7 @@ public final class Constants {
 
     public final static class SwerveModuleConstants {
         /** Rotations of the drive wheel per rotations of the drive motor. */
-        public static final double driveGearReduction = (16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0);
+        public static final double driveGearReduction = (15.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0);
 
         /** Rotations of the steering column per rotations of the angle motor. */
         public static final double steerGearReduction = (14.0 / 50.0) * (10.0 / 60.0);
@@ -267,7 +268,7 @@ public final class Constants {
     }
 
     public final static class WristConstants {
-        public final static double maxAngleDegrees = 160;
+        public final static double maxAngleDegrees = 158;
         public final static double minAngleDegrees = 0;
 
         /**rotations of the wrist motor per rotations of the wrist */

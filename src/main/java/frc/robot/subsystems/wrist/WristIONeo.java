@@ -16,6 +16,9 @@ public class WristIONeo implements WristIO{
     
     private Neo wristNeo;
 
+    private SparkMaxConfig config;
+
+
     private RelativeEncoder leftEncoder;
     private RelativeEncoder rightEncoder;
 
@@ -34,7 +37,7 @@ public class WristIONeo implements WristIO{
 
     private void configMotors() {
         // configures both Neos
-        SparkMaxConfig config = new SparkMaxConfig();
+        config = new SparkMaxConfig();
         
         config.alternateEncoder.positionConversionFactor(180) //rotations to degrees
             .velocityConversionFactor(360/60) //rpm to deg/s
@@ -43,7 +46,7 @@ public class WristIONeo implements WristIO{
         config.encoder.positionConversionFactor(360/WristConstants.gearReduction)
             .velocityConversionFactor(360/60/WristConstants.gearReduction);
 
-        config.idleMode(IdleMode.kCoast)
+        config.idleMode(IdleMode.kBrake)
             .smartCurrentLimit(30)
             .inverted(true);
 
@@ -73,6 +76,11 @@ public class WristIONeo implements WristIO{
     @Override
     public void setWristNeoVolts(double volts) {
         wristNeo.setVoltage(volts);
+    }
+
+    public void setIdleMode(IdleMode mode) {
+        config.idleMode(mode);
+        wristNeo.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
 

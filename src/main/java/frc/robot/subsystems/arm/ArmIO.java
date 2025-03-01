@@ -16,18 +16,21 @@ public interface ArmIO {
          * Raising the arm from this position will make the angle positive, while lowering it will be negative.
          */
         public double shoulderAngleDegrees = 0.0;
-
         /**
          * Velocity of the arm in degrees per second.
          * Follows the same direction as armAngleDegrees.
          */
         public double shoulderVelocityDegreesPerSecond = 0.0;
-        public double shoulderAppliedCurrent = 0.0;
+
+        public double shoulderAppliedVolts = 0.0;
+        public double shoulderTorqueCurrent = 0.0;
 
         public double extensionLengthMeters = ArmConstants.minExtensionMeters;
         public double extensionLengthMetersPerSecond = 0.0;
+        public double extensionMetersPerSecondSquared = 0.0;
 
         public double extensionAppliedVolts = 0.0;
+        public double extensionStatorCurrent = 0.0;
 
     }
 

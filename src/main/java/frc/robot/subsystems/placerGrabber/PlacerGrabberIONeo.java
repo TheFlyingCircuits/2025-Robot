@@ -49,6 +49,9 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
         inputs.frontRollerRPM = frontNeo.getVelocity();
         inputs.sideRollerRPM = sideNeo.getVelocity();
 
+        inputs.frontMotorAppliedCurrent = frontNeo.getOutputCurrent();
+        inputs.sideMotorAppliedCurrent = sideNeo.getOutputCurrent();
+        
         inputs.leftSensorSeesCoral = sideNeo.getReverseLimitSwitch().isPressed();
         inputs.rightSensorSeesCoral = sideNeo.getForwardLimitSwitch().isPressed();
 
