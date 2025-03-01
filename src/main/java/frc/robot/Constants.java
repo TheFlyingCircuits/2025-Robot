@@ -102,6 +102,8 @@ public final class Constants {
         public final static int backExtensionMotorID = 11;
         public final static int leftPivotEncoderID = 4;
         public final static int rightPivotEncoderID = 5;
+
+        public static double minAngleDegrees;
         
 
 

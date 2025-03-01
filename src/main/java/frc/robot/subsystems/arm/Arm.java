@@ -24,10 +24,15 @@ import frc.robot.Constants.ArmConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
-public class Arm extends SubsystemBase {
+public class Arm {
 
     ArmIOInputsAutoLogged inputs;
     ArmIO io;
+
+    /** Shoulder subsystem object, separated out in order for commands to function independently of extension. */
+    public Shoulder shoulder;
+    /** Extension subsystem object, separated out in order for commands to function independently of shoulder. */
+    public Extension extension;
 
     LoggedMechanism2d mech2d = new LoggedMechanism2d(3, 3); //all units for mech2d are meters
     LoggedMechanismRoot2d mech2dRoot = mech2d.getRoot("pivot", 1, 1);
@@ -41,10 +46,40 @@ public class Arm extends SubsystemBase {
         this.io = io;
         inputs = new ArmIOInputsAutoLogged();
 
+        shoulder = new Shoulder();
+        extension = new Extension();
+
         shoulderBracket = mech2dRoot.append(
             new LoggedMechanismLigament2d("pivotBracket", ArmConstants.shoulderBracketLengthMeters, 90, 30, new Color8Bit(Color.kDarkOrange)));
         telescoper = shoulderBracket.append(
             new LoggedMechanismLigament2d("telescoper", ArmConstants.minExtensionMeters, -90, 10, new Color8Bit(Color.kSilver)));
+
+    }
+
+    
+    public class Shoulder extends SubsystemBase {
+        
+        public Command setTargetAngleCommand(double degrees) {
+            return this.run(() -> {
+                io.setShoulderTargetAngle(degrees);
+            });
+        }
+
+        @Override
+        //used to call the periodic for the arm as a whole
+        public void periodic() {
+            armPeriodic();
+        }
+    }
+
+    public class Extension extends SubsystemBase {
+
+        
+        public Command setTargetLengthCommand(double meters) {
+            return this.run(() -> {
+                io.setExtensionTargetLength(meters);
+            });
+        }
 
     }
     
@@ -80,33 +115,8 @@ public class Arm extends SubsystemBase {
         telescoper.setLength(meters);
     }
 
-    public Command setArmPositionCommand(ArmPosition armPosition) {
-        return this.run(() -> {
-            setArmPosition(armPosition);
-        });
-    }
 
-    public Command setShoulderTargetAngleCommand(double degrees) {
-        return this.run(() -> {
-            io.setShoulderTargetAngle(degrees);
-        });
-    }
-
-    public Command setExtensionTargetLengthCommand(double meters) {
-        return this.run(() -> {
-            io.setExtensionTargetLength(meters);
-        });
-    }
-
-    public Command defaultCommand() {
-        return this.run(() -> {
-            io.setExtensionTargetLength(ArmConstants.minExtensionMeters);
-            io.setShoulderTargetAngle(0);
-        });
-    }
-
-    @Override
-    public void periodic() {
+    public void armPeriodic() {
         io.updateInputs(inputs);
         Logger.processInputs("armInputs", this.inputs);
 

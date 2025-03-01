@@ -8,12 +8,10 @@ import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -22,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.ReefBranch;
@@ -32,7 +31,6 @@ import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIOKraken;
 import frc.robot.subsystems.arm.ArmIOSim;
-import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
@@ -61,10 +59,6 @@ public class RobotContainer {
     public final PlacerGrabber placerGrabber;
 
     private DigitalInput coastModeButton;
-
-    private boolean isFacingForward = true;
-    private String sideCoralIsIntaked = "left";
-
 
     
     public RobotContainer() {
@@ -127,7 +121,8 @@ public class RobotContainer {
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
         leds.setDefaultCommand(leds.defaultCommand());
-        arm.setDefaultCommand(arm.defaultCommand());
+        arm.shoulder.setDefaultCommand(arm.shoulder.setTargetAngleCommand(ArmConstants.minAngleDegrees));
+        arm.extension.setDefaultCommand(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters));
         wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5));
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
@@ -167,8 +162,25 @@ public class RobotContainer {
         // controller.rightBumper().whileTrue(
         //     arm.setArmPositionCommand(new ArmPosition(57.8, 0, 0.97))
         //     .alongWith(wrist.setTargetPositionCommand(79)));
+        
 
-            
+        controller.rightBumper().onTrue(arm.shoulder.setTargetAngleCommand(57.8)
+            .alongWith(
+                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() >= 45))
+                .andThen(
+                    arm.extension.setTargetLengthCommand(0.97))
+            .alongWith(
+                wrist.setTargetPositionCommand(79)
+            )
+        );
+
+
+        //L4 DO NOT USE
+        // controller.rightBumper().whileTrue(
+        //     arm.setArmPositionCommand(new ArmPosition(73.5, 0, 1.46))
+        //     .alongWith(wrist.setTargetPositionCommand(58.83))
+        // );
+    
         controller.leftBumper().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(9, 0));
 
         controller.rightTrigger()
@@ -220,15 +232,11 @@ public class RobotContainer {
 
 
         if (RobotBase.isReal()) {
-            Trigger coastModeLimitSwitch = new Trigger(() -> coastModeButton.get());
+            Trigger coastModeLimitSwitch = new Trigger(() -> coastModeButton.get() && DriverStation.isDisabled());
             coastModeLimitSwitch.toggleOnTrue( //toggles between coast mode and brake mode
-                Commands.run(() -> {
-                    armIO.setIdleMode(NeutralModeValue.Coast);
-                    wristIO.setIdleMode(IdleMode.kCoast);
-                }).finallyDo(() -> {
-                    System.out.println("set to brake mode");
-                    armIO.setIdleMode(NeutralModeValue.Brake);
-                    wristIO.setIdleMode(IdleMode.kBrake);
+                Commands.runOnce(() -> {
+                    wristIO.toggleIdleMode();
+                    armIO.toggleIdleMode();
                 }).ignoringDisable(true)
             );
         }
@@ -256,7 +264,9 @@ public class RobotContainer {
     }
 
     private Command intake() {
-        return arm.setArmPositionCommand(new ArmPosition(0, 0, 0.76))
+        return arm.shoulder.setTargetAngleCommand(0)
+            .alongWith(
+                arm.extension.setTargetLengthCommand(0.76))
             .alongWith(
                 wrist.setTargetPositionCommand(0))
             .alongWith(

@@ -53,15 +53,11 @@ public class ArmIOKraken implements ArmIO{
     double extensionMeters = ArmConstants.minExtensionMeters;
     double targetShoulderAngleDegrees = 0;
     double shoulderAngleDegrees = 0;
+
+    NeutralModeValue neutralMode = NeutralModeValue.Brake;
     
 
     public ArmIOKraken() {
-
-        SmartDashboard.putNumber("extensionkS", 0);
-        SmartDashboard.putNumber("extensionkV", 0);
-        SmartDashboard.putNumber("extensionkA", 0);
-        SmartDashboard.putNumber("extensionkP", 0);
-
         configMotors();
     }
 
@@ -242,11 +238,19 @@ public class ArmIOKraken implements ArmIO{
         backExtensionMotor.setVoltage(volts);
     }
 
-    public void setIdleMode(NeutralModeValue mode) {
-        frontExtensionMotor.setNeutralMode(mode);
-        backExtensionMotor.setNeutralMode(mode);
-        leftShoulder.setNeutralMode(mode);
-        rightShoulder.setNeutralMode(mode);
+    public void toggleIdleMode() {
+
+        if (neutralMode == NeutralModeValue.Brake) {
+            neutralMode = NeutralModeValue.Coast;
+        }
+        else if (neutralMode == NeutralModeValue.Coast) {
+            neutralMode = NeutralModeValue.Brake;
+        }
+
+        frontExtensionMotor.setNeutralMode(neutralMode);
+        backExtensionMotor.setNeutralMode(neutralMode);
+        leftShoulder.setNeutralMode(neutralMode);
+        rightShoulder.setNeutralMode(neutralMode);
     }
 
     /** Calculates an additional feedforward output to add ON TOP of the feedforwad calculated by MotionMagic. 

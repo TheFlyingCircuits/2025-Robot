@@ -18,9 +18,10 @@ public class WristIONeo implements WristIO{
 
     private SparkMaxConfig config;
 
-
     private RelativeEncoder leftEncoder;
     private RelativeEncoder rightEncoder;
+
+    private IdleMode idleMode;
 
     /**
      * Creates a WristIONeo object.
@@ -78,8 +79,16 @@ public class WristIONeo implements WristIO{
         wristNeo.setVoltage(volts);
     }
 
-    public void setIdleMode(IdleMode mode) {
-        config.idleMode(mode);
+    public void toggleIdleMode() {
+        if (idleMode == IdleMode.kBrake) {
+            idleMode = IdleMode.kCoast;
+        }
+        else if (idleMode == IdleMode.kCoast) {
+            idleMode = IdleMode.kBrake;
+        }
+
+        config.idleMode(idleMode);
+        
         wristNeo.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
