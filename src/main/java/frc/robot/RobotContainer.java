@@ -139,7 +139,7 @@ public class RobotContainer {
 
 
         controller.rightBumper().whileTrue(
-            new SourceIntake(drivetrain, arm, wrist)
+            new SourceIntake(drivetrain, arm, wrist, placerGrabber)
         );
 
         // controller.rightBumper().whileTrue(

@@ -3,12 +3,12 @@ package frc.robot.commands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drivetrain.Drivetrain;
+import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.wrist.Wrist;
 
 public class SourceIntake extends Command{
@@ -17,11 +17,13 @@ public class SourceIntake extends Command{
     Arm arm;
     Wrist wrist;
     Pose2d targetRobotPose2d;
+    PlacerGrabber placerGrabber;
 
-    public SourceIntake(Drivetrain drivetrain, Arm arm, Wrist wrist) {
+    public SourceIntake(Drivetrain drivetrain, Arm arm, Wrist wrist, PlacerGrabber placerGrabber) {
         this.drivetrain=drivetrain;
         this.arm=arm;
         this.wrist=wrist;
+        this.placerGrabber=placerGrabber;
         
     }
     
@@ -29,8 +31,6 @@ public class SourceIntake extends Command{
     @Override
     public void initialize() {
         FieldElement sourceSide = drivetrain.getClosestSourceSide();
-        Translation2d sourceTranslation2d = sourceSide.getLocation2d();+
-        
         Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(18), 0, new Rotation2d());
         targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
     }
@@ -42,9 +42,17 @@ public class SourceIntake extends Command{
             double desiredArmAngle = 0;
             double desiredArmExtention = 0;
             double desiredWristAngle = 0;
-            arm.setShoulderTargetAngleCommand(desiredArmAngle);
-            arm.setExtensionTargetLengthCommand(desiredArmExtention);
-            wrist.setTargetPositionDegrees(desiredWristAngle);
+            if ((arm.getShoulderAngleDegrees() - 0.5) < desiredWristAngle || (arm.getShoulderAngleDegrees() + 0.5) > desiredWristAngle) {
+                arm.setExtensionTargetLength(desiredArmExtention);
+                wrist.setTargetPositionDegrees(desiredWristAngle);
+            }
+            arm.setShoulderTargetAngle(desiredArmAngle);
+            placerGrabber.setSideRollerVolts(3);
+            placerGrabber.setFrontRollerVolts(3);
+            if(placerGrabber.doesHaveCoral()) {
+                return;
+            }
+
         } 
         
     }
