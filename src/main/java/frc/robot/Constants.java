@@ -245,7 +245,11 @@ public final class Constants {
 
     public final static class VisionConstants {
 
-
+        //Camera, IP, hostname
+        //fronLeft, 10.17.87.50, Photon-RPi4-FL
+        //frontRight, 10.17.87.51, Photon-RPi4-FR
+        //backRight, 10.17.87.52, Photon-RPi4-BR
+        //backLeft, 10.17.87.53, Photon-RPi4-BL
         public final static AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.tagLayout;
                                                        
         //TODO: UPDATE TRANSFORMS TO ACTUAL ROBOT
