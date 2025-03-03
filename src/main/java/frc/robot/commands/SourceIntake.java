@@ -26,12 +26,20 @@ public class SourceIntake extends Command{
         this.placerGrabber=placerGrabber;
         
     }
+
+    @Override 
+    public boolean isFinished() {
+        if(placerGrabber.doesHaveCoral()) {
+                return true;
+        }
+        return false;
+    }
     
 
     @Override
     public void initialize() {
         FieldElement sourceSide = drivetrain.getClosestSourceSide();
-        Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(18), 0, new Rotation2d());
+        Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.fromDegrees(180));
         targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
     }
 
@@ -42,16 +50,13 @@ public class SourceIntake extends Command{
             double desiredArmAngle = 0;
             double desiredArmExtention = 0;
             double desiredWristAngle = 0;
-            if ((arm.getShoulderAngleDegrees() - 0.5) < desiredWristAngle || (arm.getShoulderAngleDegrees() + 0.5) > desiredWristAngle) {
+            if ((arm.getShoulderAngleDegrees() - 0.5) < desiredArmAngle || (arm.getShoulderAngleDegrees() + 0.5) > desiredArmAngle) {
                 arm.setExtensionTargetLength(desiredArmExtention);
                 wrist.setTargetPositionDegrees(desiredWristAngle);
             }
             arm.setShoulderTargetAngle(desiredArmAngle);
             placerGrabber.setSideRollerVolts(3);
             placerGrabber.setFrontRollerVolts(3);
-            if(placerGrabber.doesHaveCoral()) {
-                return;
-            }
 
         } 
         
