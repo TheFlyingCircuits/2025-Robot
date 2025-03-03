@@ -29,10 +29,10 @@ public class SourceIntake extends Command{
     @Override
     public void initialize() {
         FieldElement sourceSide = drivetrain.getClosestSourceSide();
-        Translation2d sourceTranslation2d = sourceSide.getLocation2d();
-        double adjustedX = sourceTranslation2d.getX() + Units.inchesToMeters(18);
-        Transform2d robotTransform2d = new Transform2d(adjustedX, 0, new Rotation2d());
-        targetRobotPose2d = new Pose2d(robotTransform2d.getX(), robotTransform2d.getY(), new Rotation2d());
+        Translation2d sourceTranslation2d = sourceSide.getLocation2d();+
+        
+        Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(18), 0, new Rotation2d());
+        targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
     }
 
     @Override
