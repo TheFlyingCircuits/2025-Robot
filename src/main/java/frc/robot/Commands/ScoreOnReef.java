@@ -59,7 +59,7 @@ public class ScoreOnReef extends Command {
         //TODO: adjust based on left/right intake in the grabby
         //TODO: make this potentially a pivot-side score
         Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, new Rotation2d());
-        return  stalkPose.plus(targetPoseToRobotRelativeToStalk);
+        return stalkPose.plus(targetPoseToRobotRelativeToStalk);
     }
 
     /**

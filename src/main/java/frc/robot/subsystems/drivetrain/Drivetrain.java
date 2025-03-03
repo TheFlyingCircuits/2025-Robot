@@ -35,6 +35,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
@@ -332,6 +333,13 @@ public class Drivetrain extends SubsystemBase {
     /**
      * Uses PID control to reach a target pose2d.
      */
+    public boolean translationControllerAtSetpoint() {
+        if (translationController.atSetpoint()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     public void pidToPose(Pose2d desired) {
         Pose2d current = getPoseMeters();
 
@@ -693,7 +701,6 @@ public class Drivetrain extends SubsystemBase {
     public double getAngleError() {
         return angleController.getError();
     }
-
 
     @Override
     public void periodic() {

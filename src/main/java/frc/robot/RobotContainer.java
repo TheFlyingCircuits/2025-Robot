@@ -6,28 +6,22 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.ScoreOnReef;
+import frc.robot.commands.SourceIntake;
 import frc.robot.commands.leds.ReefFaceLED;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIOKraken;
 import frc.robot.subsystems.arm.ArmIOSim;
-import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
@@ -118,8 +112,8 @@ public class RobotContainer {
         wrist.setDefaultCommand(wrist.setTargetPositionCommand(0));
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
-        // realBindings();
-        testBindings();
+        realBindings();
+        // testBindings();
         triggers();
 
     }
@@ -144,19 +138,22 @@ public class RobotContainer {
         controller.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
 
 
-
         controller.rightBumper().whileTrue(
-            new ScoreOnReef(
-                drivetrain,
-                arm,
-                wrist,
-                charlie::getRequestedFieldOrientedVelocity,
-                () -> {return drivetrain.getClosestReefStalk().getBranch(3);},
-                leds,
-                () -> placerGrabber.sideCoralIsIn(),
-                () -> isFacingReef()
-            )
+            new SourceIntake(drivetrain, arm, wrist)
         );
+
+        // controller.rightBumper().whileTrue(
+        //     new ScoreOnReef(
+        //         drivetrain,
+        //         arm,
+        //         wrist,
+        //         charlie::getRequestedFieldOrientedVelocity,
+        //         () -> {return drivetrain.getClosestReefStalk().getBranch(3);},
+        //         leds,
+        //         () -> placerGrabber.sideCoralIsIn(),
+        //         () -> isFacingReef()
+        //     )
+        // );
 
         controller.rightTrigger()
             .whileTrue(
@@ -189,32 +186,6 @@ public class RobotContainer {
 
     }
 
-    public void sourceIntake() {
-        FieldElement sourceSide = drivetrain.getClosestSourceSide();
-        Translation2d robotTranslation = drivetrain.getPoseMeters().getTranslation();
-        Translation3d sourceTranslation = sourceSide.getLocation();
-        // reefBranch.get().getLocation();
-
-        Translation2d horizontalTranslation = robotTranslation.minus(sourceTranslation.toTranslation2d());
-        double horizontalExtensionMeters = horizontalTranslation.getNorm();
-
-        double verticalExtensionMeters = sourceTranslation.getZ();
-
-        horizontalExtensionMeters -= 0.1; //TODO: tweak these
-        verticalExtensionMeters += 0.2;
-
-        double targetWristAngleDegrees = 0;
-
-        ArmPosition armPosition = ArmPosition.generateArmPosition(
-            new Pose2d(
-                horizontalExtensionMeters,
-                verticalExtensionMeters,
-                Rotation2d.fromDegrees(targetWristAngleDegrees)
-            )
-        );
-
-        
-    }
 
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
         return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), () -> isFacingReef());
@@ -247,11 +218,6 @@ public class RobotContainer {
             placerGrabber.setSideRollerVolts(sideRollerVolts);
             placerGrabber.setFrontRollerVolts(frontRollerVolts);
         });
-    }
-
-    private Command sourceIntakeCommand() {
-        return Commands.run(() -> {sourceIntake();});
-
     }
     
     public Command intakeTowardsCoralInAuto() {
