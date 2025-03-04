@@ -95,6 +95,10 @@ public class Arm {
         return inputs.extensionLengthMeters;
     }
 
+    public double getExtensionMetersPerSecond() {
+        return inputs.extensionLengthMetersPerSecond;
+    }
+
     /**
      * Sets the target extension and angle of the arm to be equal to the one in the armPosition object.
      */

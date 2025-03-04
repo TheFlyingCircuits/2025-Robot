@@ -60,6 +60,10 @@ public class RobotContainer {
 
     private DigitalInput coastModeButton;
 
+
+
+
+    Command waitUntil;
     
     public RobotContainer() {
 
@@ -121,8 +125,19 @@ public class RobotContainer {
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
         leds.setDefaultCommand(leds.defaultCommand());
-        arm.shoulder.setDefaultCommand(arm.shoulder.setTargetAngleCommand(ArmConstants.minAngleDegrees));
-        arm.extension.setDefaultCommand(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters));
+        
+        
+        //wait until wrist homes to retract arm
+        arm.extension.setDefaultCommand(
+            new WaitUntilCommand(() -> true)
+                .andThen(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters)));
+
+        //wait until extension retracts to lower arm
+        arm.shoulder.setDefaultCommand(
+            new WaitUntilCommand(() -> arm.getExtensionMeters() <= ArmConstants.minExtensionMeters+0.5 && arm.getExtensionMetersPerSecond() < 0.1)
+                .andThen(arm.shoulder.setTargetAngleCommand(ArmConstants.minAngleDegrees))
+        );
+
         wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5));
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
@@ -162,26 +177,31 @@ public class RobotContainer {
         // controller.rightBumper().whileTrue(
         //     arm.setArmPositionCommand(new ArmPosition(57.8, 0, 0.97))
         //     .alongWith(wrist.setTargetPositionCommand(79)));
-        
 
-        controller.rightBumper().onTrue(arm.shoulder.setTargetAngleCommand(57.8)
+
+        //L4
+        controller.rightBumper().whileTrue(arm.shoulder.setTargetAngleCommand(71)
             .alongWith(
-                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() >= 45))
-                .andThen(
-                    arm.extension.setTargetLengthCommand(0.97))
-            .alongWith(
-                wrist.setTargetPositionCommand(79)
+                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() >= 45).andThen(arm.extension.setTargetLengthCommand(1.57)),
+                wrist.setTargetPositionCommand(42)
             )
         );
 
+        //SOURCE
+        //35.23, 0.737, 53.5
 
-        //L4 DO NOT USE
-        // controller.rightBumper().whileTrue(
-        //     arm.setArmPositionCommand(new ArmPosition(73.5, 0, 1.46))
-        //     .alongWith(wrist.setTargetPositionCommand(58.83))
-        // );
+        controller.b().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6)
+            .alongWith(
+                arm.shoulder.setTargetAngleCommand(35.23),
+                arm.extension.setTargetLengthCommand(0.737),
+                wrist.setTargetPositionCommand(53.5)
+            ).until(() -> placerGrabber.doesHaveCoral())
+        );
     
-        controller.leftBumper().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(9, 0));
+        controller.leftBumper().whileTrue(
+            placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.25)
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, -9))
+            );
 
         controller.rightTrigger()
             .whileTrue(
@@ -243,10 +263,13 @@ public class RobotContainer {
 
     }
 
-    /** Called by Robot.java, brief convenience function. */
+    /** Called by Robot.java, convenience function for logging. */
     public void periodic() {
-        Logger.recordOutput("coastModeLimitSwitch", coastModeButton.get());
+        Logger.recordOutput("robotContainer/coastModeLimitSwitch", coastModeButton.get());
+        // Logger.recordOutput("robotContainer/waitUntil.IsFinished()", waitUntil.isFinished());
     }    
+
+
     public boolean isFacingReef() {
         if((drivetrain.getClosestReefFace().getOrientation2d().getCos() *
         drivetrain.getPoseMeters().getRotation().getCos()) + 
@@ -264,13 +287,11 @@ public class RobotContainer {
     }
 
     private Command intake() {
-        return arm.shoulder.setTargetAngleCommand(0)
+        return placerGrabber.setPlacerGrabberVoltsCommand(10, 8)
             .alongWith(
-                arm.extension.setTargetLengthCommand(0.76))
-            .alongWith(
-                wrist.setTargetPositionCommand(0))
-            .alongWith(
-                placerGrabber.setPlacerGrabberVoltsCommand(3, 3));
+                arm.shoulder.setTargetAngleCommand(0),
+                arm.extension.setTargetLengthCommand(0.77),
+                wrist.setTargetPositionCommand(-1));
     }
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {

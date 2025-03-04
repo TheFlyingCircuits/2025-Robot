@@ -21,7 +21,7 @@ public class WristIONeo implements WristIO{
     private RelativeEncoder leftEncoder;
     private RelativeEncoder rightEncoder;
 
-    private IdleMode idleMode;
+    private IdleMode idleMode = IdleMode.kBrake;
 
     /**
      * Creates a WristIONeo object.
@@ -88,7 +88,7 @@ public class WristIONeo implements WristIO{
         }
 
         config.idleMode(idleMode);
-        
+
         wristNeo.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 

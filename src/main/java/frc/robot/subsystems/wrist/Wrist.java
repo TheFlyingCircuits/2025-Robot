@@ -38,9 +38,9 @@ public class Wrist extends SubsystemBase {
         moveToTargetPosition(desiredWristPositionDegrees);
     }
 
-    public void setTargetPositionDegrees(double targetAngleDegrees) {
-        
-        desiredWristPositionDegrees = targetAngleDegrees;
+
+    public double getWristAngleDegrees() {
+        return inputs.wristAngleDegrees;
     }
 
     private void moveToTargetPosition(double targetDegrees) {
@@ -53,6 +53,11 @@ public class Wrist extends SubsystemBase {
         
         io.setWristNeoVolts(outputVolts);
 
+    }
+
+    public void setTargetPositionDegrees(double targetAngleDegrees) {
+        
+        desiredWristPositionDegrees = targetAngleDegrees;
     }
 
     public Command setTargetPositionCommand (double targetDegrees) {

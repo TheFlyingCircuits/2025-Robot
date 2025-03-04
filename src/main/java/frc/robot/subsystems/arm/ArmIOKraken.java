@@ -163,23 +163,27 @@ public class ArmIOKraken implements ArmIO{
         inputs.extensionStatorCurrent = (frontExtensionMotor.getStatorCurrent().getValueAsDouble()
                                     + backExtensionMotor.getStatorCurrent().getValueAsDouble())/2;
 
-        if (leftPivotEncoder.getAbsolutePosition().getStatus() == StatusCode.OK) {
-            shoulderAngleDegrees = leftPivotEncoder.getAbsolutePosition().getValueAsDouble() * 360;
-            inputs.shoulderAngleDegrees = shoulderAngleDegrees;
-            inputs.shoulderVelocityDegreesPerSecond = leftPivotEncoder.getVelocity().getValueAsDouble() * 360;
-        }
-        else if (rightPivotEncoder.getAbsolutePosition().getStatus() == StatusCode.OK) {
-            System.out.println("Left pivot encoder not measuring! Using right instead");
-            shoulderAngleDegrees = rightPivotEncoder.getAbsolutePosition().getValueAsDouble() * 360;
-            inputs.shoulderAngleDegrees = shoulderAngleDegrees;
-            inputs.shoulderVelocityDegreesPerSecond = rightPivotEncoder.getVelocity().getValueAsDouble() * 360;
-        }
-        else {
-            System.out.println("Both pivot encoders not measuring. Defaulting to shoulder angle of 0");
-            shoulderAngleDegrees = 0;
-            inputs.shoulderAngleDegrees = 0;
-            inputs.shoulderVelocityDegreesPerSecond = 0;
-        }
+        shoulderAngleDegrees = leftShoulder.getPosition().getValueAsDouble() * 360;
+        inputs.shoulderAngleDegrees = shoulderAngleDegrees;
+        inputs.shoulderVelocityDegreesPerSecond = leftShoulder.getVelocity().getValueAsDouble() * 360;
+        
+        // if (leftPivotEncoder.getAbsolutePosition().getStatus() == StatusCode.OK) {
+        //     shoulderAngleDegrees = leftPivotEncoder.getAbsolutePosition().getValueAsDouble() * 360;
+        //     inputs.shoulderAngleDegrees = shoulderAngleDegrees;
+        //     inputs.shoulderVelocityDegreesPerSecond = leftPivotEncoder.getVelocity().getValueAsDouble() * 360;
+        // }
+        // else if (rightPivotEncoder.getAbsolutePosition().getStatus() == StatusCode.OK) {
+        //     System.out.println("Left pivot encoder not measuring! Using right instead");
+        //     shoulderAngleDegrees = rightPivotEncoder.getAbsolutePosition().getValueAsDouble() * 360;
+        //     inputs.shoulderAngleDegrees = shoulderAngleDegrees;
+        //     inputs.shoulderVelocityDegreesPerSecond = rightPivotEncoder.getVelocity().getValueAsDouble() * 360;
+        // }
+        // else {
+        //     System.out.println("Both pivot encoders not measuring. Defaulting to shoulder angle of 0");
+        //     shoulderAngleDegrees = 0;
+        //     inputs.shoulderAngleDegrees = 0;
+        //     inputs.shoulderVelocityDegreesPerSecond = 0;
+        // }
 
         inputs.shoulderAppliedVolts = (leftShoulder.getMotorVoltage().getValueAsDouble()
                                         + rightShoulder.getMotorVoltage().getValueAsDouble())/2.;

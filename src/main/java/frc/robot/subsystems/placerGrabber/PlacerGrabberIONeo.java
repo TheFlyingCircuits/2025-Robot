@@ -28,20 +28,32 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
         sideNeo = new Neo(3);
 
         // configures both Neos
-        SparkMaxConfig config = new SparkMaxConfig();
-        config.idleMode(IdleMode.kBrake);
-        config.smartCurrentLimit(30);
+        SparkMaxConfig sideNeoConfig = new SparkMaxConfig();
+        sideNeoConfig.idleMode(IdleMode.kBrake);
+        sideNeoConfig.smartCurrentLimit(50);
 
-        config.inverted(false);
-        sideNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        sideNeoConfig.inverted(false);
+        sideNeoConfig.limitSwitch.reverseLimitSwitchEnabled(false);
+        sideNeoConfig.limitSwitch.forwardLimitSwitchEnabled(false);
+
+        sideNeo.configure(sideNeoConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         
+
+        SparkMaxConfig frontNeoConfig = new SparkMaxConfig();
+
+        
+        frontNeoConfig.idleMode(IdleMode.kBrake);
+        
+        frontNeoConfig.smartCurrentLimit(15);
+
         //config for the left alternate encoder, eventually used by the wristIO
-        config.alternateEncoder.positionConversionFactor(360) //rotations to degrees
+        frontNeoConfig.alternateEncoder.positionConversionFactor(360) //rotations to degrees
             .velocityConversionFactor(360/60) //rpm to deg/s
             .inverted(false);
 
-        config.inverted(true);
-        frontNeo.configure(config.inverted(true), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        frontNeoConfig.inverted(true);
+        frontNeo.configure(frontNeoConfig.inverted(true), ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     @Override
