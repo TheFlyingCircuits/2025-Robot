@@ -22,12 +22,16 @@ public interface ArmIO {
          */
         public double shoulderVelocityDegreesPerSecond = 0.0;
 
+        public double targetShoulderAngleDegrees = 0.0;
+
         public double shoulderAppliedVolts = 0.0;
         public double shoulderTorqueCurrent = 0.0;
 
         public double extensionLengthMeters = ArmConstants.minExtensionMeters;
         public double extensionLengthMetersPerSecond = 0.0;
         public double extensionMetersPerSecondSquared = 0.0;
+
+        public double targetExtensionLengthMeters = ArmConstants.minExtensionMeters;
 
         public double extensionAppliedVolts = 0.0;
         public double extensionStatorCurrent = 0.0;

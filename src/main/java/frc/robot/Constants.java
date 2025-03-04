@@ -28,7 +28,6 @@ import frc.robot.PlayingField.FieldConstants;
 public final class Constants {
 
     public final static boolean atCompetition = false;
-    public final static boolean isDemoMode = false;
 
     public final class UniversalConstants {
         public final static double gravityMetersPerSecondSquared = 9.81;
@@ -252,23 +251,45 @@ public final class Constants {
         //backLeft, 10.17.87.53, Photon-RPi4-BL
         public final static AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.tagLayout;
                                                        
-        //TODO: UPDATE TRANSFORMS TO ACTUAL ROBOT
-        public final static Transform3d robotToShooterCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
-            new Rotation3d(0, Math.toRadians(35.5), 0)
+
+        public final static Transform3d robotToFrontLeft = new Transform3d(
+            new Translation3d(Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, -Math.toRadians(17.772))
         );
 
+        public final static Transform3d robotToFrontRight = new Transform3d(
+            new Translation3d(Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, Math.toRadians(17.772))
+        );
+
+        public final static Transform3d robotToBackLeft = new Transform3d(
+            new Translation3d(-Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, -Math.toRadians(17.772-180))
+        );
+
+        public final static Transform3d robotToBackRight = new Transform3d(
+            new Translation3d(-Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, Math.toRadians(-17.772+180))
+        );
+
+        //TODO: UPDATE this transform TO ACTUAL ROBOT
         public final static Transform3d robotToCoralCamera = new Transform3d(
             new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
             new Rotation3d(0, Math.toRadians(35.5), 0)
         );
 
         public final static String[] tagCameraNames = {
-            "shooterCamera"
+            "frontLeft",
+            "frontRight",
+            "backLeft",
+            "backRight"
         };
 
         public final static Transform3d tagCameraTransforms[] = {
-            robotToShooterCamera
+            robotToFrontLeft,
+            robotToFrontRight,
+            robotToBackLeft,
+            robotToBackRight
         };
 
     }

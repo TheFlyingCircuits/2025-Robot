@@ -91,6 +91,10 @@ public class Arm {
         return inputs.shoulderAngleDegrees;
     }
 
+    public double getTargetShoulderAngleDegrees() {
+        return inputs.targetShoulderAngleDegrees;
+    }
+
     public double getExtensionMeters() {
         return inputs.extensionLengthMeters;
     }

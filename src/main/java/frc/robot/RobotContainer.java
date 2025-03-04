@@ -105,7 +105,8 @@ public class RobotContainer {
                 new SwerveModuleIOKraken(2, 3, 0.397705, 1, "FR"),
                 new SwerveModuleIOKraken(4, 5, 0.238281, 2, "BL"),
                 new SwerveModuleIOKraken(6, 7,  -0.370850, 3, "BR"),
-                new VisionIOPhotonLib(){}
+                new VisionIO(){}
+                // new VisionIOPhotonLib(){}
             );
 
             coastModeButton = new DigitalInput(0);

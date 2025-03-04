@@ -159,13 +159,19 @@ public class ArmIOKraken implements ArmIO{
         inputs.extensionLengthMeters = extensionMeters;
         inputs.extensionLengthMetersPerSecond = frontExtensionMotor.getVelocity().getValueAsDouble();
         inputs.extensionMetersPerSecondSquared = frontExtensionMotor.getAcceleration().getValueAsDouble();
+
+        inputs.targetExtensionLengthMeters = targetExtensionMeters;
+
         inputs.extensionAppliedVolts = frontExtensionMotor.getMotorVoltage().getValueAsDouble();
         inputs.extensionStatorCurrent = (frontExtensionMotor.getStatorCurrent().getValueAsDouble()
                                     + backExtensionMotor.getStatorCurrent().getValueAsDouble())/2;
 
+
         shoulderAngleDegrees = leftShoulder.getPosition().getValueAsDouble() * 360;
         inputs.shoulderAngleDegrees = shoulderAngleDegrees;
         inputs.shoulderVelocityDegreesPerSecond = leftShoulder.getVelocity().getValueAsDouble() * 360;
+
+        inputs.targetShoulderAngleDegrees = targetShoulderAngleDegrees;
         
         // if (leftPivotEncoder.getAbsolutePosition().getStatus() == StatusCode.OK) {
         //     shoulderAngleDegrees = leftPivotEncoder.getAbsolutePosition().getValueAsDouble() * 360;

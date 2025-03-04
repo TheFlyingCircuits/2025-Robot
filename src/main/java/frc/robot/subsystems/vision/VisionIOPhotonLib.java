@@ -34,10 +34,13 @@ public class VisionIOPhotonLib implements VisionIO {
 
     public VisionIOPhotonLib() {
 
-        intakeCamera = new PhotonCamera("intakeCamera");
+        // intakeCamera = new PhotonCamera("intakeCamera");
 
         tagCameras = Arrays.asList(
-            new PhotonCamera(VisionConstants.tagCameraNames[0])
+            new PhotonCamera(VisionConstants.tagCameraNames[0]),
+            new PhotonCamera(VisionConstants.tagCameraNames[1]),
+            new PhotonCamera(VisionConstants.tagCameraNames[2]),
+            new PhotonCamera(VisionConstants.tagCameraNames[3])
         );
 
         /* When in demo mode, the apriltags will probably be pitched/rolled a bit
@@ -54,12 +57,11 @@ public class VisionIOPhotonLib implements VisionIO {
          * an alternative pose estimation strategy when in demo mode.
          */
         PoseStrategy estimationStrat = PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR;
-        if (Constants.isDemoMode) {
-            // TODO: learn about "averaging" 3D orientations?
-            //       it seems like it's not super straight forward,
-            //       but I don't have time for a rabbit hole right now.
-            estimationStrat = PoseStrategy.AVERAGE_BEST_TARGETS;
-        }
+
+        // TODO: learn about "averaging" 3D orientations?
+        //       it seems like it's not super straight forward,
+        //       but I don't have time for a rabbit hole right now.
+        // estimationStrat = PoseStrategy.AVERAGE_BEST_TARGETS;
 
         poseEstimators = new ArrayList<PhotonPoseEstimator>();
         for (int i = 0; i < tagCameras.size(); i++) {
@@ -67,7 +69,7 @@ public class VisionIOPhotonLib implements VisionIO {
                 new PhotonPoseEstimator(
                     VisionConstants.aprilTagFieldLayout,
                     estimationStrat,
-                    //tagCameras.get(i)
+                    // tagCameras.get(i)
                     VisionConstants.tagCameraTransforms[i]
                 )
             );
@@ -280,6 +282,6 @@ public class VisionIOPhotonLib implements VisionIO {
             }
         });
 
-        inputs.detectedCoralsRobotFrame = updateIntakeCamera();
+        // inputs.detectedCoralsRobotFrame = updateIntakeCamera();
     }
 }
