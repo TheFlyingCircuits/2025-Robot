@@ -1,7 +1,5 @@
 package frc.robot;
 
-import com.fasterxml.jackson.annotation.ObjectIdGenerators.None;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -59,26 +57,41 @@ public class Autos extends RobotContainer{
         }
         return sourceIntakeCommand();
     }
-
+    
     private Command isInRangeOfPose() {
-        return Commands.run(() -> {System.out.println("3");}, null).onlyWhile(!(drivetrain.getPoseMeters().getTranslation().getDistance(drivetrain.getClosestSourceSide().getLocation2d()) > 4));
+        return Commands.run(() -> {System.out.println("3");}).onlyWhile(() -> !(drivetrain.getPoseMeters().getTranslation().getDistance(drivetrain.getClosestSourceSide().getLocation2d()) > 4));
     }
 
     public Command rightSideAuto() {
 
         return new SequentialCommandGroup(
-            FlyingCircuitUtils.followPath("Right Start to Top Right"),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_F4),
-            FlyingCircuitUtils.followPath("Right Side to Right Source").withDeadline(doesSeeCoralCommand()), // will stop when either is completed?
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_E4),
+            intake().withDeadline(isInRangeOfPose()),
+            sourceIntakeCommand(),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_D4),
             intake().withDeadline(isInRangeOfPose()),
             intakeIfDoesntHaveCoral(),
-            FlyingCircuitUtils.followPath("Right Source to Bottom Right"),
             scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_C4),
-            FlyingCircuitUtils.followPath("Right Side to Right Source").withDeadline(doesSeeCoralCommand()),
             intake().withDeadline(isInRangeOfPose()),
             intakeIfDoesntHaveCoral(),
-            FlyingCircuitUtils.followPath("Right Source to Bottom Right"),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_D4)
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_B4)
+        );
+
+    }
+
+    public Command leftSideAuto() {
+
+        return new SequentialCommandGroup(
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_J4),
+            intake().withDeadline(isInRangeOfPose()),
+            intakeIfDoesntHaveCoral(),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_K4),
+            intake().withDeadline(isInRangeOfPose()),
+            intakeIfDoesntHaveCoral(),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_L4),
+            intake().withDeadline(isInRangeOfPose()),
+            intakeIfDoesntHaveCoral(),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_A4)
         );
 
     }

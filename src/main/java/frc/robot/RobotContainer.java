@@ -191,6 +191,10 @@ public class RobotContainer {
         return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), () -> isFacingReef());
     }
 
+    public Command sourceIntakeCommand() {
+        return new SourceIntake(drivetrain, arm, wrist, placerGrabber);
+    }
+
     private Command intake() {
         return arm.setShoulderTargetAngleCommand(0)
             .alongWith(
@@ -220,9 +224,4 @@ public class RobotContainer {
         });
     }
     
-    public Command intakeTowardsCoralInAuto() {
-        return drivetrain.run(() -> {
-            drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
-        });
-    }
 }

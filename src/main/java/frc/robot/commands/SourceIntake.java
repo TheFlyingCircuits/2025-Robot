@@ -58,7 +58,13 @@ public class SourceIntake extends Command{
             placerGrabber.setSideRollerVolts(3);
             placerGrabber.setFrontRollerVolts(3);
 
-        } 
+        } else {
+            wrist.setTargetPositionDegrees(0);
+            arm.setShoulderTargetAngle(0);
+            arm.setExtensionTargetLength(0);
+            placerGrabber.setSideRollerVolts(3);
+            placerGrabber.setFrontRollerVolts(3);
+        }
         
     }
 }
