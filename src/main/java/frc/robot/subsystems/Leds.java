@@ -13,9 +13,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LEDConstants;
 
 public class Leds extends SubsystemBase {
-    private AddressableLED leds;
+    private AddressableLED leftLeds;
     private AddressableLEDBuffer buffer;
     XboxController controller;
+
     LEDPattern green;
     LEDPattern blue;
     LEDPattern orange;
@@ -33,16 +34,16 @@ public class Leds extends SubsystemBase {
         white = LEDPattern.solid(Color.kWhite);
         black = LEDPattern.solid(Color.kBlack);
 
-        leds = new AddressableLED(LEDConstants.ledPWMPort);
+        leftLeds = new AddressableLED(LEDConstants.ledPWMPort);
         buffer = new AddressableLEDBuffer(LEDConstants.ledsPerStrip);
 
-        leds.setLength(buffer.getLength());
-
+        leftLeds.setLength(buffer.getLength());
+        
         base = black; // led Off
         base.applyTo(buffer);
         
-        leds.setData(buffer);
-        leds.start();
+        leftLeds.setData(buffer);
+        leftLeds.start();
     }
 
     //mode 
@@ -94,6 +95,6 @@ public class Leds extends SubsystemBase {
     @Override
     public void periodic() {
         base.applyTo(buffer);
-        leds.setData(buffer);
+        leftLeds.setData(buffer);
     }
 }

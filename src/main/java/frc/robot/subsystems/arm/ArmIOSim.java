@@ -36,8 +36,6 @@ public class ArmIOSim implements ArmIO {
      
     public ArmIOSim() {
 
-        
-
         TalonFXConfiguration shoulderConfig = new TalonFXConfiguration();
 
         shoulderConfig.MotionMagic.MotionMagicAcceleration = 1; //units of rotation per second squared
@@ -105,7 +103,7 @@ public class ArmIOSim implements ArmIO {
         inputs.shoulderAngleDegrees = nextState.get(0, 0);
         shoulderTalon.setPosition(inputs.shoulderAngleDegrees);
         inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
-        inputs.shoulderAppliedCurrent = this.systemInputs.get(0, 0);
+        inputs.shoulderTorqueCurrent = this.systemInputs.get(0, 0);
 
         Logger.recordOutput("arm/closedLoopReference", shoulderTalon.getClosedLoopReference().getValueAsDouble());
 

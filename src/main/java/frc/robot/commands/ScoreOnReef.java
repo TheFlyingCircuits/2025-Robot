@@ -42,7 +42,7 @@ public class ScoreOnReef extends Command {
         this.leds = leds;
         this.sideCoralIsIn=sideCoralIsIn;
         this.isFacingForward=isFacingForward;
-        addRequirements(drivetrain, arm, wrist);
+        addRequirements(drivetrain, arm.shoulder, arm.extension, wrist);
     }
 
     // bumper 37 inches

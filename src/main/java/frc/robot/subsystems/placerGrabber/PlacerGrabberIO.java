@@ -9,6 +9,9 @@ public interface PlacerGrabberIO {
         public double frontRollerRPM = 0.0;
         public double sideRollerRPM = 0.0;
 
+        public double frontMotorAppliedCurrent = 0.0;
+        public double sideMotorAppliedCurrent = 0.0;
+
         public boolean leftSensorSeesCoral = false;
         public boolean rightSensorSeesCoral = false;
     }
