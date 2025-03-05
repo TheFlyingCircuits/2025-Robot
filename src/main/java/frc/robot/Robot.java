@@ -46,20 +46,29 @@ public class Robot extends LoggedRobot {
     private RobotContainer m_robotContainer;
 
     public Robot() {
-        initAdvantageKit();
-        // m_robotContainer = new RobotContainer();
-        DriverStation.silenceJoystickConnectionWarning(true);
+
         System.gc();
+
+        initAdvantageKit();
+        m_robotContainer = new RobotContainer();
+        DriverStation.silenceJoystickConnectionWarning(true);
+        
+
+        gcTimer.restart();
     }
 
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
 
-        // m_robotContainer.periodic();
+        m_robotContainer.periodic();
 
-        if (gcTimer.advanceIfElapsed(5)) {
+
+        // System.gc();
+
+        if (gcTimer.advanceIfElapsed(2)) {
             System.gc();
+            // System.out.println("Hello world!");
         }
     }
 
@@ -68,7 +77,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void disabledPeriodic() {
-        // m_robotContainer.drivetrain.setPoseToVisionMeasurement();
+        m_robotContainer.drivetrain.setPoseToVisionMeasurement();
     }
 
     @Override
@@ -76,7 +85,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void autonomousInit() {
-        //m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        // m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
         if (m_autonomousCommand != null) {
         m_autonomousCommand.schedule();

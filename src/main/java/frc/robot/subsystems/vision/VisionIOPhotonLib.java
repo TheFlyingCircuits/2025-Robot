@@ -36,6 +36,8 @@ public class VisionIOPhotonLib implements VisionIO {
 
         // intakeCamera = new PhotonCamera("intakeCamera");
 
+        System.gc();
+
         tagCameras = Arrays.asList(
             new PhotonCamera(VisionConstants.tagCameraNames[0]),
             new PhotonCamera(VisionConstants.tagCameraNames[1]),

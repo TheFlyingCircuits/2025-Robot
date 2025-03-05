@@ -34,10 +34,10 @@ public class Arm {
     /** Extension subsystem object, separated out in order for commands to function independently of shoulder. */
     public Extension extension;
 
-    LoggedMechanism2d mech2d = new LoggedMechanism2d(3, 3); //all units for mech2d are meters
-    LoggedMechanismRoot2d mech2dRoot = mech2d.getRoot("pivot", 1, 1);
-    LoggedMechanismLigament2d shoulderBracket;
-    LoggedMechanismLigament2d telescoper;
+    // LoggedMechanism2d mech2d = new LoggedMechanism2d(3, 3); //all units for mech2d are meters
+    // LoggedMechanismRoot2d mech2dRoot = mech2d.getRoot("pivot", 1, 1);
+    // LoggedMechanismLigament2d shoulderBracket;
+    // LoggedMechanismLigament2d telescoper;
 
 
 
@@ -49,10 +49,10 @@ public class Arm {
         shoulder = new Shoulder();
         extension = new Extension();
 
-        shoulderBracket = mech2dRoot.append(
-            new LoggedMechanismLigament2d("pivotBracket", ArmConstants.shoulderBracketLengthMeters, 90, 30, new Color8Bit(Color.kDarkOrange)));
-        telescoper = shoulderBracket.append(
-            new LoggedMechanismLigament2d("telescoper", ArmConstants.minExtensionMeters, -90, 10, new Color8Bit(Color.kSilver)));
+        // shoulderBracket = mech2dRoot.append(
+        //     new LoggedMechanismLigament2d("pivotBracket", ArmConstants.shoulderBracketLengthMeters, 90, 30, new Color8Bit(Color.kDarkOrange)));
+        // telescoper = shoulderBracket.append(
+        //     new LoggedMechanismLigament2d("telescoper", ArmConstants.minExtensionMeters, -90, 10, new Color8Bit(Color.kSilver)));
 
     }
 
@@ -114,13 +114,13 @@ public class Arm {
     public void setShoulderTargetAngle(double degrees) {
         io.setShoulderTargetAngle(degrees);
 
-        shoulderBracket.setAngle(90+degrees);
+        // shoulderBracket.setAngle(90+degrees);
     }
 
     public void setExtensionTargetLength(double meters) {
         io.setExtensionTargetLength(meters);
 
-        telescoper.setLength(meters);
+        // telescoper.setLength(meters);
     }
 
 
@@ -128,7 +128,7 @@ public class Arm {
         io.updateInputs(inputs);
         Logger.processInputs("armInputs", this.inputs);
 
-        Logger.recordOutput("arm/mech2d", this.mech2d);
+        // Logger.recordOutput("arm/mech2d", this.mech2d);
 
         // commenting these out because i want mech2d to display desired angle first
         // shoulderBracket.setAngle(90+inputs.shoulderAngleDegrees);
