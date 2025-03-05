@@ -23,8 +23,18 @@ public class Autos extends RobotContainer{
                 drivetrain.pidToPose(targetRobotPose2d);
             } else {
                 drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+                arm.setShoulderTargetAngleCommand(0)
+                .alongWith(
+                    wrist.setTargetPositionCommand(0))
+                .alongWith(
+                    placerGrabber.setPlacerGrabberVoltsCommand(3,3));
+
             }
         });
+    }
+
+    private Command runUntilHasCoral() {
+        return new WaitUntilCommand(() -> placerGrabber.doesHaveCoral());
     }
 
 
@@ -42,16 +52,16 @@ public class Autos extends RobotContainer{
     public Command rightSideAuto() {
 
         return new SequentialCommandGroup(
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_E4),
-            intakeTowardsCoralInAuto().withDeadline(waitUntilInRangeOfSource()),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_E4, () -> true),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_D4),
-            intakeTowardsCoralInAuto().withDeadline(waitUntilInRangeOfSource()),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_D4, () -> true),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_C4),
-            intakeTowardsCoralInAuto().withDeadline(waitUntilInRangeOfSource()),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_C4, () -> true),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_B4)
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_B4, () -> true)
         );
 
     }
@@ -59,16 +69,16 @@ public class Autos extends RobotContainer{
     public Command leftSideAuto() {
 
         return new SequentialCommandGroup(
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_J4),
-            intakeTowardsCoralInAuto().withDeadline(waitUntilInRangeOfSource()),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_J4, () -> true),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_K4),
-            intakeTowardsCoralInAuto().withDeadline(waitUntilInRangeOfSource()),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_K4, () -> true),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_L4),
-            intakeTowardsCoralInAuto().withDeadline(waitUntilInRangeOfSource()),
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_L4, () -> true),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_A4)
+            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_A4, () -> true)
         );
 
     }
