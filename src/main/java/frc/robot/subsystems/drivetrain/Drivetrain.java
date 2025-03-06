@@ -122,7 +122,7 @@ public class Drivetrain extends SubsystemBase {
             new Pose2d());
 
         //angleController = new PIDController(11, 0, 0.5); // kP has units of degreesPerSecond per degree of error.
-        angleController = new PIDController(5, 0, 0.3);// 1 too high???? 5 very agressive too high
+        angleController = new PIDController(5, 0, 0.3); 
         angleController.enableContinuousInput(-180, 180);
         angleController.setTolerance(1); // degrees, degreesPerSecond.
 

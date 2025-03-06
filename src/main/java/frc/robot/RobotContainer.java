@@ -199,7 +199,7 @@ public class RobotContainer {
         controller.rightBumper().whileTrue(
             scoreOnReefCommand(
                 charlie::getRequestedFieldOrientedVelocity, 
-                () -> ReefBranch.BRANCH_B2));
+                () -> ReefBranch.BRANCH_B3));
 
         //SOURCE
         //35.23, 0.737, 53.5

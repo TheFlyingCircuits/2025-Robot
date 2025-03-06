@@ -219,7 +219,7 @@ public final class Constants {
         public static final double anglekDVoltsPerDegreePerSecond = 0.;
 
         public static final double drivekSVolts = 0.2383;
-        public static final double drivekVVoltsSecondsPerMeter = 2.2859;
+        public static final double drivekVVoltsSecondsPerMeter = 2.52;
         public static final double drivekAVoltsSecondsSquaredPerMeter = 0.;
         
         // Motor configs

@@ -43,7 +43,7 @@ public class Robot extends LoggedRobot {
     }
 
 
-    private RobotContainer m_robotContainer;
+    private final RobotContainer m_robotContainer;
 
     public Robot() {
 
