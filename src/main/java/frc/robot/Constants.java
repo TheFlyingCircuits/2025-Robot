@@ -28,7 +28,6 @@ import frc.robot.PlayingField.FieldConstants;
 public final class Constants {
 
     public final static boolean atCompetition = false;
-    public final static boolean isDemoMode = false;
 
     public final class UniversalConstants {
         public final static double gravityMetersPerSecondSquared = 9.81;
@@ -49,63 +48,51 @@ public final class Constants {
         public final static double shoulderBracketLengthMeters = -0.2;
         public final static Translation2d shoulderPivotPositionMeters = new Translation2d(-0.4, 0.4);
         
-        /** Minimum length of the arm when fully retracted */
+        /** Minimum length of the arm when fully retracted, 0.64 meters*/
         public final static double minExtensionMeters = Units.inchesToMeters(25);
-        /** Maximum length of the arm when fully extended */
-        public final static double maxExtensionMeters = 2.4;
+        /** Maximum length of the arm when fully extended, 1.6 meters*/
+        public final static double maxExtensionMeters = Units.inchesToMeters(38)+minExtensionMeters;
+
+
+        /** Rotations of the motor per rotations of the belt pulley */
+        public final static double extensionGearReduction = 5;
+        /** Radius of the pulley that the extension belt runs on. */
+        public static final double extensionPulleyRadiusMeters = Units.inchesToMeters(1.504/2);
+        /** Circumference of the pulley that the extension belt runs on. */
+        public final static double beltPulleyCircumferenceMeters = 2*extensionPulleyRadiusMeters*Math.PI; 
+        /** How far the belt of the extension moves per rotation of the motor. */
+        public final static double beltMetersPerMotorRotation = beltPulleyCircumferenceMeters / extensionGearReduction;
+        /** How far the tip of the arm extends per rotation of the motor. */
+        public final static double extensionMetersPerMotorRotation = beltMetersPerMotorRotation * 2;
 
 
 
-
-
+        public final static double kSExtensionVolts = 0.25;
+        public final static double kGExtensionVolts = 0.52;
+        public final static double kVExtensionVoltsSecondsPerRadian = 3.2;
+        public final static double kAExtensionVoltsSecondsSquaredPerRadian = 0;
+        public final static double kPExtensionVoltsPerMeter = 20.;
+        public final static double kDExtensionVoltsPerMeterPerSecond = 2;
 
 
         /**Minimum angle of the arm, in degrees.*/
         public final static double armMinAngleDegrees = 0;
         /**Maximum angle of the arm, in degrees. This value should be positive and greater than 90, as it is beyond the vertical. */
-        public final static double armMaxAngleDegrees = 170.0;  
-
-        public final static double armMaxVelDegreesPerSecond = 360.;
-        public final static double armMaxAccelDegreesPerSecondSquared = 660.;
+        public final static double armMaxAngleDegrees = 135.0;  
 
 
 
         /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
-        public final static double shoulderGearReduction = 100;
+        public final static double shoulderGearReduction = 246.67;
         
-
-        /** Rotations of the motor per rotations of the belt pulley */
-        public final static double extensionGearReduction = 5;
-        public static final double extensionPulleyRadiusMeters = Units.inchesToMeters(1.504/2);
-        /** Circumference of the pulley that the extension belt runs on. */
-        public final static double beltPulleyCircumferenceMeters = 2*extensionPulleyRadiusMeters*Math.PI; 
-        public final static double extensionMetersPerMotorRotation = beltPulleyCircumferenceMeters / extensionGearReduction;
-
 
 
         
-
-        /***** REAL CONSTANTS ******/
-        public final static double kSArmVolts = 0.005;
-        public final static double kGArmVolts = 0.32;
-        public final static double kVArmVoltsSecondsPerRadian = 3.1;
+        public final static double kSArmVolts = 0.0;
+        public final static double kGArmVolts = 0.;
+        public final static double kVArmVoltsSecondsPerRadian = 0;
         public final static double kAArmVoltsSecondsSquaredPerRadian = 0;
 
-        public final static double kPArmVoltsPerDegree = 0.3;
-        public final static double kDArmVoltsSecondsPerDegree = 0.02;
-
-        /**** SIM CONSTANTS  ******/
-        // public final static double kSArmVolts = 0.0;
-        // public final static double kGArmVolts = 0.30;
-        // public final static double kVArmVoltsSecondsPerRadian = 3.5;
-        // public final static double kAArmVoltsSecondsSquaredPerRadian = 0;
-        // public final static double kPArmVoltsPerDegree = 0.3;
-        // public final static double kIArmVoltsPerDegreesSeconds = 0.;
-        // public final static double kDArmVoltsSecondsPerDegree = 0.1;
-
-        public final static TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(
-            armMaxVelDegreesPerSecond, armMaxAccelDegreesPerSecondSquared
-        );
 
         //Motor IDs
         public final static int leftShoulderMotorID = 8;
@@ -114,6 +101,8 @@ public final class Constants {
         public final static int backExtensionMotorID = 11;
         public final static int leftPivotEncoderID = 4;
         public final static int rightPivotEncoderID = 5;
+
+        public static double minAngleDegrees;
         
 
 
@@ -208,7 +197,7 @@ public final class Constants {
 
     public final static class SwerveModuleConstants {
         /** Rotations of the drive wheel per rotations of the drive motor. */
-        public static final double driveGearReduction = (16.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0);
+        public static final double driveGearReduction = (15.0 / 50.0) * (27.0 / 17.0) * (15.0 / 45.0);
 
         /** Rotations of the steering column per rotations of the angle motor. */
         public static final double steerGearReduction = (14.0 / 50.0) * (10.0 / 60.0);
@@ -230,7 +219,7 @@ public final class Constants {
         public static final double anglekDVoltsPerDegreePerSecond = 0.;
 
         public static final double drivekSVolts = 0.2383;
-        public static final double drivekVVoltsSecondsPerMeter = 2.2859;
+        public static final double drivekVVoltsSecondsPerMeter = 2.52;
         public static final double drivekAVoltsSecondsSquaredPerMeter = 0.;
         
         // Motor configs
@@ -255,32 +244,58 @@ public final class Constants {
 
     public final static class VisionConstants {
 
-
+        //Camera, IP, hostname
+        //fronLeft, 10.17.87.50, Photon-RPi4-FL
+        //frontRight, 10.17.87.51, Photon-RPi4-FR
+        //backRight, 10.17.87.52, Photon-RPi4-BR
+        //backLeft, 10.17.87.53, Photon-RPi4-BL
         public final static AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.tagLayout;
                                                        
-        //TODO: UPDATE TRANSFORMS TO ACTUAL ROBOT
-        public final static Transform3d robotToShooterCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
-            new Rotation3d(0, Math.toRadians(35.5), 0)
+
+        public final static Transform3d robotToFrontLeft = new Transform3d(
+            new Translation3d(Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, -Math.toRadians(17.772))
         );
 
+        public final static Transform3d robotToFrontRight = new Transform3d(
+            new Translation3d(Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, Math.toRadians(17.772))
+        );
+
+        public final static Transform3d robotToBackLeft = new Transform3d(
+            new Translation3d(-Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, -Math.toRadians(17.772-180))
+        );
+
+        public final static Transform3d robotToBackRight = new Transform3d(
+            new Translation3d(-Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, Math.toRadians(-17.772+180))
+        );
+
+        //TODO: UPDATE this transform TO ACTUAL ROBOT
         public final static Transform3d robotToCoralCamera = new Transform3d(
             new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
             new Rotation3d(0, Math.toRadians(35.5), 0)
         );
 
         public final static String[] tagCameraNames = {
-            "shooterCamera"
+            "frontLeft",
+            "frontRight",
+            "backLeft",
+            "backRight"
         };
 
         public final static Transform3d tagCameraTransforms[] = {
-            robotToShooterCamera
+            robotToFrontLeft,
+            robotToFrontRight,
+            robotToBackLeft,
+            robotToBackRight
         };
 
     }
 
     public final static class WristConstants {
-        public final static double maxAngleDegrees = 160;
+        public final static double maxAngleDegrees = 158;
         public final static double minAngleDegrees = 0;
 
         /**rotations of the wrist motor per rotations of the wrist */

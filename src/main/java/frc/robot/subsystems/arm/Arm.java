@@ -24,15 +24,20 @@ import frc.robot.Constants.ArmConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 
-public class Arm extends SubsystemBase {
+public class Arm {
 
     ArmIOInputsAutoLogged inputs;
     ArmIO io;
 
-    LoggedMechanism2d mech2d = new LoggedMechanism2d(3, 3); //all units for mech2d are meters
-    LoggedMechanismRoot2d mech2dRoot = mech2d.getRoot("pivot", 1, 1);
-    LoggedMechanismLigament2d shoulderBracket;
-    LoggedMechanismLigament2d telescoper;
+    /** Shoulder subsystem object, separated out in order for commands to function independently of extension. */
+    public Shoulder shoulder;
+    /** Extension subsystem object, separated out in order for commands to function independently of shoulder. */
+    public Extension extension;
+
+    // LoggedMechanism2d mech2d = new LoggedMechanism2d(3, 3); //all units for mech2d are meters
+    // LoggedMechanismRoot2d mech2dRoot = mech2d.getRoot("pivot", 1, 1);
+    // LoggedMechanismLigament2d shoulderBracket;
+    // LoggedMechanismLigament2d telescoper;
 
 
 
@@ -41,23 +46,65 @@ public class Arm extends SubsystemBase {
         this.io = io;
         inputs = new ArmIOInputsAutoLogged();
 
-        shoulderBracket = mech2dRoot.append(
-            new LoggedMechanismLigament2d("pivotBracket", ArmConstants.shoulderBracketLengthMeters, 90, 30, new Color8Bit(Color.kDarkOrange)));
-        telescoper = shoulderBracket.append(
-            new LoggedMechanismLigament2d("telescoper", ArmConstants.minExtensionMeters, -90, 10, new Color8Bit(Color.kSilver)));
+        shoulder = new Shoulder();
+        extension = new Extension();
 
+        // shoulderBracket = mech2dRoot.append(
+        //     new LoggedMechanismLigament2d("pivotBracket", ArmConstants.shoulderBracketLengthMeters, 90, 30, new Color8Bit(Color.kDarkOrange)));
+        // telescoper = shoulderBracket.append(
+        //     new LoggedMechanismLigament2d("telescoper", ArmConstants.minExtensionMeters, -90, 10, new Color8Bit(Color.kSilver)));
+
+    }
+
+    
+    public class Shoulder extends SubsystemBase {
+        
+        public Command setTargetAngleCommand(double degrees) {
+            return this.run(() -> {
+                io.setShoulderTargetAngle(degrees);
+            });
+        }
+
+        @Override
+        //used to call the periodic for the arm as a whole
+        public void periodic() {
+            armPeriodic();
+        }
+    }
+
+    public class Extension extends SubsystemBase {
+
+        
+        public Command setTargetLengthCommand(double meters) {
+            return this.run(() -> {
+                io.setExtensionTargetLength(meters);
+            });
+        }
+
+    }
+    
+    public void setShoulderVoltage(double volts) {
+        io.setShoulderMotorVolts(volts);
     }
 
     public double getShoulderAngleDegrees() {
         return inputs.shoulderAngleDegrees;
     }
 
+    public double getTargetShoulderAngleDegrees() {
+        return inputs.targetShoulderAngleDegrees;
+    }
+
     public double getExtensionMeters() {
         return inputs.extensionLengthMeters;
     }
 
+    public double getExtensionMetersPerSecond() {
+        return inputs.extensionLengthMetersPerSecond;
+    }
+
     /**
-     * Sets the taret extension and angle of the arm to be equal to the one in the armPosition object.
+     * Sets the target extension and angle of the arm to be equal to the one in the armPosition object.
      */
     public void setArmPosition(ArmPosition armPosition) {
         io.setShoulderTargetAngle(armPosition.shoulderAngleDegrees);
@@ -67,33 +114,21 @@ public class Arm extends SubsystemBase {
     public void setShoulderTargetAngle(double degrees) {
         io.setShoulderTargetAngle(degrees);
 
-        shoulderBracket.setAngle(90+degrees);
+        // shoulderBracket.setAngle(90+degrees);
     }
 
     public void setExtensionTargetLength(double meters) {
         io.setExtensionTargetLength(meters);
 
-        telescoper.setLength(meters);
+        // telescoper.setLength(meters);
     }
 
-    public Command setShoulderTargetAngleCommand(double degrees) {
-        return this.runOnce(() -> {
-            io.setShoulderTargetAngle(degrees);
-        });
-    }
 
-    public Command setExtensionTargetLengthCommand(double meters) {
-        return this.runOnce(() -> {
-            io.setExtensionTargetLength(meters);
-        });
-    }
-    
-    @Override
-    public void periodic() {
+    public void armPeriodic() {
         io.updateInputs(inputs);
         Logger.processInputs("armInputs", this.inputs);
 
-        Logger.recordOutput("arm/mech2d", this.mech2d);
+        // Logger.recordOutput("arm/mech2d", this.mech2d);
 
         // commenting these out because i want mech2d to display desired angle first
         // shoulderBracket.setAngle(90+inputs.shoulderAngleDegrees);

@@ -20,7 +20,7 @@ public class Wrist extends SubsystemBase {
         this.io = io;
         inputs = new WristIOInputsAutoLogged();
 
-        wristNeoPID = new PIDController(0.3,0,0); // kp has units of volts per degree
+        wristNeoPID = new PIDController(0.4,0,0); // kp has units of volts per degree
         wristNeoPID.setTolerance(1); // degrees
 
     }
@@ -38,9 +38,9 @@ public class Wrist extends SubsystemBase {
         moveToTargetPosition(desiredWristPositionDegrees);
     }
 
-    public void setTargetPositionDegrees(double targetAngleDegrees) {
-        
-        desiredWristPositionDegrees = targetAngleDegrees;
+
+    public double getWristAngleDegrees() {
+        return inputs.wristAngleDegrees;
     }
 
     private void moveToTargetPosition(double targetDegrees) {
@@ -53,6 +53,11 @@ public class Wrist extends SubsystemBase {
         
         io.setWristNeoVolts(outputVolts);
 
+    }
+
+    public void setTargetPositionDegrees(double targetAngleDegrees) {
+        
+        desiredWristPositionDegrees = targetAngleDegrees;
     }
 
     public Command setTargetPositionCommand (double targetDegrees) {

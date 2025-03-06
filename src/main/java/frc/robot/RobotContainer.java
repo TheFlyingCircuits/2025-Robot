@@ -6,13 +6,31 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
+<<<<<<< HEAD
+=======
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import org.littletonrobotics.junction.Logger;
+
+>>>>>>> main
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+<<<<<<< HEAD
+=======
+import frc.robot.PlayingField.FieldElement;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.WristConstants;
+>>>>>>> main
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.ScoreOnReef;
 import frc.robot.commands.SourceIntake;
@@ -31,6 +49,7 @@ import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.placerGrabber.PlacerGrabberIO;
 import frc.robot.subsystems.placerGrabber.PlacerGrabberIONeo;
 import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonLib;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.subsystems.wrist.WristIO;
 import frc.robot.subsystems.wrist.WristIONeo;
@@ -42,16 +61,19 @@ public class RobotContainer {
     protected final HumanDriver ben = new HumanDriver(1);
 
     public final Drivetrain drivetrain;
-
+    private ArmIOKraken armIO;
     public final Arm arm;
+    private WristIONeo wristIO;
     public final Wrist wrist;
     public final Leds leds;
     public final PlacerGrabber placerGrabber;
 
-    private boolean isFacingForward = true;
-    private String sideCoralIsIntaked = "left";
+    private DigitalInput coastModeButton;
 
 
+
+
+    Command waitUntil;
     
     public RobotContainer() {
 
@@ -66,12 +88,15 @@ public class RobotContainer {
             //     new VisionIOPhotonLib()
             // );
 
-            arm = new Arm(new ArmIOKraken());
+            armIO = new ArmIOKraken();
+            arm = new Arm(armIO);
 
 
             PlacerGrabberIONeo placerGrabberIO = new PlacerGrabberIONeo();
             placerGrabber = new PlacerGrabber(placerGrabberIO);
-            wrist = new Wrist(new WristIONeo(placerGrabberIO.getLeftThroughboreEncoder()));
+
+            wristIO = new WristIONeo(placerGrabberIO.getLeftThroughboreEncoder());
+            wrist = new Wrist(wristIO);
 
             leds = new Leds();
 
@@ -83,8 +108,10 @@ public class RobotContainer {
                 new SwerveModuleIOKraken(2, 3, 0.397705, 1, "FR"),
                 new SwerveModuleIOKraken(4, 5, 0.238281, 2, "BL"),
                 new SwerveModuleIOKraken(6, 7,  -0.370850, 3, "BR"),
-                new VisionIO(){}
+                new VisionIOPhotonLib(){}
             );
+
+            coastModeButton = new DigitalInput(0);
 
 
         }
@@ -108,8 +135,20 @@ public class RobotContainer {
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
         leds.setDefaultCommand(leds.defaultCommand());
-        arm.setDefaultCommand(arm.setShoulderTargetAngleCommand(30));
-        wrist.setDefaultCommand(wrist.setTargetPositionCommand(0));
+        
+        
+        //wait until wrist homes to retract arm
+        arm.extension.setDefaultCommand(
+            new WaitUntilCommand(() -> true)
+                .andThen(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters)));
+
+        //wait until extension retracts to lower arm
+        arm.shoulder.setDefaultCommand(
+            new WaitUntilCommand(() -> arm.getExtensionMeters() <= ArmConstants.minExtensionMeters+0.5 && arm.getExtensionMetersPerSecond() < 0.1)
+                .andThen(arm.shoulder.setTargetAngleCommand(45))
+        );
+
+        wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5));
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
         realBindings();
@@ -120,17 +159,79 @@ public class RobotContainer {
 
     private void testBindings() {
         CommandXboxController controller = charlie.getXboxController();
-        controller.a().onTrue(wrist.setTargetPositionCommand(0));
-        controller.b().onTrue(wrist.setTargetPositionCommand(45));
-        controller.x().onTrue(wrist.setTargetPositionCommand(90));
-        controller.y().onTrue(wrist.setTargetPositionCommand(135));
+        // controller.a().onTrue(wrist.setTargetPositionCommand(0));
+        // controller.b().onTrue(wrist.setTargetPositionCommand(45));
+        // controller.x().onTrue(wrist.setTargetPositionCommand(90));
+        // controller.y().onTrue(wrist.setTargetPositionCommand(135));
+
+
+        // controller.povDown().onTrue(arm.setExtensionTargetLengthCommand(ArmConstants.minExtensionMeters+0.05));
+        // controller.povRight().onTrue(arm.setExtensionTargetLengthCommand(ArmConstants.minExtensionMeters+0.3));
+        // controller.povLeft().onTrue(arm.setExtensionTargetLengthCommand(ArmConstants.maxExtensionMeters-0.3));
+        // controller.povUp().onTrue(arm.setExtensionTargetLengthCommand(ArmConstants.maxExtensionMeters-0.05));
+
+        // controller.rightBumper().whileTrue(arm.run(() -> arm.setShoulderVoltage(2)));
+
+        // controller.a().onTrue(arm.setShoulderTargetAngleCommand(ArmConstants.armMinAngleDegrees+5));
+        // controller.b().onTrue(arm.setShoulderTargetAngleCommand(45));
+        // controller.x().onTrue(arm.setShoulderTargetAngleCommand(90));
+        // controller.y().onTrue(arm.setShoulderTargetAngleCommand(ArmConstants.armMaxAngleDegrees-5));
+
+
+        //L2
+        // controller.rightBumper().whileTrue(
+        //     arm.setArmPositionCommand(new ArmPosition(38.2, 0, 0.73))
+        //     .alongWith(wrist.setTargetPositionCommand(101)));
+
+        //L3
+        // controller.rightBumper().whileTrue(
+        //     arm.setArmPositionCommand(new ArmPosition(57.8, 0, 0.97))
+        //     .alongWith(wrist.setTargetPositionCommand(79)));
+
+
+        //L4
+        // controller.rightBumper().whileTrue(arm.shoulder.setTargetAngleCommand(71)
+        //     .alongWith(
+        //         new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() >= 45).andThen(arm.extension.setTargetLengthCommand(1.57)),
+        //         wrist.setTargetPositionCommand(42)
+        //     )
+        // );
+
+
+        //SCOREONREEF
+        controller.rightBumper().whileTrue(
+            scoreOnReefCommand(
+                charlie::getRequestedFieldOrientedVelocity, 
+                () -> ReefBranch.BRANCH_B3));
+
+        //SOURCE
+        //35.23, 0.737, 53.5
+        controller.b().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6)
+            .alongWith(
+                arm.shoulder.setTargetAngleCommand(35.23),
+                arm.extension.setTargetLengthCommand(0.737),
+                wrist.setTargetPositionCommand(53.5)
+            ).until(() -> placerGrabber.doesHaveCoral())
+        );
 
 
 
+        //intake
+        controller.rightTrigger()
+            .whileTrue(
+                intakeTowardsCoral(charlie::getRequestedFieldOrientedVelocity).until(() -> placerGrabber.doesHaveCoral())
+            );
 
-        controller.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(9, 6).until(placerGrabber::doesHaveCoral));
-        controller.rightBumper().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(-6, 0));
-        controller.leftBumper().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 0));
+
+                    
+        //eject coral
+        controller.leftBumper().whileTrue(
+            placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.25)
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, -9))
+            );
+
+
+        // controller.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(9, 6).until(placerGrabber::doesHaveCoral));
     }
 
     private void realBindings() {
@@ -173,12 +274,32 @@ public class RobotContainer {
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.coralControlledCommand());
         hasCoral.onFalse(leds.scoreCompleteCommand());
+
+
+        if (RobotBase.isReal()) {
+            Trigger coastModeLimitSwitch = new Trigger(() -> coastModeButton.get() && DriverStation.isDisabled());
+            coastModeLimitSwitch.toggleOnTrue( //toggles between coast mode and brake mode
+                Commands.runOnce(() -> {
+                    wristIO.toggleIdleMode();
+                    armIO.toggleIdleMode();
+                }).ignoringDisable(true)
+            );
+        }
+
+    }
+
+    /** Called by Robot.java, convenience function for logging. */
+    public void periodic() {
+        Logger.recordOutput("robotContainer/coastModeLimitSwitch", coastModeButton.get());
+        Logger.recordOutput("robotContainer/isFacingReef", isFacingReef());
     }    
+
+
     public boolean isFacingReef() {
         if((drivetrain.getClosestReefFace().getOrientation2d().getCos() *
-        drivetrain.getPoseMeters().getRotation().getCos()) + 
-        (drivetrain.getClosestReefFace().getOrientation2d().getSin() *
-        drivetrain.getPoseMeters().getRotation().getSin()) <= 0) {
+            drivetrain.getPoseMeters().getRotation().getCos()) + 
+            (drivetrain.getClosestReefFace().getOrientation2d().getSin() *
+            drivetrain.getPoseMeters().getRotation().getSin()) <= 0) {
             return true;
         } else {
             return false;
@@ -186,6 +307,7 @@ public class RobotContainer {
 
     }
 
+<<<<<<< HEAD
 
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Supplier<Boolean> sideToScoreOn) {
         return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), sideToScoreOn);
@@ -193,14 +315,18 @@ public class RobotContainer {
 
     public Command sourceIntakeCommand() {
         return new SourceIntake(drivetrain, arm, wrist, placerGrabber);
+=======
+    public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
+        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), () -> isFacingReef());
+>>>>>>> main
     }
 
     private Command intake() {
-        return arm.setShoulderTargetAngleCommand(0)
+        return placerGrabber.setPlacerGrabberVoltsCommand(10, 8)
             .alongWith(
-                wrist.setTargetPositionCommand(0))
-            .alongWith(
-                setPlacerGrabberVolts(3, 3));
+                arm.shoulder.setTargetAngleCommand(0),
+                arm.extension.setTargetLengthCommand(0.77),
+                wrist.setTargetPositionCommand(-1));
     }
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
@@ -215,6 +341,7 @@ public class RobotContainer {
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         }).alongWith(intake());
     }
+<<<<<<< HEAD
 
 
     private Command setPlacerGrabberVolts(double sideRollerVolts, double frontRollerVolts) {
@@ -224,4 +351,13 @@ public class RobotContainer {
         });
     }
     
+=======
+    
+    public Command intakeTowardsCoralInAuto() {
+        return drivetrain.run(() -> {
+            drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+        });
+    }
+
+>>>>>>> main
 }
