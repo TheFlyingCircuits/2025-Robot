@@ -299,7 +299,14 @@ public class RobotContainer {
     }
 
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Supplier<Boolean> isFacingReef) {
-        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), isFacingReef);
+        ScoreOnReef align = new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), isFacingReef);
+        Command waitForAlignment = new WaitUntilCommand(align::readyToScore);
+        Command scoreCoral = scoreCoral();
+        return align.raceWith(waitForAlignment.andThen(scoreCoral).raceWith(align));
+    }
+
+    public Command scoreCoral() {
+        return Commands.run(() -> placerGrabber.setPlacerGrabberVoltsCommand(-8,-8)).until(() -> !placerGrabber.doesHaveCoral());
     }
 
     private Command intake() {

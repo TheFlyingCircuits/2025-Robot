@@ -1,7 +1,5 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Rotation;
-
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -49,6 +47,16 @@ public class ScoreOnReef extends Command {
         this.sideCoralIsIn=sideCoralIsIn;
         this.isFacingForward=isFacingReef;
         addRequirements(drivetrain, arm.shoulder, arm.extension, wrist);
+    }
+
+    public boolean readyToScore() {
+        if ((Math.abs(arm.getTargetShoulderAngleDegrees() - arm.getShoulderAngleDegrees())) < 3 && 
+                (Math.abs(arm.getTargetExtensionMeters() - arm.getExtensionMeters()) < 0.1) &&
+                    (Math.abs(wrist.getTargetWristDegrees() - wrist.getWristAngleDegrees()) < 1) && 
+                        drivetrain.translationControllerAtSetpoint()) {
+            return true;
+        }
+        return false;
     }
 
     // bumper 37 inches
