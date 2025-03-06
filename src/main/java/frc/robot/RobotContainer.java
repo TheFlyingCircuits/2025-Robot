@@ -60,10 +60,7 @@ public class RobotContainer {
 
     private DigitalInput coastModeButton;
 
-
-
-
-    Command waitUntil;
+    private ReefBranch desiredBranch = ReefBranch.BRANCH_A2;
     
     public RobotContainer() {
 
@@ -127,22 +124,18 @@ public class RobotContainer {
         leds.setDefaultCommand(leds.defaultCommand());
         
         
-        //wait until wrist homes to retract arm
-        arm.extension.setDefaultCommand(
-            new WaitUntilCommand(() -> true)
-                .andThen(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters)));
+        arm.extension.setDefaultCommand(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters));
 
         //wait until extension retracts to lower arm
         arm.shoulder.setDefaultCommand(
-            new WaitUntilCommand(() -> arm.getExtensionMeters() <= ArmConstants.minExtensionMeters+0.5 && arm.getExtensionMetersPerSecond() < 0.1)
-                .andThen(arm.shoulder.setTargetAngleCommand(45))
+            arm.shoulder.safeSetTargetAngleCommand(0)
         );
 
         wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5));
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
-        realBindings();
-        // testBindings();
+        // realBindings();
+        testBindings();
         triggers();
 
     }
@@ -187,23 +180,26 @@ public class RobotContainer {
         //     )
         // );
 
+        controller.b().onTrue(new InstantCommand(() -> desiredBranch = ReefBranch.BRANCH_B2));
+        controller.x().onTrue(new InstantCommand(() -> desiredBranch = ReefBranch.BRANCH_B3));
+        controller.y().onTrue(new InstantCommand(() -> desiredBranch = ReefBranch.BRANCH_B4));
 
         //SCOREONREEF
         controller.rightBumper().whileTrue(
             scoreOnReefCommand(
                 charlie::getRequestedFieldOrientedVelocity, 
-                () -> ReefBranch.BRANCH_B3,
+                () -> desiredBranch,
                 () -> isFacingReef()));
 
         //SOURCE
         //35.23, 0.737, 53.5
-        controller.b().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6)
-            .alongWith(
-                arm.shoulder.setTargetAngleCommand(35.23),
-                arm.extension.setTargetLengthCommand(0.737),
-                wrist.setTargetPositionCommand(53.5)
-            ).until(() -> placerGrabber.doesHaveCoral())
-        );
+        // controller.b().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6)
+        //     .alongWith(
+        //         arm.shoulder.setTargetAngleCommand(35.23),
+        //         arm.extension.setTargetLengthCommand(0.737),
+        //         wrist.setTargetPositionCommand(53.5)
+        //     ).until(() -> placerGrabber.doesHaveCoral())
+        // );
 
 
 
@@ -217,8 +213,7 @@ public class RobotContainer {
                     
         //eject coral
         controller.leftBumper().whileTrue(
-            placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.25)
-                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, -9))
+            placerGrabber.setPlacerGrabberVoltsCommand(9, 0)
             );
 
 
@@ -261,6 +256,7 @@ public class RobotContainer {
         });
 
         inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
+        inScoringDistance.whileTrue(arm.shoulder.safeSetTargetAngleCommand(45));
 
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.coralControlledCommand());

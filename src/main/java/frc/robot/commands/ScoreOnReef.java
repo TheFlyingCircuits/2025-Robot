@@ -53,7 +53,14 @@ public class ScoreOnReef extends Command {
 
     // bumper 37 inches
     private Pose2d adjustedReefScoringPose(Pose2d stalkPose, String sideCoralIsIn, boolean isFacingForward) {
-        double adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(25);
+        double adjustedX;
+        //17.5 inches of robot space, 4.5 inches is one coral dist
+        if (reefBranch.get().getLevel() == 4) {
+            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5); 
+        }
+        else {
+            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(9);
+        }
         double adjustedY;
         Rotation2d rotation = Rotation2d.fromDegrees(180);
 
@@ -99,11 +106,14 @@ public class ScoreOnReef extends Command {
                 targetWristAngleDegrees = 40;
                 break;
             case 2:
-                return new ArmPosition(38.2, 101, 0.73);
+                //2 coral distance
+                return new ArmPosition(35.3, 98, 0.845);
             case 3:
-                return new ArmPosition(57.8, 79, 0.97);
+                //2 coral distance
+                return new ArmPosition(52.2, 80, 1.08);
             case 4:
-                return new ArmPosition(71, 42, 1.57);
+                //1 coral distance
+                return new ArmPosition(70.5, 35, 1.56);
         }
 
         return ArmPosition.generateArmPosition(
@@ -121,7 +131,7 @@ public class ScoreOnReef extends Command {
         Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), sideCoralIsIn.get(), isFacingForward.get());
 
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
-        drivetrain.pidToPose(targetPose);
+        drivetrain.pidToPose(targetPose, 1);
 
         ArmPosition desiredArmPosition = calculateArmScoringPosition();
 
@@ -131,14 +141,22 @@ public class ScoreOnReef extends Command {
 
         arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
         
-        if (Math.abs(arm.getShoulderAngleDegrees() - arm.getTargetShoulderAngleDegrees()) < 20) {
+        if (Math.abs(arm.getShoulderAngleDegrees() - arm.getTargetShoulderAngleDegrees()) < 10) {
             arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
+
+
         }
         else {
             arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
         }
 
-        wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
+        // if (Math.abs(arm.getExtensionMeters() - arm.get)) {
+        //     wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
+        // }
+        // else {
+        //     wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
+        // }
+        
 
         leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
     }

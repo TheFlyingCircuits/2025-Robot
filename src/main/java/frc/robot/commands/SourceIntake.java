@@ -24,15 +24,13 @@ public class SourceIntake extends Command{
         this.arm=arm;
         this.wrist=wrist;
         this.placerGrabber=placerGrabber;
-        
+
+        addRequirements(drivetrain, arm.extension, arm.shoulder, wrist, placerGrabber);
     }
 
     @Override 
     public boolean isFinished() {
-        if(placerGrabber.doesHaveCoral()) {
-                return true;
-        }
-        return false;
+        return placerGrabber.doesHaveCoral();
     }
     
 
@@ -45,7 +43,7 @@ public class SourceIntake extends Command{
 
     @Override
     public void execute() {
-        drivetrain.pidToPose(targetRobotPose2d);
+        drivetrain.pidToPose(targetRobotPose2d, 2);
         if (drivetrain.translationControllerAtSetpoint()) {
             double desiredArmAngle = 0;
             double desiredArmExtention = 0;

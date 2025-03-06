@@ -21,14 +21,14 @@ public class Autos extends RobotContainer{
                     FieldElement sourceSide = drivetrain.getClosestSourceSide();
                     Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.fromDegrees(180));
                     Pose2d targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
-                    drivetrain.pidToPose(targetRobotPose2d);
+                    drivetrain.pidToPose(targetRobotPose2d, 3);
                 } else {
                     drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
                     arm.shoulder.setTargetAngleCommand(0)
                     .alongWith(
                         wrist.setTargetPositionCommand(0))
                     .alongWith(
-                        placerGrabber.setPlacerGrabberVoltsCommand(3,3));
+                        placerGrabber.setPlacerGrabberVoltsCommand(8,8));
     
                 }
             }).raceWith(runUntilHasCoral());

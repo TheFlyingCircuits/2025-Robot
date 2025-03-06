@@ -264,7 +264,7 @@ public final class Constants {
 
         public final static Transform3d robotToBackLeft = new Transform3d(
             new Translation3d(-Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
-            new Rotation3d(0, 0, -Math.toRadians(17.772-180))
+            new Rotation3d(0, 0, Math.toRadians(17.772-180))
         );
 
         public final static Transform3d robotToBackRight = new Transform3d(

@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.ArmConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -63,6 +64,12 @@ public class Arm {
             return this.run(() -> {
                 io.setShoulderTargetAngle(degrees);
             });
+        }
+
+        /** Waits until extension is retracted before moving the arm to the desired degrees.. */
+        public Command safeSetTargetAngleCommand(double degrees) {
+            return new WaitUntilCommand(() -> getExtensionMeters() <= ArmConstants.minExtensionMeters+0.5 && getExtensionMetersPerSecond() < 0.1)
+                .andThen(this.setTargetAngleCommand(degrees));
         }
 
         @Override

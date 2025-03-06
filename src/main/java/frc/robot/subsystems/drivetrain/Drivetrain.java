@@ -16,6 +16,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
@@ -332,6 +333,8 @@ public class Drivetrain extends SubsystemBase {
 
     /**
      * Uses PID control to reach a target pose2d.
+     * 
+     * @param maxSpeedMetersPerSecond - Max speed that the robot will travel at while PID-ing. The output of the translation is clamped to never exceed this value.
      */
     public boolean translationControllerAtSetpoint() {
         if (translationController.atSetpoint()) {
@@ -340,22 +343,32 @@ public class Drivetrain extends SubsystemBase {
             return false;
         }
     }
-    public void pidToPose(Pose2d desired) {
+
+    public void pidToPose(Pose2d desired, double maxSpeedMetersPerSecond) {
+        Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
+
         Pose2d current = getPoseMeters();
 
-        Translation2d delta = desired.getTranslation().minus(current.getTranslation());
+        Translation2d error = desired.getTranslation().minus(current.getTranslation());
+
+        Logger.recordOutput("drivetrain/pidErrorMeters", error);
         
-        double pidOutputMetersPerSecond = -translationController.calculate(delta.getNorm(), 0);
+        double pidOutputMetersPerSecond = -translationController.calculate(error.getNorm(), 0);
 
 
         if (translationController.atSetpoint()) {
             pidOutputMetersPerSecond = 0;
         }
 
+        pidOutputMetersPerSecond = MathUtil.clamp(pidOutputMetersPerSecond, -maxSpeedMetersPerSecond, maxSpeedMetersPerSecond);
+
+        double xMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getCos();
+        double yMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getSin();
+        
         fieldOrientedDriveWhileAiming(
             new ChassisSpeeds(
-                pidOutputMetersPerSecond*delta.getAngle().getCos(),
-                pidOutputMetersPerSecond*delta.getAngle().getSin(),
+                xMetersPerSecond,
+                yMetersPerSecond,
                 0
             ),
             desired.getRotation()
