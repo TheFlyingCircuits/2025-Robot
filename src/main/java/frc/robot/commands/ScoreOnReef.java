@@ -72,11 +72,7 @@ public class ScoreOnReef extends Command {
 
 
         //TODO: make this potentially a pivot-side score
-<<<<<<< HEAD:src/main/java/frc/robot/Commands/ScoreOnReef.java
-        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, new Rotation2d());
-=======
         Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, rotation);
->>>>>>> main:src/main/java/frc/robot/commands/ScoreOnReef.java
         return stalkPose.plus(targetPoseToRobotRelativeToStalk);
     }
 

@@ -6,31 +6,26 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
-<<<<<<< HEAD
-=======
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.Logger;
 
->>>>>>> main
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-<<<<<<< HEAD
-=======
 import frc.robot.PlayingField.FieldElement;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.WristConstants;
->>>>>>> main
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.ScoreOnReef;
 import frc.robot.commands.SourceIntake;
@@ -307,18 +302,8 @@ public class RobotContainer {
 
     }
 
-<<<<<<< HEAD
-
-    public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Supplier<Boolean> sideToScoreOn) {
-        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), sideToScoreOn);
-    }
-
-    public Command sourceIntakeCommand() {
-        return new SourceIntake(drivetrain, arm, wrist, placerGrabber);
-=======
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
         return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), () -> isFacingReef());
->>>>>>> main
     }
 
     private Command intake() {
@@ -341,7 +326,6 @@ public class RobotContainer {
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         }).alongWith(intake());
     }
-<<<<<<< HEAD
 
 
     private Command setPlacerGrabberVolts(double sideRollerVolts, double frontRollerVolts) {
@@ -351,13 +335,10 @@ public class RobotContainer {
         });
     }
     
-=======
     
     public Command intakeTowardsCoralInAuto() {
         return drivetrain.run(() -> {
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         });
     }
-
->>>>>>> main
 }
