@@ -10,28 +10,29 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
+import frc.robot.commands.SourceIntake;
 
 public class Autos extends RobotContainer{
     
 
-    private Command intakeTowardsCoralInAuto() {
-        return drivetrain.run(() -> {
-            if (drivetrain.getBestCoralLocation().isEmpty()) {
-                FieldElement sourceSide = drivetrain.getClosestSourceSide();
-                Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.fromDegrees(180));
-                Pose2d targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
-                drivetrain.pidToPose(targetRobotPose2d);
-            } else {
-                drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
-                arm.setShoulderTargetAngleCommand(0)
-                .alongWith(
-                    wrist.setTargetPositionCommand(0))
-                .alongWith(
-                    placerGrabber.setPlacerGrabberVoltsCommand(3,3));
-
-            }
-        });
-    }
+    public Command intakeTowardsCoralInAuto() {
+            return drivetrain.run(() -> {
+                if (drivetrain.getBestCoralLocation().isEmpty()) {
+                    FieldElement sourceSide = drivetrain.getClosestSourceSide();
+                    Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.fromDegrees(180));
+                    Pose2d targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
+                    drivetrain.pidToPose(targetRobotPose2d);
+                } else {
+                    drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+                    arm.shoulder.setTargetAngleCommand(0)
+                    .alongWith(
+                        wrist.setTargetPositionCommand(0))
+                    .alongWith(
+                        placerGrabber.setPlacerGrabberVoltsCommand(3,3));
+    
+                }
+            }).raceWith(runUntilHasCoral());
+        }
 
     private Command runUntilHasCoral() {
         return new WaitUntilCommand(() -> placerGrabber.doesHaveCoral());
@@ -53,13 +54,13 @@ public class Autos extends RobotContainer{
 
         return new SequentialCommandGroup(
             scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_E4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
             scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_D4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
             scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_C4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
             scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_B4, () -> true)
         );
@@ -70,13 +71,13 @@ public class Autos extends RobotContainer{
 
         return new SequentialCommandGroup(
             scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_J4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
             scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_K4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
             scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_L4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource(), runUntilHasCoral()),
+            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
             scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_A4, () -> true)
         );

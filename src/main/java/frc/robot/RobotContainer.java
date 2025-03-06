@@ -6,8 +6,6 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Transform2d;
@@ -18,12 +16,9 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.PlayingField.FieldElement;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.ReefBranch;
@@ -197,7 +192,8 @@ public class RobotContainer {
         controller.rightBumper().whileTrue(
             scoreOnReefCommand(
                 charlie::getRequestedFieldOrientedVelocity, 
-                () -> ReefBranch.BRANCH_B3));
+                () -> ReefBranch.BRANCH_B3,
+                () -> isFacingReef()));
 
         //SOURCE
         //35.23, 0.737, 53.5
@@ -302,8 +298,12 @@ public class RobotContainer {
 
     }
 
-    public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch) {
-        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), () -> isFacingReef());
+    public Command sourceIntakeCommand() {
+        return new SourceIntake(drivetrain, arm, wrist, placerGrabber);
+    }
+
+    public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Supplier<Boolean> isFacingReef) {
+        return new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), isFacingReef);
     }
 
     private Command intake() {

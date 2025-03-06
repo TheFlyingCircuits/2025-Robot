@@ -38,7 +38,7 @@ public class ScoreOnReef extends Command {
     /**
      *  @param translationController - ChassisSpeeds supplier for driver input while scoring.
      */
-    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds, Supplier<String> sideCoralIsIn, Supplier<Boolean> isFacingForward) {
+    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds, Supplier<String> sideCoralIsIn, Supplier<Boolean> isFacingReef) {
     
         this.drivetrain = drivetrain;
         this.arm = arm;
@@ -47,7 +47,7 @@ public class ScoreOnReef extends Command {
         this.reefBranch=reefBranch;
         this.leds = leds;
         this.sideCoralIsIn=sideCoralIsIn;
-        this.isFacingForward=isFacingForward;
+        this.isFacingForward=isFacingReef;
         addRequirements(drivetrain, arm.shoulder, arm.extension, wrist);
     }
 
