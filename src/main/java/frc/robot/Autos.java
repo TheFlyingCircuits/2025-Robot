@@ -40,7 +40,7 @@ public class Autos extends RobotContainer{
 
 
     private Command sourceIntakeIfDoesntHaveCoral() {
-        return sourceIntakeCommand().onlyIf(() -> !(placerGrabber.doesHaveCoral()));
+        return new SourceIntake(drivetrain, arm, wrist, placerGrabber).onlyIf(() -> !(placerGrabber.doesHaveCoral()));
     }
     
     private Command waitUntilInRangeOfSource() {

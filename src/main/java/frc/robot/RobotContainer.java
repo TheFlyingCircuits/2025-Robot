@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -207,6 +208,7 @@ public class RobotContainer {
         controller.rightTrigger()
             .whileTrue(
                 intakeTowardsCoral(charlie::getRequestedFieldOrientedVelocity).until(() -> placerGrabber.doesHaveCoral())
+                    .andThen(new PrintCommand("intake ended!!!!!!!!"))
             );
 
 
@@ -294,19 +296,16 @@ public class RobotContainer {
 
     }
 
-    public Command sourceIntakeCommand() {
-        return new SourceIntake(drivetrain, arm, wrist, placerGrabber);
-    }
-
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Supplier<Boolean> isFacingReef) {
         ScoreOnReef align = new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), isFacingReef);
         Command waitForAlignment = new WaitUntilCommand(align::readyToScore);
         Command scoreCoral = scoreCoral();
-        return align.raceWith(waitForAlignment.andThen(scoreCoral).raceWith(align));
+        return align.raceWith(waitForAlignment.andThen(scoreCoral));
     }
 
     public Command scoreCoral() {
-        return Commands.run(() -> placerGrabber.setPlacerGrabberVoltsCommand(-8,-8)).until(() -> !placerGrabber.doesHaveCoral());
+        return placerGrabber.setPlacerGrabberVoltsCommand(9, 0).until(() -> !placerGrabber.doesHaveCoral())
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(2.0));
     }
 
     private Command intake() {

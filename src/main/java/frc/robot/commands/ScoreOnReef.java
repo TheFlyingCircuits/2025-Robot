@@ -27,11 +27,13 @@ public class ScoreOnReef extends Command {
     private Drivetrain drivetrain;
     private Arm arm;
     private Wrist wrist;
+    private Leds leds;
     private Supplier<ChassisSpeeds> translationController;
     private Supplier<ReefBranch> reefBranch;
-    private Leds leds;
-    private Supplier<String> sideCoralIsIn;
+    private Supplier<String> coralSideSupplier;
+    private String coralSide;
     private Supplier<Boolean> isFacingForward;
+    private ArmPosition desiredArmPosition;
 
     /**
      *  @param translationController - ChassisSpeeds supplier for driver input while scoring.
@@ -44,15 +46,15 @@ public class ScoreOnReef extends Command {
         this.translationController = translationController;
         this.reefBranch=reefBranch;
         this.leds = leds;
-        this.sideCoralIsIn=sideCoralIsIn;
+        this.coralSideSupplier=sideCoralIsIn;
         this.isFacingForward=isFacingReef;
         addRequirements(drivetrain, arm.shoulder, arm.extension, wrist);
     }
 
     public boolean readyToScore() {
-        if ((Math.abs(arm.getTargetShoulderAngleDegrees() - arm.getShoulderAngleDegrees())) < 3 && 
-                (Math.abs(arm.getTargetExtensionMeters() - arm.getExtensionMeters()) < 0.1) &&
-                    (Math.abs(wrist.getTargetWristDegrees() - wrist.getWristAngleDegrees()) < 1) && 
+        if ((Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees())) < 0.25 && 
+                (Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.01) &&
+                    (Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 0.5) && 
                         drivetrain.translationControllerAtSetpoint()) {
             return true;
         }
@@ -133,15 +135,20 @@ public class ScoreOnReef extends Command {
         );
 
     }
+    
+    @Override
+    public void initialize() {
+        coralSide = coralSideSupplier.get();
+    }
 
     @Override
     public void execute() {
-        Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), sideCoralIsIn.get(), isFacingForward.get());
+        Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), coralSide, isFacingForward.get());
 
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
         drivetrain.pidToPose(targetPose, 1);
 
-        ArmPosition desiredArmPosition = calculateArmScoringPosition();
+        desiredArmPosition = calculateArmScoringPosition();
 
         Logger.recordOutput("scoreOnReef/armDesiredDegrees", desiredArmPosition.shoulderAngleDegrees);
         Logger.recordOutput("scoreOnReef/wristDesiredDegrees", desiredArmPosition.wristAngleDegrees);
@@ -149,21 +156,23 @@ public class ScoreOnReef extends Command {
 
         arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
         
-        if (Math.abs(arm.getShoulderAngleDegrees() - arm.getTargetShoulderAngleDegrees()) < 10) {
+        if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
             arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
-
-
         }
         else {
             arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
         }
 
-        // if (Math.abs(arm.getExtensionMeters() - arm.get)) {
-        //     wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
-        // }
-        // else {
-        //     wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
-        // }
+
+        if (Math.abs(arm.getExtensionMeters() - desiredArmPosition.extensionMeters) < 0.1) {
+            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
+        }
+        else if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
+            wrist.setTargetPositionDegrees(90);
+        }
+        else {
+            wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
+        }
         
 
         leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
