@@ -336,11 +336,4 @@ public class RobotContainer {
             placerGrabber.setFrontRollerVolts(frontRollerVolts);
         });
     }
-    
-    
-    public Command intakeTowardsCoralInAuto() {
-        return drivetrain.run(() -> {
-            drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
-        });
-    }
 }
