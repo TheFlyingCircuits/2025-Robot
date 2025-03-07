@@ -213,14 +213,23 @@ public class RobotContainer {
             .whileTrue(
                 intakeTowardsCoral(duncan::getRequestedFieldOrientedVelocity).until(() -> placerGrabber.doesHaveCoral())
                     .andThen(new PrintCommand("intake ended!!!!!!!!"))
-            );
+        );
 
+        //alternate intake sequence for testing
+        // duncanController.rightTrigger()
+        //     .whileTrue(
+        //         new ParallelDeadlineGroup(
+        //             new WaitUntilCommand(() -> placerGrabber.doesHaveCoral()),
+        //             intakeTowardsCoral(duncan::getRequestedFieldOrientedVelocity)
+        //         ).andThen(new PrintCommand("intake ended!!!!!!!!"))
+        // );
 
                     
         //eject coral
         duncanController.leftBumper().whileTrue(
-            placerGrabber.setPlacerGrabberVoltsCommand(9, 0)
-            );
+            placerGrabber.setPlacerGrabberVoltsCommand(9, 0).until(() -> !placerGrabber.doesHaveCoral())
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.5));
+        );
 
 
         // duncanController.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(9, 6).until(placerGrabber::doesHaveCoral));
@@ -333,13 +342,5 @@ public class RobotContainer {
             // drive towards the note when the intake camera does see a note.
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         }).alongWith(intake());
-    }
-
-
-    private Command setPlacerGrabberVolts(double sideRollerVolts, double frontRollerVolts) {
-        return placerGrabber.run(() -> {
-            placerGrabber.setSideRollerVolts(sideRollerVolts);
-            placerGrabber.setFrontRollerVolts(frontRollerVolts);
-        });
     }
 }
