@@ -69,7 +69,6 @@ public class Drivetrain extends SubsystemBase {
             return Double.compare(a.timestampSeconds, b.timestampSeconds);
         }
     });
-    private VisionMeasurement mostRecentSpeakerTagMeasurement = null;
 
     /** error measured in degrees, output is in degrees per second. */
     private PIDController angleController;
@@ -576,25 +575,6 @@ public class Drivetrain extends SubsystemBase {
     }
 
 
-    // public boolean inSpeakerShotRange() {
-    //     Translation2d speakerLocation = FieldElement.SPEAKER.getLocation().toTranslation2d();
-    //     Translation2d robotLocation = getPoseMeters().getTranslation();
-
-    //     // about half way between the center line and our wing.
-    //     boolean closeEnough = Math.abs(speakerLocation.getX() - robotLocation.getX()) <= 7.091;
-    //     return closeEnough;
-    // }
-
-    // public boolean inAmpShotRange() {
-    //     Translation2d ampLocation = FieldElement.AMP.getLocation().toTranslation2d();
-    //     Translation2d robotLocation = getPoseMeters().getTranslation();
-
-    //     boolean closeEnoughX = Math.abs(ampLocation.getX() - robotLocation.getX()) < 3.0;
-    //     boolean closeEnoughY = Math.abs(ampLocation.getY() - robotLocation.getY()) < 3.0;
-    //     return closeEnoughX && closeEnoughY;
-    // }
-
-
     public Translation3d fieldCoordsFromRobotCoords(Translation3d robotCoords) {
         Translation3d robotLocation_fieldFrame = new Translation3d(getPoseMeters().getX(), getPoseMeters().getY(), 0);
         Rotation3d robotOrientation_fieldFrame = new Rotation3d(0, 0, getPoseMeters().getRotation().getRadians());
@@ -630,11 +610,9 @@ public class Drivetrain extends SubsystemBase {
      * Returns the best (largest) note that is valid (within the field boundary and within a certain distance).
      * Returns an empty optional if no such note is detected.
      */
-
-    // need to change this function
     public Optional<Translation2d> getBestCoralLocation() {
-        for (Translation3d coralRobotFram3d : visionInputs.detectedCoralsRobotFrame) {
-            Translation2d coralRobotFrame = coralRobotFram3d.toTranslation2d();
+        for (Translation3d coralRobotFrame3d : visionInputs.detectedCoralsRobotFrame) {
+            Translation2d coralRobotFrame = coralRobotFrame3d.toTranslation2d();
             Translation2d coralFieldFrame = fieldCoordsFromRobotCoords(coralRobotFrame);
 
             boolean closeToRobot = coralRobotFrame.getNorm() < 2.5;
@@ -655,9 +633,9 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public ReefFace getClosestReefFace() {
-
         ReefFace[] reefFaces = FieldElement.ALL_REEF_FACES;
         ReefFace closestReefFace = reefFaces[0];
+
         for (ReefFace reefFace : reefFaces) {
             // distance formula 
             double distance = reefFace.getLocation2d().getDistance(getPoseMeters().getTranslation());
@@ -669,10 +647,11 @@ public class Drivetrain extends SubsystemBase {
 
         return closestReefFace;
     }
-    public ReefStalk getClosestReefStalk() {
 
+    public ReefStalk getClosestReefStalk() {
         ReefStalk[] reefStalks = FieldElement.ALL_STALKS;
         ReefStalk closestReefStalk = reefStalks[0];
+
         for (ReefStalk reefStalk : reefStalks) {
             // distance formula 
             double distance = reefStalk.getLocation2d().getDistance(getPoseMeters().getTranslation());
@@ -757,7 +736,7 @@ public class Drivetrain extends SubsystemBase {
         Logger.recordOutput("drivetrain/isAligned", isAligned());
 
 
-        // Note tracking visualization
+        // Coral tracking visualization
         if (getBestCoralLocation().isPresent()) {
             Translation2d noteFieldFrame = getBestCoralLocation().get();
             Logger.recordOutput("drivetrain/trackedCoralPose", new Pose2d(noteFieldFrame, new Rotation2d()));
