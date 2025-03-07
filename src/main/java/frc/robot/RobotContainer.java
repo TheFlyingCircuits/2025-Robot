@@ -261,13 +261,15 @@ public class RobotContainer {
         });
 
         inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
-        inScoringDistance.whileTrue(arm.shoulder.safeSetTargetAngleCommand(45));
 
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.coralControlledCommand());
         hasCoral.onTrue(duncanController.setRumble(RumbleType.kBothRumble, 0.5).andThen(duncanController.setRumble(RumbleType.kBothRumble, 0)));
         hasCoral.onFalse(leds.scoreCompleteCommand());
 
+
+        inScoringDistance.and(hasCoral)
+            .whileTrue(arm.shoulder.safeSetTargetAngleCommand(45).repeatedly());
 
         if (RobotBase.isReal()) {
             Trigger coastModeLimitSwitch = new Trigger(() -> coastModeButton.get() && DriverStation.isDisabled());

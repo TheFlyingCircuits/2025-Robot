@@ -61,15 +61,6 @@ public class Drivetrain extends SubsystemBase {
     private SwerveDrivePoseEstimator fusedPoseEstimator;
     private SwerveDrivePoseEstimator wheelsOnlyPoseEstimator;
 
-    private PriorityQueue<VisionMeasurement> mostRecentSpeakerTagMeasurements = new PriorityQueue<VisionMeasurement>(new Comparator<VisionMeasurement>() {
-        // Front of the queue will be the smallest timestamp
-        // i.e. the timestamp that's closest to 0 (when the robot was turned on)
-        // i.e. the oldest timestamp.
-        public int compare(VisionMeasurement a, VisionMeasurement b) {
-            return Double.compare(a.timestampSeconds, b.timestampSeconds);
-        }
-    });
-
     /** error measured in degrees, output is in degrees per second. */
     private PIDController angleController;
 
@@ -543,37 +534,11 @@ public class Drivetrain extends SubsystemBase {
             for (int id : visionMeasurement.tagsUsed) {
                 Pose2d tagPose = VisionConstants.aprilTagFieldLayout.getTagPose(id).get().toPose2d();
                 trackedTags.add(tagPose);
-
-                // if (id == FieldElement.getSpeakerTagID()) {
-                //     mostRecentSpeakerTagMeasurements.add(visionMeasurement);
-
-                //     if (mostRecentSpeakerTagMeasurement == null) {
-                //         mostRecentSpeakerTagMeasurement = visionMeasurement;
-                //     }
-
-                //     if (visionMeasurement.timestampSeconds > mostRecentSpeakerTagMeasurement.timestampSeconds) {
-                //         mostRecentSpeakerTagMeasurement = visionMeasurement;
-                //     }
-                // }
             }
-        }
-
-        while (mostRecentSpeakerTagMeasurements.size() > 1) {
-            mostRecentSpeakerTagMeasurements.remove();
         }
 
         Logger.recordOutput("drivetrain/trackedTags", trackedTags.toArray(new Pose2d[0]));
     }
-
-    public boolean hasRecentSpeakerTagMeasurement(double maxTimeSinceLastTag) {
-        if (mostRecentSpeakerTagMeasurement == null) {
-            return false;
-        }
-
-        double timeSinceLastTag = Timer.getFPGATimestamp() - mostRecentSpeakerTagMeasurement.timestampSeconds;
-        return timeSinceLastTag <= maxTimeSinceLastTag;
-    }
-
 
     public Translation3d fieldCoordsFromRobotCoords(Translation3d robotCoords) {
         Translation3d robotLocation_fieldFrame = new Translation3d(getPoseMeters().getX(), getPoseMeters().getY(), 0);
