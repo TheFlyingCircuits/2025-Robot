@@ -21,6 +21,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
 
@@ -34,7 +35,7 @@ public class VisionIOPhotonLib implements VisionIO {
 
     public VisionIOPhotonLib() {
 
-        // intakeCamera = new PhotonCamera("intakeCamera");
+        intakeCamera = new PhotonCamera("intakeCam");
 
         System.gc();
 
@@ -223,6 +224,8 @@ public class VisionIOPhotonLib implements VisionIO {
             double coralYawDegrees = -target.getYaw();
             double coralPitchDegrees = -target.getPitch();
 
+            if (coralPitchDegrees < -12) continue;
+
             // Use the reported pitch and yaw to calculate a unit vector in the camera
             // frame that points towards the note.
             Rotation3d directionOfCoral = new Rotation3d(0, Math.toRadians(coralPitchDegrees), Math.toRadians(coralYawDegrees));
@@ -246,6 +249,10 @@ public class VisionIOPhotonLib implements VisionIO {
             // extend the original unit vector to the intersection point in the plane
             Translation3d note_camFrame = unitTowardsCoral.times(distanceToCoral);
             Translation3d note_robotFrame = robotCoordsFromIntakeCameraCoords(note_camFrame);
+
+            if (note_robotFrame.getNorm() > 3 || note_robotFrame.getNorm() < Units.inchesToMeters(13.5+14)) {
+                continue;
+            };
 
             detectedCorals.add(note_robotFrame);
         }
@@ -284,6 +291,6 @@ public class VisionIOPhotonLib implements VisionIO {
             }
         });
 
-        // inputs.detectedCoralsRobotFrame = updateIntakeCamera();
+        inputs.detectedCoralsRobotFrame = updateIntakeCamera();
     }
 }

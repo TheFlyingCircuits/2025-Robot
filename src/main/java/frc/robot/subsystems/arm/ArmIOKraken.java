@@ -66,13 +66,13 @@ public class ArmIOKraken implements ArmIO{
         /* CANCODER CONFIG */
         CANcoderConfiguration leftPivotConfig = new CANcoderConfiguration();
         leftPivotConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
-        leftPivotConfig.MagnetSensor.MagnetOffset = 0.267578125;
+        leftPivotConfig.MagnetSensor.MagnetOffset = 0.26806640625;
         leftPivotConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         leftPivotEncoder.getConfigurator().apply(leftPivotConfig);
 
         CANcoderConfiguration rightPivotConfig = new CANcoderConfiguration();
         leftPivotConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
-        rightPivotConfig.MagnetSensor.MagnetOffset = 0.179443359375;
+        rightPivotConfig.MagnetSensor.MagnetOffset = 0.17919921875;
         rightPivotConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
         rightPivotEncoder.getConfigurator().apply(rightPivotConfig);
 
@@ -126,7 +126,7 @@ public class ArmIOKraken implements ArmIO{
         shoulderConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         shoulderConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.armMaxAngleDegrees / 360;
         shoulderConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        shoulderConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.armMinAngleDegrees / 360;
+        shoulderConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = (ArmConstants.armMinAngleDegrees - 0.5 / 360);
 
         //torquecurrentfoc constants
         // shoulderConfig.Slot0.kS = 1.5;

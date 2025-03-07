@@ -55,7 +55,8 @@ public class ScoreOnReef extends Command {
         if ((Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees())) < 0.6 && 
                 (Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02) &&
                     (Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 0.5) && 
-                        drivetrain.isAligned()) {
+                        drivetrain.isAligned() &&
+                            drivetrain.translationControllerAtSetpoint()) {
             return true;
         }
         return false;
@@ -168,10 +169,10 @@ public class ScoreOnReef extends Command {
         //     wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
         // }
         if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
-            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
+            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, 8);
         }
         else {
-            wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
+            wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5, 8);
         }
         
 

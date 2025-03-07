@@ -76,7 +76,7 @@ public final class Constants {
 
 
         /**Minimum angle of the arm, in degrees.*/
-        public final static double armMinAngleDegrees = 0;
+        public final static double armMinAngleDegrees = -0.5;
         /**Maximum angle of the arm, in degrees. This value should be positive and greater than 90, as it is beyond the vertical. */
         public final static double armMaxAngleDegrees = 135.0;  
 
@@ -101,8 +101,6 @@ public final class Constants {
         public final static int backExtensionMotorID = 11;
         public final static int leftPivotEncoderID = 4;
         public final static int rightPivotEncoderID = 5;
-
-        public static double minAngleDegrees;
         
 
 
@@ -272,10 +270,9 @@ public final class Constants {
             new Rotation3d(0, 0, Math.toRadians(-17.772+180))
         );
 
-        //TODO: UPDATE this transform TO ACTUAL ROBOT
         public final static Transform3d robotToCoralCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
-            new Rotation3d(0, Math.toRadians(35.5), 0)
+            new Translation3d(Units.inchesToMeters(-9.75), Units.inchesToMeters(6), Units.inchesToMeters(26.)),
+            new Rotation3d(0, Math.toRadians(19), Math.toRadians(-12))
         );
 
         public final static String[] tagCameraNames = {

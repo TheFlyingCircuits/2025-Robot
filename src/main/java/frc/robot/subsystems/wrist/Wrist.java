@@ -15,6 +15,7 @@ public class Wrist extends SubsystemBase {
     private PIDController wristNeoPID;
 
     private double desiredWristPositionDegrees;
+    private double maxVolts;
 
     public Wrist(WristIO io) {
         this.io = io;
@@ -51,7 +52,7 @@ public class Wrist extends SubsystemBase {
         
         double outputVolts = (wristNeoPID.calculate(inputs.wristAngleDegrees, desiredWristPositionDegrees));
 
-        outputVolts = MathUtil.clamp(outputVolts, -6, 6);
+        outputVolts = MathUtil.clamp(outputVolts, -maxVolts, maxVolts);
 
         // if (wristNeoPID.atSetpoint()) {
         //     return;
@@ -61,12 +62,33 @@ public class Wrist extends SubsystemBase {
 
     }
 
+
     public void setTargetPositionDegrees(double targetAngleDegrees) {
         
+        this.maxVolts = 12;
         desiredWristPositionDegrees = targetAngleDegrees;
     }
 
-    public Command setTargetPositionCommand (double targetDegrees) {
-        return this.run(() -> {this.setTargetPositionDegrees(targetDegrees);});
+
+    public void setTargetPositionDegrees(double targetAngleDegrees, double maxVolts) {
+        
+        this.maxVolts = maxVolts;
+        desiredWristPositionDegrees = targetAngleDegrees;
+    }
+
+    public Command setTargetPositionCommand(double targetDegrees) {
+        return this.run(() -> {
+            this.setTargetPositionDegrees(targetDegrees);
+            this.maxVolts = 12;
+        
+        });
+    }
+
+    public Command setTargetPositionCommand(double targetDegrees, double maxVolts) {
+        return this.run(() -> {
+            this.setTargetPositionDegrees(targetDegrees);
+            this.maxVolts = maxVolts;
+        
+        });
     }
 }

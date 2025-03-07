@@ -55,6 +55,14 @@ public class Leds extends SubsystemBase {
 
 
     //scoirng
+
+    public void orange() {
+        base = orange;
+    }
+
+    public void green() {
+        base = green;
+    }
     
     public void red() { // red
        base = red;

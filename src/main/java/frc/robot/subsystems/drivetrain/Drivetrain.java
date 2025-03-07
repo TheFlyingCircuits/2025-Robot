@@ -647,7 +647,7 @@ public class Drivetrain extends SubsystemBase {
         Translation2d coralToRobot = coralLocation.minus(getPoseMeters().getTranslation());
 
         // orient the robot to point away from the note, because the intake is in the back of the robot.
-        this.beeLineToPose(new Pose2d(coralLocation, coralToRobot.getAngle()));
+        this.pidToPose(new Pose2d(coralLocation, coralToRobot.getAngle()), 1.5);
     }
 
 

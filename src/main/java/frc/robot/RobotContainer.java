@@ -135,7 +135,7 @@ public class RobotContainer {
             arm.shoulder.safeSetTargetAngleCommand(0)
         );
 
-        wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5));
+        wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5, 8));
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0));
 
         duncanController = duncan.getXboxController();
@@ -274,7 +274,7 @@ public class RobotContainer {
 
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.coralControlledCommand());
-        hasCoral.onTrue(duncan.rumbleController(0.5).withTimeout(0.5));
+        hasCoral.onTrue(duncan.rumbleController(1.0).withTimeout(0.5));
         hasCoral.onFalse(leds.scoreCompleteCommand());
 
 
@@ -325,14 +325,24 @@ public class RobotContainer {
     }
 
     private Command intake() {
-        return placerGrabber.setPlacerGrabberVoltsCommand(10, 8)
+        return placerGrabber.setPlacerGrabberVoltsCommand(11, 11)
             .alongWith(
-                arm.shoulder.setTargetAngleCommand(0),
+                arm.shoulder.setTargetAngleCommand(ArmConstants.armMinAngleDegrees),
                 arm.extension.setTargetLengthCommand(0.77),
-                wrist.setTargetPositionCommand(-1));
+                wrist.setTargetPositionCommand(0));
     }
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
+
+        Command ledCommand = leds.run(() -> {
+            if (drivetrain.getBestCoralLocation().isEmpty()) {
+                leds.orange();
+            }
+            else {
+                leds.green();
+            }
+        });
+
         return drivetrain.run(() -> {
             // have driver stay in control when the intake camera doesn't see a note
             if (drivetrain.getBestCoralLocation().isEmpty()) {
@@ -342,6 +352,6 @@ public class RobotContainer {
 
             // drive towards the note when the intake camera does see a note.
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
-        }).alongWith(intake());
+        }).alongWith(intake()).alongWith(ledCommand);
     }
 }
