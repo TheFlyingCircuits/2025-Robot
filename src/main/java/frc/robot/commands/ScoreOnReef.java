@@ -52,10 +52,10 @@ public class ScoreOnReef extends Command {
     }
 
     public boolean readyToScore() {
-        if ((Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees())) < 0.25 && 
-                (Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.01) &&
+        if ((Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees())) < 0.6 && 
+                (Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02) &&
                     (Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 0.5) && 
-                        drivetrain.translationControllerAtSetpoint()) {
+                        drivetrain.isAligned()) {
             return true;
         }
         return false;
@@ -123,7 +123,7 @@ public class ScoreOnReef extends Command {
                 return new ArmPosition(52.2, 80, 1.08);
             case 4:
                 //1 coral distance
-                return new ArmPosition(70.5, 35, 1.56);
+                return new ArmPosition(70.5, 35, 1.6);
         }
 
         return ArmPosition.generateArmPosition(
@@ -164,11 +164,11 @@ public class ScoreOnReef extends Command {
         }
 
 
-        if (Math.abs(arm.getExtensionMeters() - desiredArmPosition.extensionMeters) < 0.1) {
+        // if (Math.abs(arm.getExtensionMeters() - desiredArmPosition.extensionMeters) < 0.1) {
+        //     wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
+        // }
+        if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
             wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
-        }
-        else if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
-            wrist.setTargetPositionDegrees(90);
         }
         else {
             wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);

@@ -71,6 +71,7 @@ public class WristIONeo implements WristIO{
         inputs.wristDegreesPerSecond = wristNeo.getVelocity();
         inputs.wristAngleDegrees = wristNeo.getPosition();
 
+        inputs.motorOutputVoltage = wristNeo.getAppliedOutput()*12;
         inputs.motorOutputCurrentAmps = wristNeo.getOutputCurrent();
     }
 

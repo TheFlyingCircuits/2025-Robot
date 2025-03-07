@@ -10,6 +10,8 @@ public interface WristIO {
         
         public double wristDegreesPerSecond = 0.0;
         
+        public double motorOutputVoltage = 0.0;
+        
         public double motorOutputCurrentAmps = 0.0;
     }
 

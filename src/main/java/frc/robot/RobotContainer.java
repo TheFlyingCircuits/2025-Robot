@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -63,7 +64,7 @@ public class RobotContainer {
 
     private DigitalInput coastModeButton;
 
-    private ReefBranch desiredBranch = ReefBranch.BRANCH_A2;
+    private int desiredBranch = 2;
     
     public RobotContainer() {
 
@@ -185,15 +186,15 @@ public class RobotContainer {
         //     )
         // );
 
-        duncanController.b().onTrue(new InstantCommand(() -> desiredBranch = ReefBranch.BRANCH_B2));
-        duncanController.x().onTrue(new InstantCommand(() -> desiredBranch = ReefBranch.BRANCH_B3));
-        duncanController.y().onTrue(new InstantCommand(() -> desiredBranch = ReefBranch.BRANCH_B4));
+        duncanController.b().onTrue(new InstantCommand(() -> desiredBranch = 2));
+        duncanController.x().onTrue(new InstantCommand(() -> desiredBranch = 3));
+        duncanController.y().onTrue(new InstantCommand(() -> desiredBranch = 4));
 
         //SCOREONREEF
         duncanController.rightBumper().whileTrue(
             scoreOnReefCommand(
                 duncan::getRequestedFieldOrientedVelocity, 
-                () -> desiredBranch,
+                () -> drivetrain.getClosestReefStalk().getBranch(desiredBranch),
                 () -> isFacingReef()));
 
         //SOURCE
@@ -228,7 +229,7 @@ public class RobotContainer {
         //eject coral
         duncanController.leftBumper().whileTrue(
             placerGrabber.setPlacerGrabberVoltsCommand(9, 0).until(() -> !placerGrabber.doesHaveCoral())
-                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.5));
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.5))
         );
 
 
@@ -273,7 +274,7 @@ public class RobotContainer {
 
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.coralControlledCommand());
-        hasCoral.onTrue(duncanController.setRumble(RumbleType.kBothRumble, 0.5).andThen(duncanController.setRumble(RumbleType.kBothRumble, 0)));
+        hasCoral.onTrue(duncan.rumbleController(0.5).withTimeout(0.5));
         hasCoral.onFalse(leds.scoreCompleteCommand());
 
 

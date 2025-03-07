@@ -69,10 +69,10 @@ public final class Constants {
 
         public final static double kSExtensionVolts = 0.25;
         public final static double kGExtensionVolts = 0.52;
-        public final static double kVExtensionVoltsSecondsPerRadian = 3.2;
+        public final static double kVExtensionVoltsSecondsPerRadian = 3.3;
         public final static double kAExtensionVoltsSecondsSquaredPerRadian = 0;
-        public final static double kPExtensionVoltsPerMeter = 20.;
-        public final static double kDExtensionVoltsPerMeterPerSecond = 2;
+        public final static double kPExtensionVoltsPerMeter = 25.;
+        public final static double kDExtensionVoltsPerMeterPerSecond = 1.5;
 
 
         /**Minimum angle of the arm, in degrees.*/

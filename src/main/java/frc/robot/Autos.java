@@ -53,16 +53,16 @@ public class Autos extends RobotContainer{
     public Command rightSideAuto() {
 
         return new SequentialCommandGroup(
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_E4, () -> true),
+            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_E4, () -> true),
             intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_D4, () -> true),
+            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_D4, () -> true),
             intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_C4, () -> true),
+            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_C4, () -> true),
             intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_B4, () -> true)
+            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_B4, () -> true)
         );
 
     }
@@ -70,16 +70,16 @@ public class Autos extends RobotContainer{
     public Command leftSideAuto() {
 
         return new SequentialCommandGroup(
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_J4, () -> true),
+            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_J4, () -> true),
             intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_K4, () -> true),
+            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_K4, () -> true),
             intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_L4, () -> true),
+            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_L4, () -> true),
             intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
             sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(charlie::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_A4, () -> true)
+            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_A4, () -> true)
         );
 
     }
