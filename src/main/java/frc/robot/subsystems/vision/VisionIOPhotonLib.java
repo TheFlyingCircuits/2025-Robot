@@ -41,8 +41,8 @@ public class VisionIOPhotonLib implements VisionIO {
 
         tagCameras = Arrays.asList(
             new PhotonCamera(VisionConstants.tagCameraNames[0]),
-            new PhotonCamera(VisionConstants.tagCameraNames[1]),
-            new PhotonCamera(VisionConstants.tagCameraNames[3])
+            new PhotonCamera(VisionConstants.tagCameraNames[1])
+            // new PhotonCamera(VisionConstants.tagCameraNames[3])
             // new PhotonCamera(VisionConstants.tagCameraNames[3])
         );
 

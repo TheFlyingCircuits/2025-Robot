@@ -298,7 +298,7 @@ public final class Constants {
 
     public final static class WristConstants {
         public final static double maxAngleDegrees = 162;
-        public final static double minAngleDegrees = 0;
+        public final static double minAngleDegrees = -10;
 
         /**rotations of the wrist motor per rotations of the wrist */
         public final static double gearReduction = 9. * (52./12.) * (37./15.);

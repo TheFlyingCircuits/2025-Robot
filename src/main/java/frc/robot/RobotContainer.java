@@ -197,9 +197,9 @@ public class RobotContainer {
         //     )
         // );
 
-        duncanController.b().onTrue(new InstantCommand(() -> desiredLevel = 2));
-        duncanController.x().onTrue(new InstantCommand(() -> desiredLevel = 3));
-        duncanController.y().onTrue(new InstantCommand(() -> desiredLevel = 4));
+        // duncanController.b().onTrue(new InstantCommand(() -> desiredLevel = 2));
+        // duncanController.x().onTrue(new InstantCommand(() -> desiredLevel = 3));
+        // duncanController.y().onTrue(new InstantCommand(() -> desiredLevel = 4));
         
         // ReefFace.FRONT_REEF_FACE.getBranches(2);
 
@@ -249,15 +249,35 @@ public class RobotContainer {
                 .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.5))
         );
 
+        //CLIMB PREP
         duncanController.povUp().onTrue(
             new ParallelCommandGroup(
                 arm.shoulder.setTargetAngleCommand(101.4),
-                wrist.setTargetPositionCommand(13)
+                wrist.setTargetPositionCommand(0)
             )
         );
 
+        //CLIMB PULL
         duncanController.povDown().whileTrue(
             arm.shoulder.run(() -> arm.setShoulderVoltage(-3))
+                .alongWith(
+                    wrist.setTargetPositionCommand(13),
+                    arm.extension.setTargetLengthCommand(0.75))
+
+        );
+
+        //reset arm
+        duncanController.x().onTrue(
+            arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters)
+                .alongWith(
+                    arm.shoulder.setTargetAngleCommand(ArmConstants.armMinAngleDegrees),
+                    wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5)
+                )   
+        );
+        
+                
+        duncanController.a().whileTrue(
+            descoreAlgaeLow()
         );
 
         // duncanController.rightTrigger().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(9, 6).until(placerGrabber::doesHaveCoral));
@@ -279,6 +299,22 @@ public class RobotContainer {
                 duncan::getRequestedFieldOrientedVelocity, 
                 this::getDesiredBranch,
                 this::isFacingReef));
+
+        duncanController.leftBumper().whileTrue(
+            placerGrabber.setPlacerGrabberVoltsCommand(9, 0).until(() -> !placerGrabber.doesHaveCoral())
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.5))
+        );
+
+        //reset arm
+        duncanController.x().onTrue(
+            arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters)
+                .alongWith(
+                    arm.shoulder.setTargetAngleCommand(ArmConstants.armMinAngleDegrees),
+                    wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5)
+                )   
+        );
+        
+
 
 
         // duncanController.rightBumper().whileTrue(
@@ -316,7 +352,7 @@ public class RobotContainer {
             .onFalse(leds.scoreCompleteCommand());
 
 
-        inScoringDistance.and(hasCoral)
+        inScoringDistance.and(hasCoral).and(DriverStation::isTeleop)
             .whileTrue(arm.shoulder.safeSetTargetAngleCommand(45).repeatedly());
 
         if (RobotBase.isReal()) {
@@ -397,7 +433,47 @@ public class RobotContainer {
         }).alongWith(intake()).alongWith(ledCommand);
     }
 
+    public Command descoreAlgaeLow() {
+        return arm.shoulder.setTargetAngleCommand(34)
+            .alongWith(
+                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() > 25).andThen(arm.extension.setTargetLengthCommand(0.77)),
+                wrist.setTargetPositionCommand(WristConstants.minAngleDegrees),
+                placerGrabber.setPlacerGrabberVoltsCommand(-10, 0),
+                drivetrain.run(() -> {
+                    Pose2d lineToDriveOn = new Pose2d(
+                        drivetrain.getClosestReefFace().getPose2d().getTranslation(),
+                        drivetrain.getClosestReefFace().getPose2d().getRotation().rotateBy(Rotation2d.fromDegrees(180))
+                    );
 
+                    drivetrain.fieldOrientedDriveOnALine(
+                        duncan.getRequestedFieldOrientedVelocity(), 
+                        lineToDriveOn
+                    );
+                })
+        );
+    }
+
+    public Command descoreAlgaeHigh() {
+        return arm.shoulder.setTargetAngleCommand(47)
+            .alongWith(
+                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() > 40).andThen(arm.extension.setTargetLengthCommand(0.93)),
+                wrist.setTargetPositionCommand(0),
+                placerGrabber.setPlacerGrabberVoltsCommand(10, 0),
+                drivetrain.run(() -> {
+                    Pose2d lineToDriveOn = new Pose2d(
+                        drivetrain.getClosestReefFace().getPose2d().getTranslation(),
+                        drivetrain.getClosestReefFace().getPose2d().getRotation().rotateBy(Rotation2d.fromDegrees(180))
+                    );
+
+                    drivetrain.fieldOrientedDriveOnALine(
+                        duncan.getRequestedFieldOrientedVelocity(), 
+                        lineToDriveOn
+                    );
+                })
+        );
+    }
+
+    /*** AUTO ***/
 
     public Command intakeTowardsCoralInAuto() {
             return drivetrain.run(() -> {

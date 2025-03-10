@@ -18,6 +18,8 @@ public class Wrist extends SubsystemBase {
 
     private double desiredWristPositionDegrees;
 
+    private double maxVolts;
+
     public Wrist(WristIO io) {
         this.io = io;
         inputs = new WristIOInputsAutoLogged();
@@ -59,7 +61,6 @@ public class Wrist extends SubsystemBase {
         // }
         // wrist is feedback only, so we need some output to fight gravity.
 
-        double maxVolts = 11;
         outputVolts = MathUtil.clamp(outputVolts, -maxVolts, maxVolts);
 
         Logger.recordOutput("wrist/desiredVolts", outputVolts);
@@ -67,14 +68,22 @@ public class Wrist extends SubsystemBase {
         io.setWristNeoVolts(outputVolts);
     }
 
-
     public void setTargetPositionDegrees(double targetAngleDegrees) {
+        setTargetPositionDegrees(targetAngleDegrees, 12);
+    }
+
+    public void setTargetPositionDegrees(double targetAngleDegrees, double maxVolts) {
+        this.maxVolts = maxVolts;
         desiredWristPositionDegrees = targetAngleDegrees;
     }
 
     public Command setTargetPositionCommand(double targetDegrees) {
+        return setTargetPositionCommand(targetDegrees, 12);
+    }
+    
+    public Command setTargetPositionCommand(double targetDegrees, double maxVolts) {
         return this.run(() -> {
-            this.setTargetPositionDegrees(targetDegrees);
+            this.setTargetPositionDegrees(targetDegrees, maxVolts);
         });
     }
 }

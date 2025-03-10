@@ -53,7 +53,7 @@ public class ScoreOnReef extends Command {
     }
 
     public boolean readyToScore() {
-        if ((Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees())) < 0.6 && 
+        if ((Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees())) < 0.7 && 
                 (Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02) &&
                     (Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 0.5) && 
                         drivetrain.isAngleAligned() &&
