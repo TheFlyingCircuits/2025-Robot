@@ -118,8 +118,8 @@ public class Drivetrain extends SubsystemBase {
         angleController.enableContinuousInput(-180, 180);
         angleController.setTolerance(1); // degrees, degreesPerSecond.
 
-        translationController = new PIDController(5, 0, 0.1); // kP has units of metersPerSecond per meter of error.
-        translationController.setTolerance(0.01); // 1 centimeters
+        translationController = new PIDController(4, 0, 0.1); // kP has units of metersPerSecond per meter of error.
+        translationController.setTolerance(0.01, 0.5); // 1 centimeters
 
         //configPathPlanner();
     }
@@ -321,19 +321,16 @@ public class Drivetrain extends SubsystemBase {
         this.fieldOrientedDriveWhileAiming(desiredVelocity, directionToPoint);
     }
 
+
+    public boolean translationControllerAtSetpoint() {
+        return translationController.atSetpoint();
+    }
+
     /**
      * Uses PID control to reach a target pose2d.
      * 
      * @param maxSpeedMetersPerSecond - Max speed that the robot will travel at while PID-ing. The output of the translation is clamped to never exceed this value.
      */
-    public boolean translationControllerAtSetpoint() {
-        if (translationController.atSetpoint()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public void pidToPose(Pose2d desired, double maxSpeedMetersPerSecond) {
         Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
 
@@ -591,10 +588,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public boolean doesSeeCoral() {
-        if (getBestCoralLocation().isEmpty()) {
-            return false;
-        }
-        return true;
+        return getBestCoralLocation().isPresent();
     }
 
     public ReefFace getClosestReefFace() {
@@ -646,12 +640,21 @@ public class Drivetrain extends SubsystemBase {
 
         Translation2d coralToRobot = coralLocation.minus(getPoseMeters().getTranslation());
 
-        // orient the robot to point away from the note, because the intake is in the back of the robot.
-        this.pidToPose(new Pose2d(coralLocation, coralToRobot.getAngle()), 1.5);
+        Rotation2d directionToPointIn = coralToRobot.getAngle();
+
+        //if the coral is left side of the robot, rotate left
+        if (robotCoordsFromFieldCoords(coralLocation).getAngle().getSin() > 0) {
+            directionToPointIn = directionToPointIn.minus(Rotation2d.fromDegrees(10));
+        }
+        else {
+            directionToPointIn = directionToPointIn.plus(Rotation2d.fromDegrees(10));
+        }
+
+        this.pidToPose(new Pose2d(coralLocation, directionToPointIn), 1.5);
     }
 
 
-    public boolean isAligned() {
+    public boolean isAngleAligned() {
         return angleController.atSetpoint();
     }
 
@@ -698,7 +701,8 @@ public class Drivetrain extends SubsystemBase {
             });
 
         Logger.recordOutput("drivetrain/anglePIDSetpoint", Rotation2d.fromDegrees(angleController.getSetpoint()));
-        Logger.recordOutput("drivetrain/isAligned", isAligned());
+        Logger.recordOutput("drivetrain/isAngleAligned", isAngleAligned());
+        Logger.recordOutput("drivetrain/isTranslationAligned", translationControllerAtSetpoint());
 
 
         // Coral tracking visualization

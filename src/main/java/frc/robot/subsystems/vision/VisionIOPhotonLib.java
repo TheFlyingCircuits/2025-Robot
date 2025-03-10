@@ -42,8 +42,8 @@ public class VisionIOPhotonLib implements VisionIO {
         tagCameras = Arrays.asList(
             new PhotonCamera(VisionConstants.tagCameraNames[0]),
             new PhotonCamera(VisionConstants.tagCameraNames[1]),
-            new PhotonCamera(VisionConstants.tagCameraNames[2]),
             new PhotonCamera(VisionConstants.tagCameraNames[3])
+            // new PhotonCamera(VisionConstants.tagCameraNames[3])
         );
 
         /* When in demo mode, the apriltags will probably be pitched/rolled a bit
@@ -215,6 +215,12 @@ public class VisionIOPhotonLib implements VisionIO {
     private List<Translation3d> updateIntakeCamera() {
 
         List<Translation3d> detectedCorals = new ArrayList<Translation3d>();
+        if (!intakeCamera.isConnected()) {
+            Logger.recordOutput("intakeCamConnected", false);
+            return detectedCorals; // can't see anything if unplugged.
+                                   // shouldn't default to most recent frame.
+        }
+        Logger.recordOutput("intakeCamConnected", true);
 
         PhotonPipelineResult intakeCameraResult = intakeCamera.getLatestResult();
 
@@ -224,7 +230,7 @@ public class VisionIOPhotonLib implements VisionIO {
             double coralYawDegrees = -target.getYaw();
             double coralPitchDegrees = -target.getPitch();
 
-            if (coralPitchDegrees < -12) continue;
+            if (coralPitchDegrees > 15) continue;
 
             // Use the reported pitch and yaw to calculate a unit vector in the camera
             // frame that points towards the note.

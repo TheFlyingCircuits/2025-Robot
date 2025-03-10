@@ -74,6 +74,9 @@ public class PlacerGrabber extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
+
+
+        
         Logger.processInputs("placerGrabberInputs", inputs);
 
         Logger.recordOutput("frontRollerRPM", inputs.frontRollerRPM);

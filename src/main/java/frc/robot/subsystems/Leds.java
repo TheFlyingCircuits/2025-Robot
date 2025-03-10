@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.LEDConstants;
 
@@ -48,7 +50,8 @@ public class Leds extends SubsystemBase {
 
     //mode 
     public Command defaultCommand() {
-        return DriverStation.isAutonomous() ? this.runOnce(() -> {base = blue;}) : this.runOnce(() -> {base = black;}); // auto: blue, tele: off
+        return new InstantCommand();
+        // return DriverStation.isAutonomous() ? Commands.runOnce(() -> {base = blue;}) : Commands.runOnce(() -> {base = black;}); // auto: blue, tele: off
         
     }
 

@@ -50,7 +50,7 @@ public class SourceIntake extends Command{
             double desiredWristAngle = 0;
             if ((arm.getShoulderAngleDegrees() - 0.5) < desiredArmAngle || (arm.getShoulderAngleDegrees() + 0.5) > desiredArmAngle) {
                 arm.setExtensionTargetLength(desiredArmExtention);
-                wrist.setTargetPositionDegrees(desiredWristAngle, 8);
+                wrist.setTargetPositionDegrees(desiredWristAngle);
             }
             arm.setShoulderTargetAngle(desiredArmAngle);
             placerGrabber.setSideRollerVolts(3);

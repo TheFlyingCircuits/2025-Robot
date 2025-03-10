@@ -30,10 +30,11 @@ public class ScoreOnReef extends Command {
     private Leds leds;
     private Supplier<ChassisSpeeds> translationController;
     private Supplier<ReefBranch> reefBranch;
+    private Supplier<Boolean> isFacingReef;
     private Supplier<String> coralSideSupplier;
     private String coralSide;
-    private Supplier<Boolean> isFacingForward;
     private ArmPosition desiredArmPosition;
+
 
     /**
      *  @param translationController - ChassisSpeeds supplier for driver input while scoring.
@@ -47,7 +48,7 @@ public class ScoreOnReef extends Command {
         this.reefBranch=reefBranch;
         this.leds = leds;
         this.coralSideSupplier=sideCoralIsIn;
-        this.isFacingForward=isFacingReef;
+        this.isFacingReef = isFacingReef;
         addRequirements(drivetrain, arm.shoulder, arm.extension, wrist);
     }
 
@@ -55,19 +56,20 @@ public class ScoreOnReef extends Command {
         if ((Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees())) < 0.6 && 
                 (Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02) &&
                     (Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 0.5) && 
-                        drivetrain.isAligned() &&
+                        drivetrain.isAngleAligned() &&
                             drivetrain.translationControllerAtSetpoint()) {
             return true;
         }
         return false;
     }
 
+
     // bumper 37 inches
     private Pose2d adjustedReefScoringPose(Pose2d stalkPose, String sideCoralIsIn, boolean isFacingForward) {
         double adjustedX;
         //17.5 inches of robot space, 4.5 inches is one coral dist
         if (reefBranch.get().getLevel() == 4) {
-            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5); 
+            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1); 
         }
         else {
             adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(9);
@@ -124,7 +126,7 @@ public class ScoreOnReef extends Command {
                 return new ArmPosition(52.2, 80, 1.08);
             case 4:
                 //1 coral distance
-                return new ArmPosition(70.5, 35, 1.6);
+                return new ArmPosition(71, 35, 1.6);
         }
 
         return ArmPosition.generateArmPosition(
@@ -144,7 +146,7 @@ public class ScoreOnReef extends Command {
 
     @Override
     public void execute() {
-        Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), coralSide, isFacingForward.get());
+        Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), coralSide, isFacingReef.get());
 
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
         drivetrain.pidToPose(targetPose, 1);
@@ -169,10 +171,10 @@ public class ScoreOnReef extends Command {
         //     wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
         // }
         if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
-            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, 8);
+            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);//, 6);
         }
         else {
-            wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5, 8);
+            wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
         }
         
 

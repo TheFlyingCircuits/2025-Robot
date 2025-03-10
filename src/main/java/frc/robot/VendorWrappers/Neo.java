@@ -21,6 +21,8 @@ public class Neo extends SparkMax {
     private double mostRecentGoodAppliedOutput = 0;
     private double mostRecentGoodBusVoltage = 0;
     private double mostRecentGoodOutputCurrent = 0;
+    private double mostRecentGoodAnalogInputVolts = 0;
+    private double mostRecentGoodAnalogInputVoltsPerSecond = 0;
 
 
     // physics constants
@@ -167,6 +169,36 @@ public class Neo extends SparkMax {
             return mostRecentGoodOutputCurrent;
         }
     }
+
+    public double getAnalogInputVolts() {
+        double newAnalogInputVolts = super.getAnalog().getVoltage();
+        REVLibError errorCode = super.getLastError();
+        if (errorCode == REVLibError.kOk) {
+            mostRecentGoodAnalogInputVolts = newAnalogInputVolts;
+            return newAnalogInputVolts;
+        }
+        else {
+            System.out.println("Error getting the analog input voltage of "+name+": "+errorCode);
+            System.out.println("Returning most recent valid analog input voltage");
+            return mostRecentGoodAnalogInputVolts;
+        }
+    }
+
+    public double getAnalogInputVoltsPerSecond() {
+        double newAnalogInputVoltsPerSecond = super.getAnalog().getVelocity();
+        REVLibError errorCode = super.getLastError();
+        if (errorCode == REVLibError.kOk) {
+            mostRecentGoodAnalogInputVoltsPerSecond = newAnalogInputVoltsPerSecond;
+            return newAnalogInputVoltsPerSecond;
+        }
+        else {
+            System.out.println("Error getting the analog input velocity of "+name+": "+errorCode);
+            System.out.println("Returning most recent valid analog input velocity");
+            return mostRecentGoodAnalogInputVoltsPerSecond;
+        }
+    }
+
+
 
     public REVLibError setPosition(double position) {
         String errorMessage = "Failed to set the position of "+name+" to "+position+"!";

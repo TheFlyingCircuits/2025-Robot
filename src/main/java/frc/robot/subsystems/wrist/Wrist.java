@@ -6,6 +6,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.WristConstants;
 
 public class Wrist extends SubsystemBase {
     
@@ -15,13 +17,12 @@ public class Wrist extends SubsystemBase {
     private PIDController wristNeoPID;
 
     private double desiredWristPositionDegrees;
-    private double maxVolts;
 
     public Wrist(WristIO io) {
         this.io = io;
         inputs = new WristIOInputsAutoLogged();
 
-        wristNeoPID = new PIDController(0.40,0,0); // kp has units of volts per degree
+        wristNeoPID = new PIDController(0.25,0,0); // kp has units of volts per degree
         wristNeoPID.setTolerance(1); // degrees
 
     }
@@ -36,59 +37,44 @@ public class Wrist extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("wristInputs", inputs);
 
-        moveToTargetPosition(desiredWristPositionDegrees);
+        moveToTargetPosition();
+
+        Logger.recordOutput("wrist/desiredWristPositionDegrees", desiredWristPositionDegrees);
     }
 
 
     public double getWristAngleDegrees() {
-        return inputs.wristAngleDegrees;
+        return inputs.absoluteAngleDegrees;
     }
 
     public double getTargetWristDegrees() {
         return desiredWristPositionDegrees;
     }
 
-    private void moveToTargetPosition(double targetDegrees) {
+    private void moveToTargetPosition() {
         
-        double outputVolts = (wristNeoPID.calculate(inputs.wristAngleDegrees, desiredWristPositionDegrees));
+        double outputVolts = (wristNeoPID.calculate(inputs.absoluteAngleDegrees, desiredWristPositionDegrees));
+        // if (wristNeoPID.atSetpoint()) {
+        //     outputVolts = 0;
+        // }
+        // wrist is feedback only, so we need some output to fight gravity.
 
+        double maxVolts = 11;
         outputVolts = MathUtil.clamp(outputVolts, -maxVolts, maxVolts);
 
-        // if (wristNeoPID.atSetpoint()) {
-        //     return;
-        // }
-        
-        io.setWristNeoVolts(outputVolts);
+        Logger.recordOutput("wrist/desiredVolts", outputVolts);
 
+        io.setWristNeoVolts(outputVolts);
     }
 
 
     public void setTargetPositionDegrees(double targetAngleDegrees) {
-        
-        this.maxVolts = 12;
-        desiredWristPositionDegrees = targetAngleDegrees;
-    }
-
-
-    public void setTargetPositionDegrees(double targetAngleDegrees, double maxVolts) {
-        
-        this.maxVolts = maxVolts;
         desiredWristPositionDegrees = targetAngleDegrees;
     }
 
     public Command setTargetPositionCommand(double targetDegrees) {
         return this.run(() -> {
             this.setTargetPositionDegrees(targetDegrees);
-            this.maxVolts = 12;
-        
-        });
-    }
-
-    public Command setTargetPositionCommand(double targetDegrees, double maxVolts) {
-        return this.run(() -> {
-            this.setTargetPositionDegrees(targetDegrees);
-            this.maxVolts = maxVolts;
-        
         });
     }
 }

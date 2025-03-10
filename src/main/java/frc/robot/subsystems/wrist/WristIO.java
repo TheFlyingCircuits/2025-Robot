@@ -13,10 +13,20 @@ public interface WristIO {
         public double motorOutputVoltage = 0.0;
         
         public double motorOutputCurrentAmps = 0.0;
+
+        public double analogInputVolts = 0.0;
+
+        public double analogInputVoltsPerSecond = 0.0;
+
+        public double absoluteAngleDegrees = 0.0;
+        
+        public double absoluteDegreesPerSecond = 0.0;
     }
 
     public default void updateInputs(WristIOInputs inputs) {};
 
     public default void setWristNeoVolts(double volts) {};
+
+    public default void setWristPosition(double degrees) {};
     
 }

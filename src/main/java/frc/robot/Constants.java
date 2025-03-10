@@ -35,6 +35,11 @@ public final class Constants {
 
         public final static String canivoreName = "CTRENetwork";
 
+        public enum Direction {
+            left,
+            right
+        }
+
     }
 
     public final static class ArmConstants {
@@ -69,7 +74,7 @@ public final class Constants {
 
         public final static double kSExtensionVolts = 0.25;
         public final static double kGExtensionVolts = 0.52;
-        public final static double kVExtensionVoltsSecondsPerRadian = 3.3;
+        public final static double kVExtensionVoltsSecondsPerRadian = 3.35;
         public final static double kAExtensionVoltsSecondsSquaredPerRadian = 0;
         public final static double kPExtensionVoltsPerMeter = 25.;
         public final static double kDExtensionVoltsPerMeterPerSecond = 1.5;
@@ -252,22 +257,22 @@ public final class Constants {
 
         public final static Transform3d robotToFrontLeft = new Transform3d(
             new Translation3d(Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
-            new Rotation3d(0, 0, -Math.toRadians(17.772))
+            new Rotation3d(0, -Math.toRadians(8), -Math.toRadians(17.772))
         );
 
         public final static Transform3d robotToFrontRight = new Transform3d(
             new Translation3d(Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
-            new Rotation3d(0, 0, Math.toRadians(17.772))
+            new Rotation3d(0, -Math.toRadians(8), Math.toRadians(17.772))
         );
 
         public final static Transform3d robotToBackLeft = new Transform3d(
             new Translation3d(-Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
-            new Rotation3d(0, 0, Math.toRadians(17.772-180))
+            new Rotation3d(0, Math.toRadians(8), Math.toRadians(17.772-180))
         );
 
         public final static Transform3d robotToBackRight = new Transform3d(
             new Translation3d(-Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
-            new Rotation3d(0, 0, Math.toRadians(-17.772+180))
+            new Rotation3d(0, Math.toRadians(8), Math.toRadians(-17.772+180))
         );
 
         public final static Transform3d robotToCoralCamera = new Transform3d(
@@ -292,7 +297,7 @@ public final class Constants {
     }
 
     public final static class WristConstants {
-        public final static double maxAngleDegrees = 158;
+        public final static double maxAngleDegrees = 162;
         public final static double minAngleDegrees = 0;
 
         /**rotations of the wrist motor per rotations of the wrist */
