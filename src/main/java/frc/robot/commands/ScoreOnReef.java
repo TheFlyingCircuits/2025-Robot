@@ -171,7 +171,10 @@ public class ScoreOnReef extends Command {
         //     wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
         // }
         if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
-            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);//, 6);
+            double maxWristVolts = 8;
+            if (reefBranch.get().getLevel() == 4) maxWristVolts = 6;
+            
+            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, maxWristVolts);
         }
         else {
             wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
