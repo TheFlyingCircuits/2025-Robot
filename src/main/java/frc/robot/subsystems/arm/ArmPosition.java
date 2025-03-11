@@ -1,6 +1,7 @@
 package frc.robot.subsystems.arm;
 
 import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.WristConstants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -11,6 +12,7 @@ public class ArmPosition {
     public double shoulderAngleDegrees;
     public double wristAngleDegrees;
     public double extensionMeters;
+
 
     /**
         * Creates a new ArmPosition object, representing the position of the arm at a given point.
@@ -25,6 +27,10 @@ public class ArmPosition {
         this.shoulderAngleDegrees=shoulderAngleDegrees;
         this.wristAngleDegrees=wristAngleDegrees;
         this.extensionMeters=extensionMeters;    
+    }
+
+    public ArmPosition() {
+        this(ArmConstants.armMinAngleDegrees, WristConstants.maxAngleDegrees, ArmConstants.minExtensionMeters);
     }
 
 

@@ -33,6 +33,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
@@ -515,7 +516,7 @@ public class Drivetrain extends SubsystemBase {
             Translation2d estimatedTranslation = fusedPoseEstimator.getEstimatedPosition().getTranslation();
 
             // Dont' allow the robot to teleport (Can cause problems when we get bumped)
-            double teleportToleranceMeters = 2.0;
+            double teleportToleranceMeters = 4.0;
             if (visionTranslation.getDistance(estimatedTranslation) > teleportToleranceMeters) { 
                 continue;
             }
@@ -566,11 +567,11 @@ public class Drivetrain extends SubsystemBase {
         return ChassisSpeeds.fromRobotRelativeSpeeds(robotOrientedSpeeds, getPoseMeters().getRotation());
     }
 
-    //**************** TARGET TRACKING (Speaker, Note, etc.) ****************/
+    //**************** TARGET TRACKING ****************/
 
     /**
-     * Returns the best (largest) note that is valid (within the field boundary and within a certain distance).
-     * Returns an empty optional if no such note is detected.
+     * Returns the best (largest) coral that is valid (within the field boundary and within a certain distance).
+     * Returns an empty optional if no such coral is detected.
      */
     public Optional<Translation2d> getBestCoralLocation() {
         for (Translation3d coralRobotFrame3d : visionInputs.detectedCoralsRobotFrame) {
@@ -642,12 +643,13 @@ public class Drivetrain extends SubsystemBase {
 
         Rotation2d directionToPointIn = coralToRobot.getAngle();
 
-        //if the coral is left side of the robot, rotate left
-        if (robotCoordsFromFieldCoords(coralLocation).getAngle().getSin() > 0) {
-            directionToPointIn = directionToPointIn.minus(Rotation2d.fromDegrees(10));
-        }
-        else {
-            directionToPointIn = directionToPointIn.plus(Rotation2d.fromDegrees(10));
+        //if the coral is far, approach with strafe (otherwise rotate back straight)
+        if (coralToRobot.getNorm() > Units.inchesToMeters(DrivetrainConstants.frameWidthMeters + 10)) {
+            //if the coral is left side of the robot, rotate left
+            if (robotCoordsFromFieldCoords(coralLocation).getAngle().getSin() > 0) 
+                directionToPointIn = directionToPointIn.minus(Rotation2d.fromDegrees(10));
+            else
+                directionToPointIn = directionToPointIn.plus(Rotation2d.fromDegrees(10));
         }
 
         this.pidToPose(new Pose2d(coralLocation, directionToPointIn), 1.5);

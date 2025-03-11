@@ -6,6 +6,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.UniversalConstants.Direction;
 
 
 // 2 neo 550's
@@ -63,12 +64,11 @@ public class PlacerGrabber extends SubsystemBase {
         return inputs.leftSensorSeesCoral || inputs.rightSensorSeesCoral;
     }
 
-    public String sideCoralIsIn() {
-        if (inputs.leftSensorSeesCoral) {
-            return("left");
-        } else {
-            return("right");
-        }
+    public Direction sideCoralIsIn() {
+        if (inputs.leftSensorSeesCoral)
+            return Direction.left;
+        else
+             return Direction.right;
     }
 
     @Override

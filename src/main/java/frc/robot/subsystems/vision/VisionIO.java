@@ -76,7 +76,7 @@ public interface VisionIO {
         public List<VisionMeasurement> visionMeasurements = new ArrayList<VisionMeasurement>();
 
         /**
-         * The 3D coordinates of every note detected by the intake camera in the robot coordinate frame.
+         * The 3D coordinates of every coral detected by the intake camera in the robot coordinate frame.
          * <p>
          * Positive X is forward
          * <p>

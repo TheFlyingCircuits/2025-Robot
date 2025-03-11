@@ -391,13 +391,13 @@ public class RobotContainer {
         });
 
         return drivetrain.run(() -> {
-            // have driver stay in control when the intake camera doesn't see a note
+            // have driver stay in control when the intake camera doesn't see a coral
             if (drivetrain.getBestCoralLocation().isEmpty()) {
                 drivetrain.fieldOrientedDrive(howToDriveWhenNoCoralDetected.get(), true);
                 return;
             }
 
-            // drive towards the note when the intake camera does see a note.
+            // drive towards the coral when the intake camera does see a coral.
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         }).alongWith(intake()).alongWith(ledCommand);
     }
@@ -492,13 +492,8 @@ public class RobotContainer {
                         placerGrabber.setPlacerGrabberVoltsCommand(8,8));
     
                 }
-            }).raceWith(runUntilHasCoral());
-        }
-
-    private Command runUntilHasCoral() {
-        return new WaitUntilCommand(() -> placerGrabber.doesHaveCoral());
+            }).raceWith(new WaitUntilCommand(() -> placerGrabber.doesHaveCoral()));
     }
-
 
     private Command sourceIntakeIfDoesntHaveCoral() {
         return new SourceIntake(drivetrain, arm, wrist, placerGrabber).onlyIf(() -> !(placerGrabber.doesHaveCoral()));
@@ -524,10 +519,7 @@ public class RobotContainer {
             sourceIntakeIfDoesntHaveCoral(),
             scoreOnReefCommand(duncan::getRequestedRobotOrientedVelocity, () -> ReefBranch.BRANCH_B4, () -> true)
         );
-
     }
-
-
 
     public Command leftSideAuto() {
         return new SequentialCommandGroup(

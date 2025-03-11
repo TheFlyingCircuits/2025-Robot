@@ -23,6 +23,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
+import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
 
 public class VisionIOPhotonLib implements VisionIO {
@@ -61,7 +62,7 @@ public class VisionIOPhotonLib implements VisionIO {
          */
         PoseStrategy estimationStrat = PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR;
 
-        // TODO: learn about "averaging" 3D orientations?
+        // Todo: learn about "averaging" 3D orientations?
         //       it seems like it's not super straight forward,
         //       but I don't have time for a rabbit hole right now.
         // estimationStrat = PoseStrategy.AVERAGE_BEST_TARGETS;
@@ -103,32 +104,6 @@ public class VisionIOPhotonLib implements VisionIO {
             slopeStdDevMetersPerMeterX = 0.008;
             slopeStdDevMetersPerMeterY = 0.02;
         }
-
-
-
-        //bad vision from practice match at worlds
-
-        // if (DriverStation.isAutonomous()) {
-        //     if (useMultitag) {
-        //         slopeStdDevMetersPerMeterX = 0.06;
-        //         slopeStdDevMetersPerMeterY = 0.06;
-        //     }
-
-        //     else {
-        //         slopeStdDevMetersPerMeterX = 0.08;
-        //         slopeStdDevMetersPerMeterY = 0.08;
-        //     }
-        // }
-        // else {
-        //     if (useMultitag) {
-        //         slopeStdDevMetersPerMeterX = 0.008;
-        //         slopeStdDevMetersPerMeterY = 0.008;
-        //     }
-        //     else {
-        //         slopeStdDevMetersPerMeterX = 0.008;
-        //         slopeStdDevMetersPerMeterY = 0.008;
-        //     }
-        // }
 
         // previous linear model
         return VecBuilder.fill(
@@ -233,11 +208,11 @@ public class VisionIOPhotonLib implements VisionIO {
             if (coralPitchDegrees > 15) continue;
 
             // Use the reported pitch and yaw to calculate a unit vector in the camera
-            // frame that points towards the note.
+            // frame that points towards the coral.
             Rotation3d directionOfCoral = new Rotation3d(0, Math.toRadians(coralPitchDegrees), Math.toRadians(coralYawDegrees));
             Translation3d unitTowardsCoral = new Translation3d(1, directionOfCoral);
 
-            // Start the process of finding the full 3D distance from the camera to the note
+            // Start the process of finding the full 3D distance from the camera to the coral
             // by finding the coordinates of the normal vector of the floor,
             // as seen in the camera frame.
             Translation3d robotOrigin_robotFrame = new Translation3d(0, 0, 0.1);
@@ -246,21 +221,21 @@ public class VisionIOPhotonLib implements VisionIO {
             Translation3d aboveTheFloor_camFrame = intakeCameraCoordsFromRobotCoords(aboveTheFloor_robotFrame);
             Translation3d floorNormal_camFrame = aboveTheFloor_camFrame.minus(robotOrigin_camFrame);
 
-            // Find where the vector that points from the camera to the note intersects
+            // Find where the vector that points from the camera to the coral intersects
             // the plane of the floor.
             Translation3d floorAnchor = robotOrigin_camFrame;
             double distanceToCoral = floorAnchor.toVector().dot(floorNormal_camFrame.toVector())
                                     / unitTowardsCoral.toVector().dot(floorNormal_camFrame.toVector());
 
             // extend the original unit vector to the intersection point in the plane
-            Translation3d note_camFrame = unitTowardsCoral.times(distanceToCoral);
-            Translation3d note_robotFrame = robotCoordsFromIntakeCameraCoords(note_camFrame);
+            Translation3d coral_camFrame = unitTowardsCoral.times(distanceToCoral);
+            Translation3d coral_robotFrame = robotCoordsFromIntakeCameraCoords(coral_camFrame);
 
-            if (note_robotFrame.getNorm() > 3 || note_robotFrame.getNorm() < Units.inchesToMeters(13.5+14)) {
+            if (coral_robotFrame.getNorm() > 3 || coral_robotFrame.getNorm() < Units.inchesToMeters(DrivetrainConstants.frameWidthMeters/2+14)) {
                 continue;
             };
 
-            detectedCorals.add(note_robotFrame);
+            detectedCorals.add(coral_robotFrame);
         }
 
 

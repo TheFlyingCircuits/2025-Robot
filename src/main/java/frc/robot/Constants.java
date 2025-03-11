@@ -119,11 +119,11 @@ public final class Constants {
         /**
          * Distance between the center point of the left wheels and the center point of the right wheels.
          */
-        public static final double trackwidthMeters = Units.inchesToMeters(23.75);
+        public static final double trackwidthMeters = Units.inchesToMeters(21.75);
         /**
          * Distance between the center point of the front wheels and the center point of the back wheels.
          */
-        public static final double wheelbaseMeters = Units.inchesToMeters(22.75);
+        public static final double wheelbaseMeters = Units.inchesToMeters(21.75);
         /**
          * Distance from the center of the robot to each swerve module.
          */
@@ -137,6 +137,9 @@ public final class Constants {
             new Translation2d(-wheelbaseMeters / 2.0, -trackwidthMeters / 2.0)
         );
 
+        public static final double frameWidthMeters = Units.inchesToMeters(27);
+
+        public static final double frameWithBumpersWidthMeters = Units.inchesToMeters(27 + 7);
 
 
 
