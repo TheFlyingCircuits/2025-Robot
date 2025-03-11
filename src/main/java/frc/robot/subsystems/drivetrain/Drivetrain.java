@@ -119,10 +119,10 @@ public class Drivetrain extends SubsystemBase {
         angleController.enableContinuousInput(-180, 180);
         angleController.setTolerance(1); // degrees, degreesPerSecond.
 
-        translationController = new PIDController(4, 0, 0.1); // kP has units of metersPerSecond per meter of error.
-        translationController.setTolerance(0.01, 0.5); // 1 centimeters
+        translationController = new PIDController(3.75, 0, 0.1); // kP has units of metersPerSecond per meter of error.
+        translationController.setTolerance(0.01, 1.0); // 1 centimeters
 
-        //configPathPlanner();
+        //configPathPlanner();  
     }
 
     private void configPathPlanner() {
@@ -567,6 +567,14 @@ public class Drivetrain extends SubsystemBase {
         return ChassisSpeeds.fromRobotRelativeSpeeds(robotOrientedSpeeds, getPoseMeters().getRotation());
     }
 
+    public double getSpeedMetersPerSecond() {
+        
+        ChassisSpeeds v = getFieldOrientedVelocity();
+        double s = Math.hypot(v.vxMetersPerSecond, v.vyMetersPerSecond);
+        
+        return s;
+    }
+
     //**************** TARGET TRACKING ****************/
 
     /**
@@ -579,8 +587,8 @@ public class Drivetrain extends SubsystemBase {
             Translation2d coralFieldFrame = fieldCoordsFromRobotCoords(coralRobotFrame);
 
             boolean closeToRobot = coralRobotFrame.getNorm() < 2.5;
-            boolean inField = !FlyingCircuitUtils.isOutsideOfField(coralFieldFrame, 0.5);
-            if (closeToRobot) {
+            boolean inField = !FlyingCircuitUtils.isOutsideOfField(coralFieldFrame, 0.3);
+            if (closeToRobot && inField) {
                 return Optional.of(coralFieldFrame);
             }
         }
@@ -639,12 +647,13 @@ public class Drivetrain extends SubsystemBase {
      */
     public void driveTowardsCoral(Translation2d coralLocation) {
 
-        Translation2d coralToRobot = coralLocation.minus(getPoseMeters().getTranslation());
+        Translation2d frontOfRobot = fieldCoordsFromRobotCoords(new Translation2d(Units.inchesToMeters(10), 0));
+        Translation2d coralToRobot = coralLocation.minus(frontOfRobot);
 
         Rotation2d directionToPointIn = coralToRobot.getAngle();
 
         //if the coral is far, approach with strafe (otherwise rotate back straight)
-        if (coralToRobot.getNorm() > Units.inchesToMeters(DrivetrainConstants.frameWidthMeters + 10)) {
+        if (coralToRobot.getNorm() > DrivetrainConstants.frameWidthMeters) {
             //if the coral is left side of the robot, rotate left
             if (robotCoordsFromFieldCoords(coralLocation).getAngle().getSin() > 0) 
                 directionToPointIn = directionToPointIn.minus(Rotation2d.fromDegrees(10));
@@ -717,10 +726,7 @@ public class Drivetrain extends SubsystemBase {
             Logger.recordOutput("drivetrain/trackedCoralPose", getPoseMeters());
         }
 
-        ChassisSpeeds v = DrivetrainConstants.swerveKinematics.toChassisSpeeds(getModuleStates());
-        double s = Math.hypot(v.vxMetersPerSecond, v.vyMetersPerSecond);
-        
 
-        Logger.recordOutput("drivetrain/speed", s);
+        Logger.recordOutput("drivetrain/speedMetersPerSecond", getSpeedMetersPerSecond());
     }
 }

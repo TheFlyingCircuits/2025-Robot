@@ -45,10 +45,7 @@ public class WristIONeo implements WristIO{
             .smartCurrentLimit(30)
             .inverted(true);
 
-        config.softLimit.forwardSoftLimitEnabled(true)
-            .forwardSoftLimit(WristConstants.maxAngleDegrees+2)
-            .reverseSoftLimitEnabled(true)
-            .reverseSoftLimit(WristConstants.minAngleDegrees-2);
+        config.softLimit.forwardSoftLimitEnabled(false);
 
         wristNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 

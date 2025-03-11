@@ -136,7 +136,7 @@ public class ArmIOKraken implements ArmIO{
         // shoulderConfig.Slot0.kP = 0;
         
         shoulderConfig.Slot0.kS = 0.117;
-        shoulderConfig.Slot0.kV = 30;
+        shoulderConfig.Slot0.kV = 31;
         shoulderConfig.Slot0.kA = 0;
         shoulderConfig.Slot0.kG = 0.22;
         shoulderConfig.Slot0.kP = 125;

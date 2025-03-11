@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.drivetrain.Drivetrain;
@@ -37,7 +38,7 @@ public class SourceIntake extends Command{
     @Override
     public void initialize() {
         FieldElement sourceSide = drivetrain.getClosestSourceSide();
-        Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.fromDegrees(180));
+        Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(DrivetrainConstants.frameWidthMeters/2 + 13), 0, Rotation2d.fromDegrees(180));
         targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
     }
 

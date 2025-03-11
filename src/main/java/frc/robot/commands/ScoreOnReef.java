@@ -146,7 +146,7 @@ public class ScoreOnReef extends Command {
         Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), coralSide, isFacingReef.get());
 
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
-        drivetrain.pidToPose(targetPose, 1);
+        drivetrain.pidToPose(targetPose, 1.5);
 
         desiredArmPosition = calculateArmScoringPosition();
 
@@ -154,7 +154,12 @@ public class ScoreOnReef extends Command {
         Logger.recordOutput("scoreOnReef/wristDesiredDegrees", desiredArmPosition.wristAngleDegrees);
         Logger.recordOutput("scoreOnReef/extensionDesiredMeters", desiredArmPosition.extensionMeters);
 
-        arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
+
+        if (targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1
+                && drivetrain.getSpeedMetersPerSecond() < 1)
+            arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
+        else
+            arm.setShoulderTargetAngle(45);
         
         if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
             arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);

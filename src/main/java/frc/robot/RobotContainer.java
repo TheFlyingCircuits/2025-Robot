@@ -205,15 +205,15 @@ public class RobotContainer {
                 () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel),
                 this::isFacingReef));
 
-        //SOURCE
-        //35.23, 0.737, 53.5
-        // duncanController.b().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6)
-        //     .alongWith(
-        //         arm.shoulder.setTargetAngleCommand(35.23),
-        //         arm.extension.setTargetLengthCommand(0.737),
-        //         wrist.setTargetPositionCommand(53.5)
-        //     ).until(() -> placerGrabber.doesHaveCoral())
-        // );
+        // SOURCE
+        // 35.23, 0.737, 53.5
+        duncanController.b().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6)
+            .alongWith(
+                arm.shoulder.setTargetAngleCommand(35.23),
+                arm.extension.setTargetLengthCommand(0.737),
+                wrist.setTargetPositionCommand(53.5)
+            ).until(() -> placerGrabber.doesHaveCoral())
+        );
 
 
 
@@ -284,7 +284,7 @@ public class RobotContainer {
         //ground intake
         duncanController.rightTrigger()
             .whileTrue(
-                intakeTowardsCoral(duncan::getRequestedFieldOrientedVelocity).until(() -> placerGrabber.doesHaveCoral()).withName("intakeTowardsCoral")
+                intake().until(() -> placerGrabber.doesHaveCoral()).withName("intake")
         );
         
 
@@ -372,7 +372,7 @@ public class RobotContainer {
     private Command intake() {
         return placerGrabber.setPlacerGrabberVoltsCommand(11, 11)
             .alongWith(
-                arm.shoulder.setTargetAngleCommand(ArmConstants.armMinAngleDegrees),
+                arm.shoulder.safeSetTargetAngleCommand(ArmConstants.armMinAngleDegrees),
                 arm.extension.setTargetLengthCommand(0.77),
                 wrist.setTargetPositionCommand(0));
     }
@@ -429,7 +429,7 @@ public class RobotContainer {
 
     public Command scoreCoral() {
         return placerGrabber.setPlacerGrabberVoltsCommand(11, 0).until(() -> !placerGrabber.doesHaveCoral())
-                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(11, 0).withTimeout(1.5));
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(11, 0).withTimeout(0.25));
     }
 
     public Command descoreAlgaeLow() {
@@ -474,25 +474,51 @@ public class RobotContainer {
 
     /*** AUTO ***/
 
-    public Command intakeTowardsCoralInAuto() {
+    private Command homeArmWhileGoingToSource() {
+        return new ParallelCommandGroup(
+            arm.shoulder.safeSetTargetAngleCommand(0),
+            arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
+            wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5),
+            drivetrain.run(() -> {
+                Transform2d poseAdjustment = new Transform2d(2, 0, new Rotation2d());
+                drivetrain.pidToPose(drivetrain.getClosestSourceSide().getPose2d().plus(poseAdjustment), 3.5);
+            })
+        ).until(() -> arm.getShoulderAngleDegrees() < 30);
+    }
+
+
+    private Command intakeTowardsCoralInAuto() {
             return drivetrain.run(() -> {
                 if (drivetrain.getBestCoralLocation().isEmpty()) {
                     FieldElement sourceSide = drivetrain.getClosestSourceSide();
-                    Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.fromDegrees(180));
+                    Transform2d pickupLocationRelativeToSource = new Transform2d(2, 0, Rotation2d.fromDegrees(180));
                     Pose2d targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
-                    drivetrain.pidToPose(targetRobotPose2d, 3);
+                    drivetrain.pidToPose(targetRobotPose2d, 1);
                 } else {
                     drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
-                    arm.shoulder.setTargetAngleCommand(0)
-                    .alongWith(
-                        wrist.setTargetPositionCommand(0))
-                    .alongWith(
-                        placerGrabber.setPlacerGrabberVoltsCommand(8,8));
-    
                 }
-            }).raceWith(new WaitUntilCommand(() -> placerGrabber.doesHaveCoral()));
+            })
+                .alongWith(intake())
+                .raceWith(new WaitUntilCommand(() -> placerGrabber.doesHaveCoral()))
+                .andThen(intake().withTimeout(0.25))
+                .andThen(new InstantCommand(() -> {
+                    placerGrabber.setFrontRollerVolts(0);
+                    placerGrabber.setSideRollerVolts(0);
+                }));
     }
 
+    private Command driveTowardsReef() {
+        return drivetrain.run(() -> {
+                Transform2d poseAdjustment = new Transform2d(2, 0, new Rotation2d());
+                drivetrain.pidToPose(drivetrain.getClosestSourceSide().getPose2d().plus(poseAdjustment), 3.5);
+        }).alongWith(arm.shoulder.setTargetAngleCommand(45))
+            .until(() -> {
+                Translation2d sourceTranslation = drivetrain.getClosestSourceSide().getPose2d().getTranslation();
+                return drivetrain.getPoseMeters().getTranslation().minus(sourceTranslation).getNorm() > 1.5;
+        });
+    }
+
+    //DO NOT USE
     private Command sourceIntakeIfDoesntHaveCoral() {
         return new SourceIntake(drivetrain, arm, wrist, placerGrabber).onlyIf(() -> !(placerGrabber.doesHaveCoral()));
     }
@@ -506,30 +532,33 @@ public class RobotContainer {
 
     public Command rightSideAuto() {
         return new SequentialCommandGroup(
-            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_E4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
-            sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_D4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
-            sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(duncan::getRequestedRobotOrientedVelocity, () -> ReefBranch.BRANCH_C4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
-            sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(duncan::getRequestedRobotOrientedVelocity, () -> ReefBranch.BRANCH_B4, () -> true)
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_J4, () -> true),
+            homeArmWhileGoingToSource(),
+            intakeTowardsCoralInAuto(),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_K4, () -> true),
+            homeArmWhileGoingToSource(),
+            intakeTowardsCoralInAuto(),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_L4, () -> true),
+            homeArmWhileGoingToSource(),
+            intakeTowardsCoralInAuto(),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_A4, () -> true)
         );
     }
 
     public Command leftSideAuto() {
         return new SequentialCommandGroup(
-            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_J4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
-            sourceIntakeIfDoesntHaveCoral(),
-            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, () -> ReefBranch.BRANCH_K4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
-            sourceIntakeIfDoesntHaveCoral(),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_J4, () -> true),
+            homeArmWhileGoingToSource(),
+            intakeTowardsCoralInAuto(),
+            driveTowardsReef(),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_K4, () -> true),
+            homeArmWhileGoingToSource(),
+            intakeTowardsCoralInAuto(),
+            driveTowardsReef(),
             scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_L4, () -> true),
-            intakeTowardsCoralInAuto().raceWith(waitUntilInRangeOfSource()),
-            sourceIntakeIfDoesntHaveCoral(),
+            homeArmWhileGoingToSource(),
+            intakeTowardsCoralInAuto(),
+            driveTowardsReef(),
             scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_A4, () -> true)
         );
 

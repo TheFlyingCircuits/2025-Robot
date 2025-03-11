@@ -42,9 +42,9 @@ public class VisionIOPhotonLib implements VisionIO {
 
         tagCameras = Arrays.asList(
             new PhotonCamera(VisionConstants.tagCameraNames[0]),
-            new PhotonCamera(VisionConstants.tagCameraNames[1])
-            // new PhotonCamera(VisionConstants.tagCameraNames[3])
-            // new PhotonCamera(VisionConstants.tagCameraNames[3])
+            new PhotonCamera(VisionConstants.tagCameraNames[1]),
+            new PhotonCamera(VisionConstants.tagCameraNames[2]),
+            new PhotonCamera(VisionConstants.tagCameraNames[3])
         );
 
         /* When in demo mode, the apriltags will probably be pitched/rolled a bit
@@ -205,7 +205,7 @@ public class VisionIOPhotonLib implements VisionIO {
             double coralYawDegrees = -target.getYaw();
             double coralPitchDegrees = -target.getPitch();
 
-            if (coralPitchDegrees > 15) continue;
+            if (coralPitchDegrees > 10) continue;
 
             // Use the reported pitch and yaw to calculate a unit vector in the camera
             // frame that points towards the coral.
@@ -231,7 +231,7 @@ public class VisionIOPhotonLib implements VisionIO {
             Translation3d coral_camFrame = unitTowardsCoral.times(distanceToCoral);
             Translation3d coral_robotFrame = robotCoordsFromIntakeCameraCoords(coral_camFrame);
 
-            if (coral_robotFrame.getNorm() > 3 || coral_robotFrame.getNorm() < Units.inchesToMeters(DrivetrainConstants.frameWidthMeters/2+14)) {
+            if (coral_robotFrame.getNorm() > 3 || coral_robotFrame.getNorm() < Units.inchesToMeters(DrivetrainConstants.frameWidthMeters/2)) {
                 continue;
             };
 
