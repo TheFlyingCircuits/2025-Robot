@@ -16,13 +16,16 @@ public class ReefFace implements FieldElement {
 
     protected final ReefStalk leftStalk;
     protected final ReefStalk rightStalk;
+
+    protected final Boolean isAlgaeInL3;
     
-    protected ReefFace(int redTagID, int blueTagID, String name, char leftStalkLabel, char rightStalkLabel) {
+    protected ReefFace(int redTagID, int blueTagID, String name, char leftStalkLabel, char rightStalkLabel, Boolean isAlgaeInL3) {
         this.redPose = FieldConstants.tagLayout.getTagPose(redTagID).get();
         this.bluePose = FieldConstants.tagLayout.getTagPose(blueTagID).get();
         this.redTagID = redTagID;
         this.blueTagID = blueTagID;
         this.name = name;
+        this.isAlgaeInL3=isAlgaeInL3;
 
         leftStalk = new ReefStalk(this, leftStalkLabel);
         rightStalk = new ReefStalk(this, rightStalkLabel);
@@ -65,6 +68,10 @@ public class ReefFace implements FieldElement {
      *  are at Levels 2 through 4. */
     public ReefBranch[] getBranches(int branchLevel) {
         return new ReefBranch[] {leftStalk.getBranch(branchLevel), rightStalk.getBranch(branchLevel)};
+    }
+
+    public Boolean getIfAlgaeL3() {
+        return isAlgaeInL3;
     }
 
     // public static List<ReefFace> getAll() {

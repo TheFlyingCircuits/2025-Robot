@@ -111,12 +111,12 @@ public interface FieldElement {
     //
     //           -----Alliance Station-----
     //
-    ReefFace FRONT_REEF_FACE       = new ReefFace(7, 18, "FRONT_REEF_FACE", 'A', 'B');
-    ReefFace FRONT_RIGHT_REEF_FACE = new ReefFace(8, 17, "FRONT_RIGHT_REEF_FACE", 'C', 'D');
-    ReefFace BACK_RIGHT_REEF_FACE  = new ReefFace(9, 22, "BACK_RIGHT_REEF_FACE", 'E', 'F');
-    ReefFace BACK_REEF_FACE        = new ReefFace(10, 21, "BACK_REEF_FACE", 'G', 'H');
-    ReefFace BACK_LEFT_REEF_FACE   = new ReefFace(11, 20, "BACK_LEFT_REEF_FACE", 'I', 'J');
-    ReefFace FRONT_LEFT_REEF_FACE  = new ReefFace(6, 19, "FRONT_LEFT_REEF_FACE", 'K', 'L');
+    ReefFace FRONT_REEF_FACE       = new ReefFace(7, 18, "FRONT_REEF_FACE", 'A', 'B', true);
+    ReefFace FRONT_RIGHT_REEF_FACE = new ReefFace(8, 17, "FRONT_RIGHT_REEF_FACE", 'C', 'D', false);
+    ReefFace BACK_RIGHT_REEF_FACE  = new ReefFace(9, 22, "BACK_RIGHT_REEF_FACE", 'E', 'F', true);
+    ReefFace BACK_REEF_FACE        = new ReefFace(10, 21, "BACK_REEF_FACE", 'G', 'H', false);
+    ReefFace BACK_LEFT_REEF_FACE   = new ReefFace(11, 20, "BACK_LEFT_REEF_FACE", 'I', 'J', true);
+    ReefFace FRONT_LEFT_REEF_FACE  = new ReefFace(6, 19, "FRONT_LEFT_REEF_FACE", 'K', 'L', false);
     ReefFace[] ALL_REEF_FACES = {FRONT_REEF_FACE, FRONT_RIGHT_REEF_FACE, BACK_RIGHT_REEF_FACE,
                                  BACK_REEF_FACE, BACK_LEFT_REEF_FACE, FRONT_LEFT_REEF_FACE};
 
@@ -197,4 +197,6 @@ public interface FieldElement {
 
     /** A special field element that's used for demos or practice without a full field */
     MoveableFieldElement HANDHELD_TAG = new MoveableFieldElement("HANDHELD_TAG");
+
+
 }
