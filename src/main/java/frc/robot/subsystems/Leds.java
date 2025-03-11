@@ -50,8 +50,8 @@ public class Leds extends SubsystemBase {
 
     //mode 
     public Command defaultCommand() {
-        return new InstantCommand();
-        // return DriverStation.isAutonomous() ? Commands.runOnce(() -> {base = blue;}) : Commands.runOnce(() -> {base = black;}); // auto: blue, tele: off
+        // return new InstantCommand();
+        return DriverStation.isAutonomous() ? this.runOnce(() -> {base = blue;}) : this.runOnce(() -> {base = white;}); // auto: blue, tele: off
         
     }
 

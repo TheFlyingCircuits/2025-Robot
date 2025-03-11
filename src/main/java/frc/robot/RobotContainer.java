@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
@@ -25,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -126,7 +128,7 @@ public class RobotContainer {
         
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(duncan.getRequestedFieldOrientedVelocity(), true);}));
-        // leds.setDefaultCommand(leds.defaultCommand());
+        leds.setDefaultCommand(leds.defaultCommand());
         
         
         arm.extension.setDefaultCommand(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters));
@@ -142,8 +144,8 @@ public class RobotContainer {
         duncanController = duncan.getXboxController();
         amaraController = amara.getXboxController();
 
-        testBindings();
-        // realBindings();
+        // testBindings();
+        realBindings();
         triggers();
 
     }
@@ -232,15 +234,11 @@ public class RobotContainer {
                 new ParallelDeadlineGroup(
                     new WaitUntilCommand(() -> placerGrabber.doesHaveCoral()),
                     intakeTowardsCoral(duncan::getRequestedFieldOrientedVelocity)
-                ).andThen(new PrintCommand("intake ended!!!!!!!!"))
+                ).withName("intakeTowardsCoral")
+                
+                .andThen(new PrintCommand("intake ended!!!!!!!!"))
         );
-
-                    
-        //eject coral
-        duncanController.leftBumper().whileTrue(
-            placerGrabber.setPlacerGrabberVoltsCommand(9, 0).until(() -> !placerGrabber.doesHaveCoral())
-                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.5))
-        );
+   
 
         //CLIMB PREP
         duncanController.povUp().onTrue(
@@ -344,9 +342,9 @@ public class RobotContainer {
         inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
 
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
-        hasCoral.onTrue(leds.coralControlledCommand())
+        hasCoral.onTrue(new ScheduleCommand(leds.coralControlledCommand()))
             .onTrue(duncan.rumbleController(1.0).withTimeout(0.5))
-            .onFalse(leds.scoreCompleteCommand());
+            .onFalse(new ScheduleCommand(leds.scoreCompleteCommand()));
 
 
         inScoringDistance.and(hasCoral).and(DriverStation::isTeleop)
@@ -381,14 +379,14 @@ public class RobotContainer {
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
 
-        Command ledCommand = Commands.run(() -> {
+        Command ledCommand = new ScheduleCommand(leds.run(() -> {
             if (drivetrain.getBestCoralLocation().isEmpty()) {
                 leds.orange();
             }
             else {
                 leds.green();
             }
-        });
+        }));
 
         return drivetrain.run(() -> {
             // have driver stay in control when the intake camera doesn't see a coral
