@@ -56,7 +56,7 @@ public class ScoreOnReef extends Command {
     public boolean readyToScore() {
         if ((Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees())) < 0.7 && 
                 (Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02) &&
-                    (Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 0.5) && 
+                    (Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 1) && 
                         drivetrain.isAngleAligned() &&
                             drivetrain.translationControllerAtSetpoint()) {
             return true;
@@ -78,12 +78,12 @@ public class ScoreOnReef extends Command {
         double adjustedY;
         Rotation2d rotation = Rotation2d.fromDegrees(180);
 
-        //commenting out pivot side score for now because haven't tested it
-        // if (isFacingForward) {
-        //     rotation = Rotation2d.fromDegrees(180);
-        // } else {
-        //     rotation = new Rotation2d();
-        // }
+        // commenting out pivot side score for now because haven't tested it
+        if (isFacingForward) {
+            rotation = Rotation2d.fromDegrees(180);
+        } else {
+            rotation = new Rotation2d();
+        }
 
         if (((sideCoralIsIn == Direction.left) & isFacingForward) || ((sideCoralIsIn == Direction.right) & !isFacingForward)) {
             adjustedY = Units.inchesToMeters(3.25);
@@ -117,19 +117,35 @@ public class ScoreOnReef extends Command {
 
         // double targetWristAngleDegrees = WristConstants.maxAngleDegrees-5;
         
-        switch (reefBranch.get().getLevel()) {
-            case 1:
-                //TODO: implement
-                break;
-            case 2:
-                //2 coral distance
-                return new ArmPosition(35.3, 98, 0.845);
-            case 3:
-                //2 coral distance
-                return new ArmPosition(52.2, 80, 1.08);
-            case 4:
-                //1 coral distance
-                return new ArmPosition(71, 35, 1.6);
+        if (isFacingReef.get()) {            
+            switch (reefBranch.get().getLevel()) {
+                case 1:
+                    //TODO: implement
+                    break;
+                case 2:
+                    //2 coral distance
+                    return new ArmPosition(35.3, 98, 0.845);
+                case 3:
+                    //2 coral distance
+                    return new ArmPosition(52.2, 80, 1.08);
+                case 4:
+                    //1 coral distance
+                    return new ArmPosition(71, 35, 1.6);
+            }
+        }
+        else {
+            switch (reefBranch.get().getLevel()) {
+                case 1:
+                    break;
+                case 2:
+                    break; //no good angle
+                case 3:
+                    //2 coral distance
+                    return new ArmPosition(108, 105, 0.86);
+                case 4:
+                    //1 coral distance
+                    return new ArmPosition(95, 144, 1.59);
+            }
         }
 
         return new ArmPosition();
@@ -146,7 +162,15 @@ public class ScoreOnReef extends Command {
         Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), coralSide, isFacingReef.get());
 
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
-        drivetrain.pidToPose(targetPose, 1.5);
+        
+        ChassisSpeeds driverControl = translationController.get();
+        if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
+            drivetrain.pidToPose(targetPose, 1.5);
+        }
+        else {
+            drivetrain.fieldOrientedDrive(driverControl.div(3), true);
+        }
+
 
         desiredArmPosition = calculateArmScoringPosition();
 
