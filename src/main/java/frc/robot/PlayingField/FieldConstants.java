@@ -1,7 +1,14 @@
 package frc.robot.PlayingField;
 
+import org.photonvision.estimation.TargetModel;
+import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.simulation.VisionTargetSim;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
@@ -11,6 +18,15 @@ public class FieldConstants {
     public static final double maxX = tagLayout.getFieldLength();
     public static final double maxY = tagLayout.getFieldWidth();
     public static final Translation2d midField = new Translation2d(maxX / 2.0, maxY / 2.0);
+
+    public static Pose3d tagPose(int tagID) {
+        return tagLayout.getTagPose(tagID).get();
+    }
+
+    public static Transform3d tagPoseAsTransform(int tagID) {
+        Pose3d pose = tagLayout.getTagPose(tagID).get();
+        return new Transform3d(pose.getTranslation(), pose.getRotation());
+    }
 
     // Reef Geometry taken from the official field drawings (pages 102-106)
     // https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-GameSpecific.pdf
@@ -48,6 +64,7 @@ public class FieldConstants {
     public static final double branchRadiusMeters = branchDiameterMeters / 2.0;
     public static final double coralInnerRadiusMeters = coralInnerDiameterMeters / 2.0;
     public static final double coralOuterRadiusMeters = coralOuterDiameterMeters / 2.0;
+    public static final double coralLengthMeters = Units.inchesToMeters(11.875);
 
     /** When viewing the stalk so that the branches are facing to the right, this is the
      *  width of the bounding box you'd need to completely encase the stalk.
@@ -79,6 +96,31 @@ public class FieldConstants {
     /** The horizontal distance between a reef face and the center of the hole that holds a stalk. */
     public static final double stalkInsetMeters = (branchInsetMeters[4] + stalkDepthMeters) - branchRadiusMeters;
 
+    /** Used for photon vision simulation. */
+    public static final VisionSystemSim simulatedTagLayout = new VisionSystemSim("simulatedTagLayout");
+    public static final VisionSystemSim simulatedCoralLayout = new VisionSystemSim("simulatedCoralLayout");
+    static {
+        simulatedTagLayout.addAprilTags(FieldConstants.tagLayout);
 
-    
+        // add some coral in front of the loading stations
+        // (for simplicity, coral will appear as a rectangular prisim to the simulated cameras)
+        TargetModel simulatedCoralShape = new TargetModel(FieldConstants.coralLengthMeters, FieldConstants.coralOuterDiameterMeters, FieldConstants.coralOuterDiameterMeters);
+        int[] loadingStationTagIDs = {1, 13, 2, 12};  // left red, left blue, right red, right blue
+        
+        for (int loadingStationTagID : loadingStationTagIDs) {
+            Pose3d loadingStationPose = FieldConstants.tagLayout.getTagPose(loadingStationTagID).get();
+            double coralZ_loadingStationFrame = -loadingStationPose.getZ() + FieldConstants.coralOuterRadiusMeters;
+
+            // 3 corals per loading station
+            Transform3d[] coralPoses_loadingStationFrame = { new Transform3d(0.5, 0.25, coralZ_loadingStationFrame, new Rotation3d()),
+                                                             new Transform3d(0.5, -0.25, coralZ_loadingStationFrame, new Rotation3d()),
+                                                             new Transform3d(-0.5, 0, coralZ_loadingStationFrame, new Rotation3d())
+                                                           };
+
+            for (Transform3d coralPose_loadingStationFrame : coralPoses_loadingStationFrame) {
+                Pose3d coralPose_fieldFrame = loadingStationPose.plus(coralPose_loadingStationFrame);
+                simulatedCoralLayout.addVisionTargets("coral", new VisionTargetSim(coralPose_fieldFrame, simulatedCoralShape));
+            }
+        }
+    }
 }

@@ -10,6 +10,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -17,6 +18,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.PlayingField.FieldConstants;
 
 public class FlyingCircuitUtils {
 
@@ -58,14 +60,46 @@ public class FlyingCircuitUtils {
     }
 
     /**
-     * Returns true if the fed position is outside of the field.
-     * @param toleranceMeters - Distance outside of the field that will still be considered "in the field"; i.e. the method will still return
-     * true.
+     * Returns true if the fed position is inside the field perimeter.
+     * @param toleranceMeters - Distance outside of the field that will still be considered "in the field";
+     *                          i.e. the method will still return true.
      */
-    public static boolean isOutsideOfField(Translation2d pos, double toleranceMeters) {
+    public static boolean isInField(Translation2d location, double toleranceMeters) {
+        // Modeling the field as a long octagon instead of just a rectangle is necessary
+        // for accurately rejecting the coral that are outside the field at the loading stations.
+        //
+        // When using a tolerance, the current calculation isn't totally correct at the corners of the octagon
+        // (see https://www.desmos.com/calculator/xr9ocyj96n for an illustration of the innaccuracy),
+        // but it should still be close enough for our purposes.
+        int[] cornerTagIDs = {1, 2, 12, 13};
+        for (int tagID : cornerTagIDs) {
+            // Get vector from tag to location
+            Pose2d tagPose = FieldConstants.tagLayout.getTagPose(tagID).get().toPose2d();
+            Translation2d tagToLocation = location.minus(tagPose.getTranslation());
 
-        return (pos.getY() > 8.19 + toleranceMeters) || (pos.getY() < 0 - toleranceMeters)
-            ||(pos.getX() > 16.54 + toleranceMeters) || (pos.getX() < 0 - toleranceMeters);
+            // Project that onto the tag's normal vector to get signed distance from the loading station wall.
+            // Negative values indicate out of the field, because the tag's normal faces into the field.
+            Rotation2d tagNormal = tagPose.getRotation();
+            double signedDistance = tagToLocation.getX() * tagNormal.getCos() + tagToLocation.getY() * tagNormal.getSin();
+
+            if (signedDistance < -toleranceMeters) {
+                return false;
+            }
+        }
+
+        // we've passed all the loading station checks if we've gotten to this point,
+        // so all that's left to check is the length and width of the field.
+        boolean insideX = ((0 - toleranceMeters) < location.getX()) && (location.getX() < (FieldConstants.maxX + toleranceMeters));
+        boolean insideY = ((0 - toleranceMeters) < location.getY()) && (location.getY() < (FieldConstants.maxY + toleranceMeters));
+        return insideX && insideY;
+    }
+    public static boolean isInField(Translation3d location, double toleranceMeters) {
+        return FlyingCircuitUtils.isInField(location.toTranslation2d(), toleranceMeters);
+    }
+
+
+    public static double getPlanarDistanceMeters(Translation3d locaitonA, Translation3d locationB) {
+        return locaitonA.toTranslation2d().getDistance(locationB.toTranslation2d());
     }
 
 

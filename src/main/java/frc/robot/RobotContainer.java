@@ -142,8 +142,8 @@ public class RobotContainer {
         duncanController = duncan.getXboxController();
         amaraController = amara.getXboxController();
 
-        testBindings();
-        // realBindings();
+        // testBindings();
+        realBindings();
         triggers();
 
     }
@@ -389,8 +389,8 @@ public class RobotContainer {
         return placerGrabber.setPlacerGrabberVoltsCommand(11, 11)
             .alongWith(
                 arm.shoulder.safeSetTargetAngleCommand(ArmConstants.armMinAngleDegrees),
-                arm.extension.setTargetLengthCommand(0.77),
-                wrist.setTargetPositionCommand(0));
+                arm.extension.setTargetLengthCommand(0.76),
+                wrist.setTargetPositionCommand(-3));
     }
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {

@@ -45,6 +45,7 @@ import frc.robot.FlyingCircuitUtils;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefFace;
 import frc.robot.PlayingField.ReefStalk;
+import frc.robot.subsystems.vision.ColorCamera;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
 import frc.robot.subsystems.vision.VisionIO.VisionMeasurement;
@@ -56,6 +57,7 @@ public class Drivetrain extends SubsystemBase {
 
     private VisionIO visionIO;
     private VisionIOInputsLogged visionInputs;
+    private ColorCamera intakeCam = new ColorCamera("intakeCam", VisionConstants.robotToCoralCamera);
 
     private SwerveModule[] swerveModules;
 
@@ -582,17 +584,10 @@ public class Drivetrain extends SubsystemBase {
      * Returns an empty optional if no such coral is detected.
      */
     public Optional<Translation2d> getBestCoralLocation() {
-        for (Translation3d coralRobotFrame3d : visionInputs.detectedCoralsRobotFrame) {
-            Translation2d coralRobotFrame = coralRobotFrame3d.toTranslation2d();
-            Translation2d coralFieldFrame = fieldCoordsFromRobotCoords(coralRobotFrame);
-
-            boolean closeToRobot = coralRobotFrame.getNorm() < 2.5;
-            boolean inField = !FlyingCircuitUtils.isOutsideOfField(coralFieldFrame, 0.3);
-            if (closeToRobot && inField) {
-                return Optional.of(coralFieldFrame);
-            }
+        Optional<Translation3d> closest = intakeCam.getClosestValidGamepiece();
+        if (closest.isPresent()) {
+            return Optional.of(closest.get().toTranslation2d());
         }
-
         return Optional.empty();
     }
 
@@ -688,6 +683,7 @@ public class Drivetrain extends SubsystemBase {
         Logger.processInputs("visionInputs", visionInputs);
 
         updatePoseEstimator();
+        intakeCam.periodic(fusedPoseEstimator);
 
 
         Logger.recordOutput("drivetrain/fusedPose", fusedPoseEstimator.getEstimatedPosition());
