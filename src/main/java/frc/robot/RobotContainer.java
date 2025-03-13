@@ -586,7 +586,19 @@ public class RobotContainer {
         });
     }
 
-    public Command rightSideAuto() {
+    public Command autoChoosingAuto() {
+        return new ConditionalCommand(leftSideAuto(), rightSideAuto(), () -> {
+            FieldElement closestFaceOnLeft = FieldElement.BACK_LEFT_REEF_FACE;
+            FieldElement closestFaceOnRight = FieldElement.BACK_RIGHT_REEF_FACE;
+
+            double distanceToLeft = closestFaceOnLeft.getLocation2d().getDistance(drivetrain.getPoseMeters().getTranslation());
+            double distanceToRight = closestFaceOnRight.getLocation2d().getDistance(drivetrain.getPoseMeters().getTranslation());
+
+            return distanceToLeft < distanceToRight;
+        });
+    }
+
+    public Command leftSideAuto() {
         return new SequentialCommandGroup(
             scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_J4, () -> true),
             homeArmWhileGoingToSource(),
@@ -601,21 +613,21 @@ public class RobotContainer {
         );
     }
 
-    public Command leftSideAuto() {
+    public Command rightSideAuto() {
         return new SequentialCommandGroup(
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_J4, () -> true),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_E4, () -> true),
             homeArmWhileGoingToSource(),
             intakeTowardsCoralInAuto(),
             driveTowardsReef(),
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_K4, () -> true),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_D4, () -> true),
             homeArmWhileGoingToSource(),
             intakeTowardsCoralInAuto(),
             driveTowardsReef(),
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_L4, () -> true),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_C4, () -> true),
             homeArmWhileGoingToSource(),
             intakeTowardsCoralInAuto(),
             driveTowardsReef(),
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_A4, () -> true)
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_B4, () -> true)
         );
 
     }

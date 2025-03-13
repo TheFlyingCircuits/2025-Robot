@@ -16,7 +16,11 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
@@ -25,6 +29,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.PlayingField.FieldElement;
 
 public class VisionIOPhotonLib implements VisionIO {
     
@@ -123,6 +128,43 @@ public class VisionIOPhotonLib implements VisionIO {
         //     squareFactor*slopeStdDevMetersPerMeterY*Math.pow(distToTargetMeters, 3),
         //     99999
         // );
+    }
+
+    
+    private void makeTagCamsAgree(Pose2d knownRobotPose) {
+        makeTagCamsAgree(new Pose3d(knownRobotPose));
+    }
+
+    private void makeTagCamsAgree(Pose3d knownRobotPose) {
+        for (PhotonCamera tagCam : tagCameras) {
+            List<PhotonPipelineResult> newFrames = tagCam.getAllUnreadResults();
+            if (newFrames.size() == 0) {
+                continue;
+            }
+
+            PhotonPipelineResult mostRecentFrame = newFrames.get(newFrames.size()-1);
+
+            Transform3d camPose_fieldFrame = new Transform3d();
+            if (mostRecentFrame.multitagResult.isPresent()) {
+                camPose_fieldFrame = mostRecentFrame.multitagResult.get().estimatedPose.best;
+            }
+            else if (mostRecentFrame.hasTargets()) {
+                // single tag
+                PhotonTrackedTarget singleTag = mostRecentFrame.targets.get(0);
+                Transform3d tagPose_camFrame = singleTag.bestCameraToTarget;
+                Transform3d camPose_tagFrame = tagPose_camFrame.inverse();
+                Pose3d tagPose_fieldFrame = Constants.VisionConstants.aprilTagFieldLayout.getTagPose(singleTag.fiducialId).get();
+                Transform3d tagTransform_fieldFrame = new Transform3d(tagPose_fieldFrame.getTranslation(), tagPose_fieldFrame.getRotation());
+                camPose_fieldFrame = tagTransform_fieldFrame.plus(camPose_tagFrame);
+            }
+            else {
+                continue;
+            }
+
+            Pose3d camPose_fieldFrame_asPose = new Pose3d(camPose_fieldFrame.getTranslation(), camPose_fieldFrame.getRotation());
+            Pose3d camPose_robotFrame = camPose_fieldFrame_asPose.relativeTo(knownRobotPose);
+            Logger.recordOutput(tagCam.getName()+"camPose_robotFrame", camPose_robotFrame);
+        }
     }
 
 
@@ -246,6 +288,15 @@ public class VisionIOPhotonLib implements VisionIO {
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
+        Pose2d calibrationFace = FieldElement.FRONT_REEF_FACE.getPose2d();
+        double pushOutDistanceMeters = Units.inchesToMeters((45.5 + 11.75)/2.0);
+        Transform2d offset = new Transform2d(pushOutDistanceMeters, 0, new Rotation2d());
+
+        Logger.recordOutput("vision/calibrationPose", calibrationFace.plus(offset));
+
+        this.makeTagCamsAgree(calibrationFace.plus(offset));
+
+
         inputs.visionMeasurements = new ArrayList<VisionMeasurement>();
         
         for (int i = 0; i < tagCameras.size(); i++) {

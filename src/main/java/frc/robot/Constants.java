@@ -4,10 +4,13 @@
 
 package frc.robot;
 
+import javax.xml.transform.sax.TransformerHandler;
+
 import com.pathplanner.lib.path.PathConstraints;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -27,7 +30,7 @@ import frc.robot.PlayingField.FieldConstants;
  */
 public final class Constants {
 
-    public final static boolean atCompetition = false;
+    public final static boolean atCompetition = true;
 
     public final class UniversalConstants {
         public final static double gravityMetersPerSecondSquared = 9.81;
@@ -263,19 +266,40 @@ public final class Constants {
             new Rotation3d(0, -Math.toRadians(8), -Math.toRadians(17.772))
         );
 
+        public final static Transform3d robotToFrontLeft_calibrated = new Transform3d(
+            new Translation3d(0.191, 0.279, 0.188),
+            new Rotation3d(new Quaternion(-0.985, 0.009, 0.077, 0.153))
+        );
+
         public final static Transform3d robotToFrontRight = new Transform3d(
             new Translation3d(Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
             new Rotation3d(0, -Math.toRadians(8), Math.toRadians(17.772))
         );
 
+        public final static Transform3d robotToFrontRight_calibrated = new Transform3d(
+            new Translation3d(0.198, -0.283, 0.184),
+            new Rotation3d(new Quaternion(-0.983, -0.011, 0.087, -0.161))
+        );
+
         public final static Transform3d robotToBackLeft = new Transform3d(
-            new Translation3d(-Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Translation3d(-0.184-0.057, Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
             new Rotation3d(0, Math.toRadians(8), Math.toRadians(17.772-180))
         );
 
+
+        public final static Transform3d robotToBackLeft_calibrated = new Transform3d(
+            new Translation3d(-0.204, 0.280, 0.183),
+            new Rotation3d(new Quaternion(-0.157, 0.068, 0.013, 0.985))
+        );
+
         public final static Transform3d robotToBackRight = new Transform3d(
-            new Translation3d(-Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Translation3d(-Units.inchesToMeters(7.248)-0.051, -Units.inchesToMeters(11.275)+0.032, Units.inchesToMeters(7.281)),
             new Rotation3d(0, Math.toRadians(8), Math.toRadians(-17.772+180))
+        );
+
+        public final static Transform3d robotToBackRight_calibrated = new Transform3d(
+            new Translation3d(-0.193, -0.273, 0.185),
+            new Rotation3d(new Quaternion(0.159, 0.073, -0.011, 0.985))
         );
 
         public final static Transform3d robotToCoralCamera = new Transform3d(
