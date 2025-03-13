@@ -70,11 +70,16 @@ public class ScoreOnReef extends Command {
         double adjustedX;
         //17.5 inches of robot space, 4.5 inches is one coral dist
         if (reefBranch.get().getLevel() == 4) {
-            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1); 
+            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1);
         }
         else {
             adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(9);
         }
+
+        if (!isFacingForward) {
+            adjustedX -= Units.inchesToMeters(1);
+        }
+
         double adjustedY;
         Rotation2d rotation = Rotation2d.fromDegrees(180);
 

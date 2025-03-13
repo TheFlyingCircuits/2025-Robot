@@ -199,7 +199,7 @@ public class VisionIOPhotonLib implements VisionIO {
 
         // don't add vision measurements that are too far away
         // for reference: it is 6 meters from speaker tags to wing.
-        if (output.averageTagDistanceMeters > 7) {
+        if (output.averageTagDistanceMeters > 5 && seenTags.size() == 1) {
             return Optional.empty();
         }
 
@@ -286,9 +286,7 @@ public class VisionIOPhotonLib implements VisionIO {
         // return detectedCorals;
     }
 
-
-    @Override
-    public void updateInputs(VisionIOInputs inputs) {
+    public void makeTagCamsAgree() {
         Pose2d calibrationFace = FieldElement.FRONT_REEF_FACE.getPose2d();
         double pushOutDistanceMeters = Units.inchesToMeters((45.5 + 11.75)/2.0);
         Transform2d offset = new Transform2d(pushOutDistanceMeters, 0, new Rotation2d());
@@ -296,6 +294,11 @@ public class VisionIOPhotonLib implements VisionIO {
         Logger.recordOutput("vision/calibrationPose", calibrationFace.plus(offset));
 
         this.makeTagCamsAgree(calibrationFace.plus(offset));
+    }
+
+
+    @Override
+    public void updateInputs(VisionIOInputs inputs) {
 
 
         inputs.visionMeasurements = new ArrayList<VisionMeasurement>();

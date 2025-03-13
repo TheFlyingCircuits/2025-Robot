@@ -84,7 +84,7 @@ public final class Constants {
 
 
         /**Minimum angle of the arm, in degrees.*/
-        public final static double armMinAngleDegrees = -0.5;
+        public final static double armMinAngleDegrees = -3;
         /**Maximum angle of the arm, in degrees. This value should be positive and greater than 90, as it is beyond the vertical. */
         public final static double armMaxAngleDegrees = 135.0;  
 

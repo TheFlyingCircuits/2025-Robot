@@ -126,7 +126,7 @@ public class ArmIOKraken implements ArmIO{
         shoulderConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         shoulderConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.armMaxAngleDegrees / 360;
         shoulderConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        shoulderConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = (ArmConstants.armMinAngleDegrees - 0.5 / 360);
+        shoulderConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = (ArmConstants.armMinAngleDegrees - 0.5) / 360;
 
         //torquecurrentfoc constants
         // shoulderConfig.Slot0.kS = 1.5;
@@ -153,8 +153,20 @@ public class ArmIOKraken implements ArmIO{
         rightShoulder.setPosition(leftPivotEncoder.getAbsolutePosition().getValueAsDouble());
     }
 
+    private void homeExtensionIfRetracted() {
+        if (Math.abs(extensionMeters - ArmConstants.minExtensionMeters) < 0.15
+                && frontExtensionMotor.getMotorVoltage().getValueAsDouble() < 0
+                    && frontExtensionMotor.getFault_StatorCurrLimit().getValue()) {
+                        frontExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
+                        backExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
+                    }
+    }
+
     @Override
     public void updateInputs(ArmIOInputs inputs) {
+
+        homeExtensionIfRetracted();
+
         extensionMeters = frontExtensionMotor.getPosition().getValueAsDouble();
         inputs.extensionLengthMeters = extensionMeters;
         inputs.extensionLengthMetersPerSecond = frontExtensionMotor.getVelocity().getValueAsDouble();

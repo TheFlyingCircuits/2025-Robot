@@ -280,16 +280,12 @@ public class RobotContainer {
         
 
         //reef score
-        duncanController.rightBumper().whileTrue(
+        duncanController.rightBumper()
+            .whileTrue(
                 scoreOnReefCommand(
                     duncan::getRequestedFieldOrientedVelocity, 
                     this::getDesiredBranch,
-                    this::isFacingReef))
-            .onFalse(
-                drivetrain.run(() -> {
-                    ChassisSpeeds driveBackwards = this.isFacingReef() ? new ChassisSpeeds(-0.5, 0, 0) : new ChassisSpeeds(0.5, 0, 0);
-                    drivetrain.robotOrientedDrive(driveBackwards, true);
-                })
+                    this::isFacingReef)
             );
 
         //eject
@@ -323,7 +319,7 @@ public class RobotContainer {
 
 
         //reset gyro
-        duncanController.y().onTrue(new InstantCommand(drivetrain::setRobotFacingForward));
+        duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement));
         
 
 
@@ -440,11 +436,11 @@ public class RobotContainer {
         ScoreOnReef align = new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), isFacingReef);
         Command waitForAlignment = new WaitUntilCommand(align::readyToScore);
         Command scoreCoral = scoreCoral();
-        return align.raceWith(waitForAlignment.andThen(scoreCoral)).andThen(
+        return align.raceWith(waitForAlignment.andThen(scoreCoral)).withName("alignWithReefRace").andThen(
             drivetrain.run(() -> {
                 ChassisSpeeds driveBackwards = this.isFacingReef() ? new ChassisSpeeds(-0.5, 0, 0) : new ChassisSpeeds(0.5, 0, 0);
                 drivetrain.robotOrientedDrive(driveBackwards, true);
-            }).withTimeout(0.3)
+            }).withTimeout(0.3).withName("scoreOnReefCommand")
         );
     }
 
@@ -536,7 +532,7 @@ public class RobotContainer {
             arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
             wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5),
             drivetrain.run(() -> {
-                Transform2d poseAdjustment = new Transform2d(2, 0, new Rotation2d());
+                Transform2d poseAdjustment = new Transform2d(2, 0, Rotation2d.k180deg);
                 drivetrain.pidToPose(drivetrain.getClosestSourceSide().getPose2d().plus(poseAdjustment), 3.5);
             })
         ).until(() -> arm.getShoulderAngleDegrees() < 30);
@@ -547,7 +543,7 @@ public class RobotContainer {
             return drivetrain.run(() -> {
                 if (drivetrain.getBestCoralLocation().isEmpty()) {
                     FieldElement sourceSide = drivetrain.getClosestSourceSide();
-                    Transform2d pickupLocationRelativeToSource = new Transform2d(2, 0, Rotation2d.fromDegrees(180));
+                    Transform2d pickupLocationRelativeToSource = new Transform2d(2, 0, Rotation2d.k180deg);
                     Pose2d targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
                     drivetrain.pidToPose(targetRobotPose2d, 1);
                 } else {
