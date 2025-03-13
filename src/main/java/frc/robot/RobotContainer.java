@@ -461,6 +461,33 @@ public class RobotContainer {
         );
     }
 
+    //TODO: GET SETPOINTS AND TEST THIS
+    public Command descoreAlgaeLowSwipe() {
+        return new ParallelCommandGroup( //in parallel, prep arm angle and get on driving line
+                arm.shoulder.setTargetAngleCommand(34),
+                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() > 25).andThen(arm.extension.setTargetLengthCommand(0.77)),
+                wrist.setTargetPositionCommand(WristConstants.minAngleDegrees),
+                drivetrain.run(() -> {
+                    Pose2d lineToDriveOn = new Pose2d(
+                        drivetrain.getClosestReefFace().getPose2d().getTranslation(),
+                        drivetrain.getClosestReefFace().getPose2d().getRotation().rotateBy(Rotation2d.fromDegrees(180))
+                    );
+
+                    drivetrain.fieldOrientedDriveOnALine(
+                        duncan.getRequestedFieldOrientedVelocity(), 
+                        lineToDriveOn
+                    );
+            })).raceWith(new WaitUntilCommand( //wait until we approach the algae
+                () -> {
+                    Translation2d reefFace = drivetrain.getClosestReefFace().getPose2d().getTranslation();
+                    Translation2d robot = drivetrain.getPoseMeters().getTranslation();
+                    return reefFace.getDistance(robot) < 1;
+                }
+            )).andThen( //swipe up with the arm
+                arm.shoulder.setTargetAngleCommand(50).until(() -> arm.getShoulderAngleDegrees() > 45)
+            );
+    }
+
     public Command descoreAlgaeLow() {
         return arm.shoulder.setTargetAngleCommand(34)
             .alongWith(
