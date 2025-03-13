@@ -16,7 +16,7 @@ public class ArmPosition {
         * Creates a new ArmPosition object, representing the position of the arm at a given point.
         * 
         * @param shoulderAngleDegrees - Angle of the shoulder pivot of the arm. An angle of zero represents the arm pointing straight forward,
-        *  with an upwards rotation begin positive.
+        *  with an upwards rotation being positive.
         * @param wristAngleDegrees - Angle of the wrist pivot of the arm. An angle of zero represents the end effector being parallel with the ground
         *  (intake position), with an upwards rotation being positive.
         * @param extensionMeters - Total length of the arm, from the point on the arm aligning with the shoulder pivot center, to the end effector pivot center.

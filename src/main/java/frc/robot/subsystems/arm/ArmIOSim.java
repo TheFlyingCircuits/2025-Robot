@@ -103,14 +103,14 @@ public class ArmIOSim implements ArmIO {
         );
 
         inputs.shoulderAngleDegrees = nextState.get(0, 0);
-        shoulderTalon.setPosition(inputs.shoulderAngleDegrees);
+        // shoulderTalon.setPosition(inputs.shoulderAngleDegrees);
         inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
         inputs.shoulderAppliedCurrent = this.systemInputs.get(0, 0);
 
         Logger.recordOutput("arm/closedLoopReference", shoulderTalon.getClosedLoopReference().getValueAsDouble());
 
         inputs.extensionLengthMeters = nextState.get(2, 0);
-        extensionTalon.setPosition(inputs.extensionLengthMeters);
+        // extensionTalon.setPosition(inputs.extensionLengthMeters);
 
         inputs.extensionLengthMetersPerSecond = nextState.get(3, 0);
         inputs.extensionAppliedVolts = this.systemInputs.get(1, 0);

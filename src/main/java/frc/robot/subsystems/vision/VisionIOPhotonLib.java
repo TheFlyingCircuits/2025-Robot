@@ -2,6 +2,7 @@ package frc.robot.subsystems.vision;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -10,18 +11,27 @@ import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonUtils;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.apriltag.AprilTag;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.robot.FlyingCircuitUtils;
 import frc.robot.Constants.VisionConstants;
 
 public class VisionIOPhotonLib implements VisionIO {
@@ -227,7 +237,7 @@ public class VisionIOPhotonLib implements VisionIO {
             // Start the process of finding the full 3D distance from the camera to the note
             // by finding the coordinates of the normal vector of the floor,
             // as seen in the camera frame.
-            Translation3d robotOrigin_robotFrame = new Translation3d(0, 0, 0.1);
+            Translation3d robotOrigin_robotFrame = new Translation3d();
             Translation3d aboveTheFloor_robotFrame = new Translation3d(0, 0, 1);
             Translation3d robotOrigin_camFrame = intakeCameraCoordsFromRobotCoords(robotOrigin_robotFrame);
             Translation3d aboveTheFloor_camFrame = intakeCameraCoordsFromRobotCoords(aboveTheFloor_robotFrame);
@@ -244,11 +254,130 @@ public class VisionIOPhotonLib implements VisionIO {
             Translation3d note_robotFrame = robotCoordsFromIntakeCameraCoords(note_camFrame);
 
             detectedCorals.add(note_robotFrame);
+            // TODO: add desmos link?
         }
 
 
             
         return detectedCorals;
+    }
+
+
+
+    private void updateDemoModeTagLayout(PhotonPoseEstimator estimator, List<PhotonTrackedTarget> seenTags) {
+        // // Do nothing if it isn't demo mode
+        // if (!Constants.isDemoMode) {
+        //     return;
+        // }
+        // FieldConstants.tagLayout.getTags();
+
+        // // Find the pose of the demo target in the robot's frame
+        // Transform3d tagPose_cameraFrame = null;
+        // for (PhotonTrackedTarget tag : seenTags) {
+        //     if (tag.getFiducialId() == FieldElement.getSpeakerTagID()) {
+        //         tagPose_cameraFrame = tag.getBestCameraToTarget();
+        //     }
+        // }
+
+        // if (tagPose_cameraFrame == null) {
+        //     return;
+        // }
+
+        // Transform3d camPose_robotFrame = estimator.getRobotToCameraTransform();
+        // Transform3d tagPose_robotFrame = camPose_robotFrame.plus(tagPose_cameraFrame);
+
+        // // Step 1) Determine the location of the demo tag on the field.
+        // //         We put it at the same XY locaiton as our speaker target,
+        // //         but use the height measured by the robot rather than the regulation height.
+        // Translation3d tagLocation_fieldFrame = new Translation3d(FieldElement.SPEAKER.getX(), FieldElement.SPEAKER.getY(), tagPose_robotFrame.getZ());
+
+        // // We don't want the robot to think it's sinking into the ground if the person holding the
+        // // demo tag isn't holding it straight up and down, so we have to update the FieldLayout to be
+        // // aware of the tag's pitch and roll.
+        // //
+        // // Step 2) Determine the orientation of the demo tag relative to the field axes.
+        // //         We do this by finding how the field frame must be oriented w.r.t.
+        // //         the robot frame, and then transforming the orientation of the tag
+        // //         (as seen by the robot) into the field frame.
+        // //         Sorry that's kinda hard to understand, I can't think of better wording right now.
+        // //         
+        // //         robotYaw_wrtFieldFrame = tagYaw_wrtFieldFrame + "angle from tagX to robotX as measured in the plane of the floor" (this phrasing accounts for the demo tag's z axis not pointing straight up from the floor to the sky, because robotYaw_wrtTagFrame doesn't measure in the plane of the floor when the tag frame's z axis isn't coincident with the floor normal).
+        // //         robotYaw_wrtFieldFrame = tagYaw_wrtFieldFrame - tagYaw_wrtRobotFrame
+        // //         fieldYaw_wrtRobotFrame = tagYaw_wrtRobotFrame - tagYaw_wrtFieldFrame
+        // Rotation2d tagYaw_robotFrame = tagPose_robotFrame.getRotation().toRotation2d();
+        // Rotation2d tagYaw_fieldFrame = FieldElement.SPEAKER.getOrientation().toRotation2d();
+        // Rotation2d fieldYaw_robotFrame = tagYaw_robotFrame.minus(tagYaw_fieldFrame);
+
+
+        // // To take a direciton vector from the robot frame and transform it into the field frame,
+        // // we find the rotation matrix whose columns are the robot's axes as measured in the field frame,
+        // // and then pump the direction vectors as seen in the robot frame through that matrix.
+        // // Sorry again that this is so wordy, this is really best described with pictures!
+        // // In other words, we have tagOrientation in terms of <robot_xDirection, robot_yDirection, robot_zDirection>.
+        // // In order to get tagOrientation in terms of <field_xDirection, field_yDirection, field_zDirection>
+        // // we simply write the robot's direction vectors in terms of the field's direction vectors, then collect like terms / simplify!
+        // Rotation3d fieldOrientation_robotFrame = new Rotation3d(0, 0, fieldYaw_robotFrame.getRadians());
+        // Rotation3d tagOrientation_robotFrame = tagPose_robotFrame.getRotation();
+        // Rotation3d tagOrientation_fieldFrame = tagOrientation_robotFrame.rotateBy(fieldOrientation_robotFrame.unaryMinus());
+
+        // // update the field layout and demo target location
+        // AprilTag demoTag = new AprilTag(FieldElement.getSpeakerTagID(), new Pose3d(tagLocation_fieldFrame, tagOrientation_fieldFrame));
+        // AprilTagFieldLayout updatedLayout = new AprilTagFieldLayout(Arrays.asList(demoTag), VisionConstants.aprilTagFieldLayout.getFieldLength(), VisionConstants.aprilTagFieldLayout.getFieldWidth());
+        // estimator.setFieldTags(updatedLayout);
+
+        // // aim 8 inches above the tag so we can hit an apple of of someone's head for the demo!
+        // Translation3d demoTargetOffset = new Translation3d(0, 0, Units.inchesToMeters(24));
+        // FieldElement.demoTargetLocation = tagLocation_fieldFrame.plus(demoTargetOffset);
+
+        // // record some debug info
+        // ArrayList<Pose3d> posesToLog = new ArrayList<>();
+        // posesToLog.add(demoTag.pose);
+
+
+        // if (demoTag.ID == 4) {
+        //     // add the second speaker tag if we're using two for the demo (when using only using 1 demo tag, it has id 13)
+        //     // it's offset from the first speaker tag, but should have the same orientaiton.
+        //     double distanceBetweenSpeakerTags = Units.inchesToMeters(22.25);
+        //     Translation3d tagYAxis_fieldFrame = new Translation3d(0, 1, 0).rotateBy(tagOrientation_fieldFrame);
+        //     Translation3d secondTagLocation_fieldFrame = tagLocation_fieldFrame.plus(tagYAxis_fieldFrame.times(distanceBetweenSpeakerTags));
+        //     AprilTag secondDemoTag = new AprilTag(3, new Pose3d(secondTagLocation_fieldFrame, tagOrientation_fieldFrame));
+
+        //     updatedLayout = new AprilTagFieldLayout(Arrays.asList(demoTag, secondDemoTag), VisionConstants.aprilTagFieldLayout.getFieldLength(), VisionConstants.aprilTagFieldLayout.getFieldWidth());
+        //     estimator.setFieldTags(updatedLayout);
+
+        //     // Aim above the midpoint of both tags.
+        //     FieldElement.demoTargetLocation = tagLocation_fieldFrame.plus(secondTagLocation_fieldFrame).div(2).plus(demoTargetOffset);
+
+        //     for (PhotonTrackedTarget tag : seenTags) {
+        //         if (tag.getFiducialId() == 3) {
+        //             posesToLog.add(secondDemoTag.pose);
+        //             break;
+        //         }
+        //     }
+
+        //     // Note: you can get bad updates that make the robot think it's sinking into the floor
+        //     //       if you rotate the tag in a way that it can't see 4, but it can see 3.
+        //     //       In this scenario, the field layout doesn't get updated because 4 can't be seen,
+        //     //       but the robot's pose is still updated based on tag 3, which it can see.
+        //     //       It will be based off the last updated layout, which could cause it to sink
+        //     //       into the floor. Not sure if I want to solve this problem.
+        //     //       We're good as long as he can see both tags, or just number 4.
+        //     //       We only get a problem if he can't see tag 3.
+        // }
+
+        // // logging
+        // Logger.recordOutput("demoMode/demoTagsFieldPose", posesToLog.toArray(new Pose3d[0]));
+        // Logger.recordOutput("demoMode/tagLocation_robotFrame", tagPose_robotFrame.getTranslation());
+
+        // Translation3d tagX_robotFrame = new Translation3d(1, 0, 0).rotateBy(tagPose_robotFrame.getRotation());
+        // Translation3d tagY_robotFrame = new Translation3d(0, 1, 0).rotateBy(tagPose_robotFrame.getRotation());
+        // Translation3d tagZ_robotFrame = new Translation3d(0, 0, 1).rotateBy(tagPose_robotFrame.getRotation());
+        // Logger.recordOutput("demoMode/tagX_robotFrame", tagX_robotFrame);
+        // Logger.recordOutput("demoMode/tagY_robotFrame", tagY_robotFrame);
+        // Logger.recordOutput("demoMode/tagZ_robotFrame", tagZ_robotFrame);
+        // Logger.recordOutput("demoMode/tagX_robotFrameMag", tagX_robotFrame.getNorm());
+        // Logger.recordOutput("demoMode/tagY_robotFrameMag", tagY_robotFrame.getNorm());
+        // Logger.recordOutput("demoMode/tagZ_robotFrameMag", tagZ_robotFrame.getNorm());
     }
 
 

@@ -4,10 +4,15 @@
 
 package frc.robot;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -29,13 +34,14 @@ import frc.robot.subsystems.wrist.WristIO;
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic shoud actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instlead, the structure of the robot (including
+ * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
 
     private final HumanDriver charlie = new HumanDriver(0);
     private final HumanDriver ben = new HumanDriver(1);
+
 
     public final Drivetrain drivetrain;
     public final Arm arm;
@@ -87,6 +93,15 @@ public class RobotContainer {
         
         drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(charlie.getRequestedFieldOrientedVelocity(), true);}));
 
+        arm.setDefaultCommand(arm.run(() -> {
+            double shoulderTargetDegrees = SmartDashboard.getNumber("shoulderTargetDegrees", 0);
+            double extensionTargetMeters = SmartDashboard.getNumber("extensionTargetMeters", 0);
+            SmartDashboard.putNumber("shoulderTargetDegrees", shoulderTargetDegrees);
+            SmartDashboard.putNumber("extensionTargetMeters", extensionTargetMeters);
+
+            // arm.setShoulderTargetAngle(shoulderTargetDegrees);
+            // arm.setExtensionTargetLength(extensionTargetMeters);
+        }));
 
         realBindings();
 
@@ -121,14 +136,16 @@ public class RobotContainer {
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
         return drivetrain.run(() -> {
 
+            Optional<Translation3d> closestCoral = drivetrain.getClosestCoralFieldCoords();
+
             // have driver stay in control when the intake camera doesn't see a note
-            if (drivetrain.getBestCoralLocation().isEmpty()) {
+            if (closestCoral.isEmpty()) {
                 drivetrain.fieldOrientedDrive(howToDriveWhenNoCoralDetected.get(), true);
                 return;
             }
 
             // drive towards the note when the intake camera does see a note.
-            drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+            drivetrain.driveTowardsCoral(closestCoral.get().toTranslation2d());
         });
     }
 }

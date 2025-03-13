@@ -6,8 +6,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.simulation.VisionTargetSim;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -21,6 +23,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -34,46 +37,45 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.FlyingCircuitUtils;
+import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefFace;
 import frc.robot.PlayingField.ReefStalk;
+import frc.robot.subsystems.vision.ColorCamera;
+import frc.robot.subsystems.vision.PoseObservation;
+import frc.robot.subsystems.vision.TagCamera;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
 import frc.robot.subsystems.vision.VisionIO.VisionMeasurement;
 
 public class Drivetrain extends SubsystemBase {
 
+    private SwerveModule[] swerveModules;
+
     private GyroIO gyroIO;
     private GyroIOInputsAutoLogged gyroInputs;
 
-    private VisionIO visionIO;
-    private VisionIOInputsLogged visionInputs;
-
-    private SwerveModule[] swerveModules;
+    /** error measured in degrees, output is in degrees per second. */
+    private PIDController angleController;
+    /** error measured in meters, output is in meters per second. */
+    private PIDController translationController;
 
     private SwerveDrivePoseEstimator fusedPoseEstimator;
     private SwerveDrivePoseEstimator wheelsOnlyPoseEstimator;
 
-    private PriorityQueue<VisionMeasurement> mostRecentSpeakerTagMeasurements = new PriorityQueue<VisionMeasurement>(new Comparator<VisionMeasurement>() {
-        // Front of the queue will be the smallest timestamp
-        // i.e. the timestamp that's closest to 0 (when the robot was turned on)
-        // i.e. the oldest timestamp.
-        public int compare(VisionMeasurement a, VisionMeasurement b) {
-            return Double.compare(a.timestampSeconds, b.timestampSeconds);
-        }
-    });
-    private VisionMeasurement mostRecentSpeakerTagMeasurement = null;
+    private ColorCamera intakeCamera = new ColorCamera("intakeCamera", VisionConstants.robotToCoralCamera);
+    private TagCamera[] tagCameras = {new TagCamera("frontLeftTagCam", VisionConstants.robotToFrontLeft),
+                                      new TagCamera("frontRightTagCam", VisionConstants.robotToFrontRight),
+                                      new TagCamera("backLeftTagCam", VisionConstants.robotToBackLeft),
+                                      new TagCamera("backRightTagCam", VisionConstants.robotToBackRight)
+                                     };
 
-    /** error measured in degrees, output is in degrees per second. */
-    private PIDController angleController;
-
-    /** error measured in meters, output is in meters per second. */
-    private PIDController translationController;
+    private VisionIOInputsLogged visionInputs = new VisionIOInputsLogged();
+    private VisionIO visionIO;
 
     public Drivetrain(
         GyroIO gyroIO, 
@@ -86,8 +88,6 @@ public class Drivetrain extends SubsystemBase {
         this.gyroIO = gyroIO;
         gyroInputs = new GyroIOInputsAutoLogged();
 
-        this.visionIO = visionIO;
-        visionInputs = new VisionIOInputsLogged();
 
         swerveModules = new SwerveModule[] {
             new SwerveModule(flSwerveModuleIO, 0),
@@ -130,6 +130,7 @@ public class Drivetrain extends SubsystemBase {
         translationController.setTolerance(0.01); // 1 centimeters
 
         //configPathPlanner();
+        this.visionIO = visionIO;
     }
 
     private void configPathPlanner() {
@@ -355,6 +356,20 @@ public class Drivetrain extends SubsystemBase {
         );
     }
 
+    /**
+     * Drives towards the given location while pointing the intake at that location
+     * @param coralLocation
+     */
+    public void driveTowardsCoral(Translation2d coralLocation) {
+        // fieldToRobot + robotToCoral = fieldToCoral
+        // robotToCoral = fieldToCoral - fieldToRobot
+        Translation2d robotToCoral = coralLocation.minus(getPoseMeters().getTranslation());
+
+        // orient the robot to point towards the coral, because the intake is in the front of the robot.
+        this.beeLineToPose(new Pose2d(coralLocation, robotToCoral.getAngle()));
+    }
+
+
     //could be used for a drivetrain command in the future; leave this as its own function
     private void setModuleStates(SwerveModuleState[] desiredStates, boolean closedLoop) {
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, DrivetrainConstants.maxAchievableVelocityMetersPerSecond);
@@ -416,6 +431,21 @@ public class Drivetrain extends SubsystemBase {
     public Pose2d getPoseMeters() {
         return fusedPoseEstimator.getEstimatedPosition();
     }
+    public Pose2d getPoseMeters(double timestampSeconds) {
+        Optional<Pose2d> interpolatedPose = fusedPoseEstimator.sampleAt(timestampSeconds);
+        if (interpolatedPose.isPresent()) {
+            return interpolatedPose.get();
+        }
+        // default to the most recent pose if there isn't any
+        // recorded pose history yet
+        return fusedPoseEstimator.getEstimatedPosition();
+    }
+    public Translation2d getLocation() {
+        return this.getPoseMeters().getTranslation();
+    }
+    public Rotation2d getOrientation() {
+        return this.getPoseMeters().getRotation();
+    }
 
     /**
      * Gets the rotation reported by the gyro.
@@ -436,18 +466,8 @@ public class Drivetrain extends SubsystemBase {
      * This allows the driver to realign the drive direction and other calls to our angle.
      */
     public void setRobotFacingForward() {
-        Optional<Alliance> alliance = DriverStation.getAlliance();
-        if (alliance.isEmpty()) {
-            return;
-        }
-
-        Rotation2d newAngle = Rotation2d.fromDegrees(0);
-        if (alliance.get() == Alliance.Red) {
-            newAngle = Rotation2d.fromDegrees(180);
-        }
-
-        Translation2d location = getPoseMeters().getTranslation();
-
+        Translation2d location = this.getLocation();
+        Rotation2d newAngle = FlyingCircuitUtils.getAllianceDependentValue(Rotation2d.k180deg, Rotation2d.kZero, this.getOrientation());
         setPoseMeters(new Pose2d(location, newAngle));
     }
 
@@ -480,8 +500,7 @@ public class Drivetrain extends SubsystemBase {
         return visionInputs.visionMeasurements.size() > 0;
     }
 
-
-    private void updatePoseEstimator() {
+    public boolean wheelsHaveSlipped() {
         double totalAccelMetersPerSecondSquared = Math.hypot(gyroInputs.robotAccelX, gyroInputs.robotAccelY);
         totalAccelMetersPerSecondSquared = Math.hypot(totalAccelMetersPerSecondSquared, gyroInputs.robotAccelZ);
 
@@ -495,12 +514,28 @@ public class Drivetrain extends SubsystemBase {
         //     hasBeenBumped = false;
         //     setTranslationToVisionMeasurement();
         // }
+        return false;
+    }
 
-        fusedPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
+
+    private void updatePoseEstimator() {
+        // Add info from wheel deltas
         wheelsOnlyPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
+        fusedPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
 
+        // Check each tagCam for pose observations
+        List<PoseObservation> acceptedPoseObservations = new ArrayList<>();
+        List<PoseObservation> rejectedPoseObservations = new ArrayList<>();
+        acceptedPoseObservations.sort(Comparator.comparing( (poseObservation) -> {return poseObservation.timestampSeconds;} ));
 
+        for (TagCamera tagCam : tagCameras) {
+            tagCam.getFreshPoseEstimate();
+        }
+
+        // get all vision measurements in the order they occurred
+        // PriorityQueue poseEstimates = new PriorityQueue<PoseObservation>(Comparator<PoseObservation>.comparing(null));
         List<Pose2d> trackedTags = new ArrayList<Pose2d>();
+
         for (VisionMeasurement visionMeasurement : visionInputs.visionMeasurements) {
 
 
@@ -524,71 +559,27 @@ public class Drivetrain extends SubsystemBase {
             for (int id : visionMeasurement.tagsUsed) {
                 Pose2d tagPose = VisionConstants.aprilTagFieldLayout.getTagPose(id).get().toPose2d();
                 trackedTags.add(tagPose);
-
-                // if (id == FieldElement.getSpeakerTagID()) {
-                //     mostRecentSpeakerTagMeasurements.add(visionMeasurement);
-
-                //     if (mostRecentSpeakerTagMeasurement == null) {
-                //         mostRecentSpeakerTagMeasurement = visionMeasurement;
-                //     }
-
-                //     if (visionMeasurement.timestampSeconds > mostRecentSpeakerTagMeasurement.timestampSeconds) {
-                //         mostRecentSpeakerTagMeasurement = visionMeasurement;
-                //     }
-                // }
             }
-        }
-
-        while (mostRecentSpeakerTagMeasurements.size() > 1) {
-            mostRecentSpeakerTagMeasurements.remove();
         }
 
         Logger.recordOutput("drivetrain/trackedTags", trackedTags.toArray(new Pose2d[0]));
     }
 
-    public boolean hasRecentSpeakerTagMeasurement(double maxTimeSinceLastTag) {
-        if (mostRecentSpeakerTagMeasurement == null) {
-            return false;
-        }
-
-        double timeSinceLastTag = Timer.getFPGATimestamp() - mostRecentSpeakerTagMeasurement.timestampSeconds;
-        return timeSinceLastTag <= maxTimeSinceLastTag;
-    }
-
-
-    // public boolean inSpeakerShotRange() {
-    //     Translation2d speakerLocation = FieldElement.SPEAKER.getLocation().toTranslation2d();
-    //     Translation2d robotLocation = getPoseMeters().getTranslation();
-
-    //     // about half way between the center line and our wing.
-    //     boolean closeEnough = Math.abs(speakerLocation.getX() - robotLocation.getX()) <= 7.091;
-    //     return closeEnough;
-    // }
-
-    // public boolean inAmpShotRange() {
-    //     Translation2d ampLocation = FieldElement.AMP.getLocation().toTranslation2d();
-    //     Translation2d robotLocation = getPoseMeters().getTranslation();
-
-    //     boolean closeEnoughX = Math.abs(ampLocation.getX() - robotLocation.getX()) < 3.0;
-    //     boolean closeEnoughY = Math.abs(ampLocation.getY() - robotLocation.getY()) < 3.0;
-    //     return closeEnoughX && closeEnoughY;
-    // }
-
 
     public Translation3d fieldCoordsFromRobotCoords(Translation3d robotCoords) {
-        Translation3d robotLocation_fieldFrame = new Translation3d(getPoseMeters().getX(), getPoseMeters().getY(), 0);
-        Rotation3d robotOrientation_fieldFrame = new Rotation3d(0, 0, getPoseMeters().getRotation().getRadians());
+        Translation3d robotLocation_fieldFrame = new Translation3d(getPoseMeters().getTranslation());
+        Rotation3d robotOrientation_fieldFrame = new Rotation3d(getPoseMeters().getRotation());
 
         return robotCoords.rotateBy(robotOrientation_fieldFrame).plus(robotLocation_fieldFrame);
     }
 
     public Translation2d fieldCoordsFromRobotCoords(Translation2d robotCoords) {
-        return fieldCoordsFromRobotCoords(new Translation3d(robotCoords.getX(), robotCoords.getY(), 0)).toTranslation2d();
+        return fieldCoordsFromRobotCoords(new Translation3d(robotCoords)).toTranslation2d();
     }
 
     public Translation3d robotCoordsFromFieldCoords(Translation3d fieldCoords) {
-        Translation3d robotLocation_fieldFrame = new Translation3d(getPoseMeters().getX(), getPoseMeters().getY(), 0);
-        Rotation3d robotOrientation_fieldFrame = new Rotation3d(0, 0, getPoseMeters().getRotation().getRadians());
+        Translation3d robotLocation_fieldFrame = new Translation3d(getPoseMeters().getTranslation());
+        Rotation3d robotOrientation_fieldFrame = new Rotation3d(getPoseMeters().getRotation());
         Transform3d robotAxesFromFieldPerspective = new Transform3d(robotLocation_fieldFrame, robotOrientation_fieldFrame);
         Transform3d fieldAxesFromRobotPerspecitve = robotAxesFromFieldPerspective.inverse();
 
@@ -596,7 +587,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public Translation2d robotCoordsFromFieldCoords(Translation2d fieldCoords) {
-        return robotCoordsFromFieldCoords(new Translation3d(fieldCoords.getX(), fieldCoords.getY(), 0)).toTranslation2d();
+        return robotCoordsFromFieldCoords(new Translation3d(fieldCoords)).toTranslation2d();
     }
 
     public ChassisSpeeds getFieldOrientedVelocity() {
@@ -604,70 +595,46 @@ public class Drivetrain extends SubsystemBase {
         return ChassisSpeeds.fromRobotRelativeSpeeds(robotOrientedSpeeds, getPoseMeters().getRotation());
     }
 
-    //**************** TARGET TRACKING (Speaker, Note, etc.) ****************/
+    public double getSpeedMetersPerSecond() {
+        ChassisSpeeds velocity = this.getFieldOrientedVelocity();
+        return Math.hypot(velocity.vxMetersPerSecond, velocity.vyMetersPerSecond);
+    }
+
+    //**************** TARGET TRACKING (closestReefFace, closestCoral, etc.) ****************/
 
     /**
-     * Returns the best (largest) note that is valid (within the field boundary and within a certain distance).
-     * Returns an empty optional if no such note is detected.
+     * Returns closest coral that is valid (within the field boundary and within a certain distance of the robot).
+     * Returns an empty optional if no such coral is detected.
      */
-
-    // need to change this function
-    public Optional<Translation2d> getBestCoralLocation() {
-        for (Translation3d coralRobotFram3d : visionInputs.detectedCoralsRobotFrame) {
-            Translation2d coralRobotFrame = coralRobotFram3d.toTranslation2d();
-            Translation2d coralFieldFrame = fieldCoordsFromRobotCoords(coralRobotFrame);
-
-            boolean closeToRobot = coralRobotFrame.getNorm() < 2.5;
-            boolean inField = !FlyingCircuitUtils.isOutsideOfField(coralFieldFrame, 0.5);
-            if (closeToRobot) {
-                return Optional.of(coralFieldFrame);
-            }
-        }
-
-        return Optional.empty();
+    public Optional<Translation3d> getClosestCoralFieldCoords() {
+        return intakeCamera.getClosestValidGamepiece();
     }
 
     public ReefFace getClosestReefFace() {
-
-        ReefFace[] reefFaces = FieldElement.ALL_REEF_FACES;
-        ReefFace closestReefFace = reefFaces[0];
-        for (ReefFace reefFace : reefFaces) {
-            // distance formula 
-            double distance = reefFace.getLocation2d().getDistance(getPoseMeters().getTranslation());
-            double closestDistance = closestReefFace.getLocation2d().getDistance(getPoseMeters().getTranslation());
-            if (distance < closestDistance) {
-                closestReefFace = reefFace;
-            }
-        }
-
-        return closestReefFace;
+        return (ReefFace) getClosestFieldElement(FieldElement.ALL_REEF_FACES);
     }
+
     public ReefStalk getClosestReefStalk() {
+        return (ReefStalk) getClosestFieldElement(FieldElement.ALL_STALKS);
+    }
 
-        ReefStalk[] reefStalks = FieldElement.ALL_STALKS;
-        ReefStalk closestReefStalk = reefStalks[0];
-        for (ReefStalk reefStalk : reefStalks) {
-            // distance formula 
-            double distance = reefStalk.getLocation2d().getDistance(getPoseMeters().getTranslation());
-            double closestDistance = closestReefStalk.getLocation2d().getDistance(getPoseMeters().getTranslation());
+    private FieldElement getClosestFieldElement(FieldElement[] options) {
+        // assume the first is the closest
+        FieldElement closest = options[0];
+        double closestDistance = closest.getLocation2d().getDistance(this.getLocation());
+
+        // see if any of the remaining field elements are closer
+        for (int i = 1; i < options.length; i += 1) {
+            FieldElement candidate = options[i];
+            double distance = candidate.getLocation2d().getDistance(this.getLocation());
+
             if (distance < closestDistance) {
-                closestReefStalk = reefStalk;
+                closest = candidate;
+                closestDistance = distance;
             }
         }
 
-        return closestReefStalk;
-    }
-
-    /**
-     * Drives towards the given location while pointing the intake at that location
-     * @param noteLocation
-     */
-    public void driveTowardsCoral(Translation2d coralLocation) {
-
-        Translation2d coralToRobot = coralLocation.minus(getPoseMeters().getTranslation());
-
-        // orient the robot to point away from the note, because the intake is in the back of the robot.
-        this.beeLineToPose(new Pose2d(coralLocation, coralToRobot.getAngle()));
+        return closest;
     }
 
 
@@ -683,7 +650,6 @@ public class Drivetrain extends SubsystemBase {
     @Override
     public void periodic() {
         gyroIO.updateInputs(gyroInputs);
-        visionIO.updateInputs(visionInputs);
         for (SwerveModule mod : swerveModules)
             mod.periodic();
 
@@ -692,50 +658,46 @@ public class Drivetrain extends SubsystemBase {
           
 
         Logger.processInputs("gyroInputs", gyroInputs);
-        Logger.processInputs("visionInputs", visionInputs);
 
         updatePoseEstimator();
+        intakeCamera.periodic(fusedPoseEstimator); // <- must come after updatePoseEstimator();
+
+        Pose3d robotPose_fieldFrame = new Pose3d(this.getPoseMeters());
+        Pose3d frontLeftTagCamPose_fieldFrame = robotPose_fieldFrame.plus(VisionConstants.robotToFrontLeft);
+        Pose3d frontRightTagCamPose_fieldFrame = robotPose_fieldFrame.plus(VisionConstants.robotToFrontRight);
+        Pose3d backLeftTagCamPose_fieldFrame = robotPose_fieldFrame.plus(VisionConstants.robotToBackLeft);
+        Pose3d backRightTagCamPose_fieldFrame = robotPose_fieldFrame.plus(VisionConstants.robotToBackRight);
+        Logger.recordOutput("frontLeftTagCamPose", new Pose3d[] {frontLeftTagCamPose_fieldFrame, new Pose3d()});
+        Logger.recordOutput("frontRightTagCamPose", new Pose3d[] {frontRightTagCamPose_fieldFrame, new Pose3d()});
+        Logger.recordOutput("backLeftTagCamPose", new Pose3d[] {backLeftTagCamPose_fieldFrame, new Pose3d()});
+        Logger.recordOutput("backRightTagCamPose", new Pose3d[] {backRightTagCamPose_fieldFrame, new Pose3d()});
 
 
         Logger.recordOutput("drivetrain/fusedPose", fusedPoseEstimator.getEstimatedPosition());
         Logger.recordOutput("drivetrain/wheelsOnlyPose", wheelsOnlyPoseEstimator.getEstimatedPosition());
 
-        Logger.recordOutput(
-            "drivetrain/swerveModuleStates",
-            new SwerveModuleState[] {
-              swerveModules[0].getState(),
-              swerveModules[1].getState(),
-              swerveModules[2].getState(),
-              swerveModules[3].getState()
-          });
+        Logger.recordOutput("drivetrain/swerveModuleStates", this.getModuleStates());
 
-        Logger.recordOutput(
-            "drivetrain/swerveModulePositions", 
-            new SwerveModulePosition[] {
-                swerveModules[0].getPosition(),
-                swerveModules[1].getPosition(),
-                swerveModules[2].getPosition(),
-                swerveModules[3].getPosition()
-            });
+        Logger.recordOutput("drivetrain/swerveModulePositions", this.getModulePositions());
 
         Logger.recordOutput("drivetrain/anglePIDSetpoint", Rotation2d.fromDegrees(angleController.getSetpoint()));
         Logger.recordOutput("drivetrain/isAligned", isAligned());
 
+        Logger.recordOutput("drivetrain/speed", this.getSpeedMetersPerSecond());
+    }
 
-        // Note tracking visualization
-        if (getBestCoralLocation().isPresent()) {
-            Translation2d noteFieldFrame = getBestCoralLocation().get();
-            Logger.recordOutput("drivetrain/trackedCoralPose", new Pose2d(noteFieldFrame, new Rotation2d()));
-            Logger.recordOutput("drivetrain/trackedCoralDistance", noteFieldFrame.getNorm());
+    @Override
+    public void simulationPeriodic() {
+        // Move the simulation forward by 1 timestep
+        FieldConstants.simulatedTagLayout.update(wheelsOnlyPoseEstimator.getEstimatedPosition());
+        FieldConstants.simulatedCoralLayout.update(wheelsOnlyPoseEstimator.getEstimatedPosition());
+
+        // Log the poses of the simulated gamepieces for visualization in advantage scope.
+        Set<VisionTargetSim> simulatedCorals = FieldConstants.simulatedCoralLayout.getVisionTargets("coral");
+        List<Pose3d> simCoralPoses = new ArrayList<>();
+        for (VisionTargetSim simulatedCoral : simulatedCorals) {
+            simCoralPoses.add(simulatedCoral.getPose());
         }
-        else {
-            Logger.recordOutput("drivetrain/trackedCoralPose", getPoseMeters());
-        }
-
-        ChassisSpeeds v = DrivetrainConstants.swerveKinematics.toChassisSpeeds(getModuleStates());
-        double s = Math.hypot(v.vxMetersPerSecond, v.vyMetersPerSecond);
-        
-
-        Logger.recordOutput("drivetrain/speed", s);
+        Logger.recordOutput("simulatedCorals", simCoralPoses.toArray(new Pose3d[0]));
     }
 }

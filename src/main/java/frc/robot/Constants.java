@@ -247,15 +247,45 @@ public final class Constants {
 
         public final static AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.tagLayout;
                                                        
-        //TODO: UPDATE TRANSFORMS TO ACTUAL ROBOT
+        // //TODO: UPDATE TRANSFORMS TO ACTUAL ROBOT
         public final static Transform3d robotToShooterCamera = new Transform3d(
             new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
             new Rotation3d(0, Math.toRadians(35.5), 0)
         );
 
+        // public final static Transform3d robotToCoralCamera = new Transform3d(
+        //     new Translation3d(Units.inchesToMeters(10.437), 0, Units.inchesToMeters(14.325)),
+        //     new Rotation3d(0, Math.toRadians(23), 0)
+        // );
+
+        // Ronnie Note Camera
+        // new Transform3d(
+        //     new Translation3d(Units.inchesToMeters(-10.437), 0, Units.inchesToMeters(14.325)),
+        //     new Rotation3d(0, Math.toRadians(23), Math.toRadians(180))
+
+        public final static Transform3d robotToFrontLeft = new Transform3d(
+            new Translation3d(Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, -Math.toRadians(17.772))
+        );
+
+        public final static Transform3d robotToFrontRight = new Transform3d(
+            new Translation3d(Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, Math.toRadians(17.772))
+        );
+
+        public final static Transform3d robotToBackLeft = new Transform3d(
+            new Translation3d(-Units.inchesToMeters(7.248), Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, Math.toRadians(17.772-180))
+        );
+
+        public final static Transform3d robotToBackRight = new Transform3d(
+            new Translation3d(-Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Rotation3d(0, 0, Math.toRadians(-17.772+180))
+        );
+
         public final static Transform3d robotToCoralCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(7.125), 0, Units.inchesToMeters(20.75)),
-            new Rotation3d(0, Math.toRadians(35.5), 0)
+            new Translation3d(Units.inchesToMeters(-9.75), Units.inchesToMeters(6), Units.inchesToMeters(26.)),
+            new Rotation3d(0, Math.toRadians(19), Math.toRadians(-12))
         );
 
         public final static String[] tagCameraNames = {
