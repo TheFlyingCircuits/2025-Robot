@@ -37,11 +37,11 @@ public class VisionIOPhotonLib implements VisionIO {
     List<PhotonCamera> tagCameras;
     List<PhotonPoseEstimator> poseEstimators;
 
-    PhotonCamera intakeCamera;
+    // PhotonCamera intakeCamera;
 
     public VisionIOPhotonLib() {
 
-        intakeCamera = new PhotonCamera("intakeCam");
+        // intakeCamera = new PhotonCamera("intakeCam");
 
         System.gc();
 
@@ -199,7 +199,7 @@ public class VisionIOPhotonLib implements VisionIO {
 
         // don't add vision measurements that are too far away
         // for reference: it is 6 meters from speaker tags to wing.
-        if (output.averageTagDistanceMeters > 7) {
+        if (output.averageTagDistanceMeters > 5 && seenTags.size() == 1) {
             return Optional.empty();
         }
 
@@ -230,64 +230,63 @@ public class VisionIOPhotonLib implements VisionIO {
     }
 
     private List<Translation3d> updateIntakeCamera() {
+        return new ArrayList<>();
 
-        List<Translation3d> detectedCorals = new ArrayList<Translation3d>();
-        if (!intakeCamera.isConnected()) {
-            Logger.recordOutput("intakeCamConnected", false);
-            return detectedCorals; // can't see anything if unplugged.
-                                   // shouldn't default to most recent frame.
-        }
-        Logger.recordOutput("intakeCamConnected", true);
+        // List<Translation3d> detectedCorals = new ArrayList<Translation3d>();
+        // if (!intakeCamera.isConnected()) {
+        //     Logger.recordOutput("intakeCamConnected", false);
+        //     return detectedCorals; // can't see anything if unplugged.
+        //                            // shouldn't default to most recent frame.
+        // }
+        // Logger.recordOutput("intakeCamConnected", true);
 
-        PhotonPipelineResult intakeCameraResult = intakeCamera.getLatestResult();
+        // PhotonPipelineResult intakeCameraResult = intakeCamera.getLatestResult();
 
-        for (PhotonTrackedTarget target : intakeCameraResult.getTargets()) {
-            // Negate the pitch and yaw that's reported by photon vision because
-            // their convention isn't consistent with a right handed coordinate system.
-            double coralYawDegrees = -target.getYaw();
-            double coralPitchDegrees = -target.getPitch();
+        // for (PhotonTrackedTarget target : intakeCameraResult.getTargets()) {
+        //     // Negate the pitch and yaw that's reported by photon vision because
+        //     // their convention isn't consistent with a right handed coordinate system.
+        //     double coralYawDegrees = -target.getYaw();
+        //     double coralPitchDegrees = -target.getPitch();
 
-            if (coralPitchDegrees > 10) continue;
+        //     if (coralPitchDegrees > 10) continue;
 
-            // Use the reported pitch and yaw to calculate a unit vector in the camera
-            // frame that points towards the coral.
-            Rotation3d directionOfCoral = new Rotation3d(0, Math.toRadians(coralPitchDegrees), Math.toRadians(coralYawDegrees));
-            Translation3d unitTowardsCoral = new Translation3d(1, directionOfCoral);
+        //     // Use the reported pitch and yaw to calculate a unit vector in the camera
+        //     // frame that points towards the coral.
+        //     Rotation3d directionOfCoral = new Rotation3d(0, Math.toRadians(coralPitchDegrees), Math.toRadians(coralYawDegrees));
+        //     Translation3d unitTowardsCoral = new Translation3d(1, directionOfCoral);
 
-            // Start the process of finding the full 3D distance from the camera to the coral
-            // by finding the coordinates of the normal vector of the floor,
-            // as seen in the camera frame.
-            Translation3d robotOrigin_robotFrame = new Translation3d(0, 0, 0.1);
-            Translation3d aboveTheFloor_robotFrame = new Translation3d(0, 0, 1);
-            Translation3d robotOrigin_camFrame = intakeCameraCoordsFromRobotCoords(robotOrigin_robotFrame);
-            Translation3d aboveTheFloor_camFrame = intakeCameraCoordsFromRobotCoords(aboveTheFloor_robotFrame);
-            Translation3d floorNormal_camFrame = aboveTheFloor_camFrame.minus(robotOrigin_camFrame);
+        //     // Start the process of finding the full 3D distance from the camera to the coral
+        //     // by finding the coordinates of the normal vector of the floor,
+        //     // as seen in the camera frame.
+        //     Translation3d robotOrigin_robotFrame = new Translation3d(0, 0, 0.1);
+        //     Translation3d aboveTheFloor_robotFrame = new Translation3d(0, 0, 1);
+        //     Translation3d robotOrigin_camFrame = intakeCameraCoordsFromRobotCoords(robotOrigin_robotFrame);
+        //     Translation3d aboveTheFloor_camFrame = intakeCameraCoordsFromRobotCoords(aboveTheFloor_robotFrame);
+        //     Translation3d floorNormal_camFrame = aboveTheFloor_camFrame.minus(robotOrigin_camFrame);
 
-            // Find where the vector that points from the camera to the coral intersects
-            // the plane of the floor.
-            Translation3d floorAnchor = robotOrigin_camFrame;
-            double distanceToCoral = floorAnchor.toVector().dot(floorNormal_camFrame.toVector())
-                                    / unitTowardsCoral.toVector().dot(floorNormal_camFrame.toVector());
+        //     // Find where the vector that points from the camera to the coral intersects
+        //     // the plane of the floor.
+        //     Translation3d floorAnchor = robotOrigin_camFrame;
+        //     double distanceToCoral = floorAnchor.toVector().dot(floorNormal_camFrame.toVector())
+        //                             / unitTowardsCoral.toVector().dot(floorNormal_camFrame.toVector());
 
-            // extend the original unit vector to the intersection point in the plane
-            Translation3d coral_camFrame = unitTowardsCoral.times(distanceToCoral);
-            Translation3d coral_robotFrame = robotCoordsFromIntakeCameraCoords(coral_camFrame);
+        //     // extend the original unit vector to the intersection point in the plane
+        //     Translation3d coral_camFrame = unitTowardsCoral.times(distanceToCoral);
+        //     Translation3d coral_robotFrame = robotCoordsFromIntakeCameraCoords(coral_camFrame);
 
-            if (coral_robotFrame.getNorm() > 3 || coral_robotFrame.getNorm() < Units.inchesToMeters(DrivetrainConstants.frameWidthMeters/2)) {
-                continue;
-            };
+        //     if (coral_robotFrame.getNorm() > 3 || coral_robotFrame.getNorm() < Units.inchesToMeters(DrivetrainConstants.frameWidthMeters/2)) {
+        //         continue;
+        //     };
 
-            detectedCorals.add(coral_robotFrame);
-        }
+        //     detectedCorals.add(coral_robotFrame);
+        // }
 
 
             
-        return detectedCorals;
+        // return detectedCorals;
     }
 
-
-    @Override
-    public void updateInputs(VisionIOInputs inputs) {
+    public void makeTagCamsAgree() {
         Pose2d calibrationFace = FieldElement.FRONT_REEF_FACE.getPose2d();
         double pushOutDistanceMeters = Units.inchesToMeters((45.5 + 11.75)/2.0);
         Transform2d offset = new Transform2d(pushOutDistanceMeters, 0, new Rotation2d());
@@ -295,6 +294,11 @@ public class VisionIOPhotonLib implements VisionIO {
         Logger.recordOutput("vision/calibrationPose", calibrationFace.plus(offset));
 
         this.makeTagCamsAgree(calibrationFace.plus(offset));
+    }
+
+
+    @Override
+    public void updateInputs(VisionIOInputs inputs) {
 
 
         inputs.visionMeasurements = new ArrayList<VisionMeasurement>();

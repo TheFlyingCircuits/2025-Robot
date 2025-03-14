@@ -80,38 +80,38 @@ public class ArmIOSim implements ArmIO {
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
-        StatusSignal<Voltage> extensionVoltage = extensionTalon.getMotorVoltage();
-        StatusSignal<Current> shoulderCurrent = shoulderTalon.getTorqueCurrent();
+        // StatusSignal<Voltage> extensionVoltage = extensionTalon.getMotorVoltage();
+        // StatusSignal<Current> shoulderCurrent = shoulderTalon.getTorqueCurrent();
 
-        this.systemInputs.set(1, 0, extensionVoltage.getValueAsDouble());
-        this.systemInputs.set(0, 0, shoulderCurrent.getValueAsDouble());
+        // this.systemInputs.set(1, 0, extensionVoltage.getValueAsDouble());
+        // this.systemInputs.set(0, 0, shoulderCurrent.getValueAsDouble());
     
-        Matrix<N4, N1> state = VecBuilder.fill(
-            inputs.shoulderAngleDegrees,
-            inputs.shoulderVelocityDegreesPerSecond,
-            inputs.extensionLengthMeters,
-            inputs.extensionLengthMetersPerSecond
-        );
+        // Matrix<N4, N1> state = VecBuilder.fill(
+        //     inputs.shoulderAngleDegrees,
+        //     inputs.shoulderVelocityDegreesPerSecond,
+        //     inputs.extensionLengthMeters,
+        //     inputs.extensionLengthMetersPerSecond
+        // );
         
-        Matrix<N4, N1> nextState = NumericalIntegration.rk4(
-            this::calculateSystemDerivative,
-            state,
-            this.systemInputs, 
-            UniversalConstants.defaultPeriodSeconds
-        );
+        // Matrix<N4, N1> nextState = NumericalIntegration.rk4(
+        //     this::calculateSystemDerivative,
+        //     state,
+        //     this.systemInputs, 
+        //     UniversalConstants.defaultPeriodSeconds
+        // );
 
-        inputs.shoulderAngleDegrees = nextState.get(0, 0);
-        shoulderTalon.setPosition(inputs.shoulderAngleDegrees);
-        inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
-        inputs.shoulderTorqueCurrent = this.systemInputs.get(0, 0);
+        // inputs.shoulderAngleDegrees = nextState.get(0, 0);
+        // // shoulderTalon.setPosition(inputs.shoulderAngleDegrees);
+        // inputs.shoulderVelocityDegreesPerSecond = nextState.get(1, 0);
+        // inputs.shoulderTorqueCurrent = this.systemInputs.get(0, 0);
 
-        Logger.recordOutput("arm/closedLoopReference", shoulderTalon.getClosedLoopReference().getValueAsDouble());
+        // Logger.recordOutput("arm/closedLoopReference", shoulderTalon.getClosedLoopReference().getValueAsDouble());
 
-        inputs.extensionLengthMeters = nextState.get(2, 0);
-        extensionTalon.setPosition(inputs.extensionLengthMeters);
+        // inputs.extensionLengthMeters = nextState.get(2, 0);
+        // // extensionTalon.setPosition(inputs.extensionLengthMeters);
 
-        inputs.extensionLengthMetersPerSecond = nextState.get(3, 0);
-        inputs.extensionAppliedVolts = this.systemInputs.get(1, 0);
+        // inputs.extensionLengthMetersPerSecond = nextState.get(3, 0);
+        // inputs.extensionAppliedVolts = this.systemInputs.get(1, 0);
     }
 
 
@@ -173,14 +173,14 @@ public class ArmIOSim implements ArmIO {
     @Override
     public void setShoulderTargetAngle(double degrees) {
         StatusCode code = shoulderTalon.setControl(new MotionMagicVoltage(degrees));
-        System.out.println("shoulder target angle set:" + code.getName());
+        // System.out.println("shoulder target angle set:" + code.getName());
     }
 
     @Override
     public void setExtensionTargetLength(double meters) {
         //all units for extension are with meters
         StatusCode code = extensionTalon.setControl(new MotionMagicVoltage(meters));
-        System.out.println("extension target length set:" + code.getName());
+        // System.out.println("extension target length set:" + code.getName());
     }
 
 

@@ -5,6 +5,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.UniversalConstants.Direction;
 
@@ -64,6 +65,14 @@ public class PlacerGrabber extends SubsystemBase {
         return inputs.leftSensorSeesCoral || inputs.rightSensorSeesCoral;
     }
 
+    public boolean hasSingleCoral() {
+        return doesHaveCoral() && !doesHaveTwoCoral();
+    }
+
+    public boolean doesHaveTwoCoral() {
+        return inputs.leftSensorSeesCoral && inputs.rightSensorSeesCoral;
+    }
+
     public Direction sideCoralIsIn() {
         if (inputs.leftSensorSeesCoral)
             return Direction.left;
@@ -87,6 +96,26 @@ public class PlacerGrabber extends SubsystemBase {
         return this.run(() -> {
             setFrontRollerVolts(frontRollerVolts);
             setSideRollerVolts(sideRollervolts);
+        });
+    }
+
+    public Command intakeOrEjectOrStop() {
+        return this.run(() -> {
+            if (!this.doesHaveCoral()) {
+                // intake if no corals
+                this.setFrontRollerVolts(11);
+                this.setSideRollerVolts(11);
+            }
+            else if (this.doesHaveTwoCoral()) {
+                // spit if two corals
+                this.setFrontRollerVolts(-9);
+                this.setSideRollerVolts(-9);
+            }
+            else {
+                // stop if single coral
+                this.setFrontRollerVolts(0);
+                this.setSideRollerVolts(0);
+            }
         });
     }
 }

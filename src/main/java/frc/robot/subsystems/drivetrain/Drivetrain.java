@@ -6,8 +6,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.simulation.VisionTargetSim;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -22,6 +24,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -42,9 +45,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.FlyingCircuitUtils;
+import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefFace;
 import frc.robot.PlayingField.ReefStalk;
+import frc.robot.subsystems.vision.ColorCamera;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
 import frc.robot.subsystems.vision.VisionIO.VisionMeasurement;
@@ -56,6 +61,7 @@ public class Drivetrain extends SubsystemBase {
 
     private VisionIO visionIO;
     private VisionIOInputsLogged visionInputs;
+    private ColorCamera intakeCam = new ColorCamera("intakeCam", VisionConstants.robotToCoralCamera);
 
     private SwerveModule[] swerveModules;
 
@@ -582,17 +588,10 @@ public class Drivetrain extends SubsystemBase {
      * Returns an empty optional if no such coral is detected.
      */
     public Optional<Translation2d> getBestCoralLocation() {
-        for (Translation3d coralRobotFrame3d : visionInputs.detectedCoralsRobotFrame) {
-            Translation2d coralRobotFrame = coralRobotFrame3d.toTranslation2d();
-            Translation2d coralFieldFrame = fieldCoordsFromRobotCoords(coralRobotFrame);
-
-            boolean closeToRobot = coralRobotFrame.getNorm() < 2.5;
-            boolean inField = !FlyingCircuitUtils.isOutsideOfField(coralFieldFrame, 0.3);
-            if (closeToRobot && inField) {
-                return Optional.of(coralFieldFrame);
-            }
+        Optional<Translation3d> closest = intakeCam.getClosestValidGamepiece();
+        if (closest.isPresent()) {
+            return Optional.of(closest.get().toTranslation2d());
         }
-
         return Optional.empty();
     }
 
@@ -688,6 +687,7 @@ public class Drivetrain extends SubsystemBase {
         Logger.processInputs("visionInputs", visionInputs);
 
         updatePoseEstimator();
+        intakeCam.periodic(fusedPoseEstimator);
 
 
         Logger.recordOutput("drivetrain/fusedPose", fusedPoseEstimator.getEstimatedPosition());
@@ -728,5 +728,20 @@ public class Drivetrain extends SubsystemBase {
 
 
         Logger.recordOutput("drivetrain/speedMetersPerSecond", getSpeedMetersPerSecond());
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        // Move the simulation forward by 1 timestep
+        FieldConstants.simulatedTagLayout.update(wheelsOnlyPoseEstimator.getEstimatedPosition());
+        FieldConstants.simulatedCoralLayout.update(wheelsOnlyPoseEstimator.getEstimatedPosition());
+
+        // Log the poses of the simulated gamepieces for visualization in advantage scope.
+        Set<VisionTargetSim> simulatedCorals = FieldConstants.simulatedCoralLayout.getVisionTargets("coral");
+        List<Pose3d> simCoralPoses = new ArrayList<>();
+        for (VisionTargetSim simulatedCoral : simulatedCorals) {
+            simCoralPoses.add(simulatedCoral.getPose());
+        }
+        Logger.recordOutput("simulatedCorals", simCoralPoses.toArray(new Pose3d[0]));
     }
 }
