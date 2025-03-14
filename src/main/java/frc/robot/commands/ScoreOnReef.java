@@ -164,6 +164,7 @@ public class ScoreOnReef extends Command {
 
     @Override
     public void execute() {
+        // System.out.println("scoringOnReef");
         Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), coralSide, isFacingReef.get());
 
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
@@ -184,30 +185,27 @@ public class ScoreOnReef extends Command {
         Logger.recordOutput("scoreOnReef/extensionDesiredMeters", desiredArmPosition.extensionMeters);
 
 
-        if (targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1
-                && drivetrain.getSpeedMetersPerSecond() < 1)
+        boolean closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
+        boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 1;
+        if (closeToReef && movingSlow) {
             arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
-        else
+
+            boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10;
+            if (shoulderNearTarget) {
+                arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
+                
+                double maxWristVolts = 8;
+                if (reefBranch.get().getLevel() == 4) maxWristVolts = 6;
+                wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, maxWristVolts);
+            }
+            else {
+                arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
+                wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
+            }
+        }
+        else {
             arm.setShoulderTargetAngle(45);
-        
-        if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
-            arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
-        }
-        else {
             arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
-        }
-
-
-        // if (Math.abs(arm.getExtensionMeters() - desiredArmPosition.extensionMeters) < 0.1) {
-        //     wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees);
-        // }
-        if (Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10) {
-            double maxWristVolts = 8;
-            if (reefBranch.get().getLevel() == 4) maxWristVolts = 6;
-            
-            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, maxWristVolts);
-        }
-        else {
             wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
         }
         

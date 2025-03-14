@@ -60,5 +60,7 @@ public interface ArmIO {
 
     public default void setExtensionTargetLength(double meters) {};
 
+    public default void zeroExtensionPosition() {};
+
 
 }

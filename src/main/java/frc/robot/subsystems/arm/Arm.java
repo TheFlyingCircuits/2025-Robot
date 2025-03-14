@@ -8,6 +8,7 @@ package frc.robot.subsystems.arm;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.ArmConstants;
@@ -73,6 +74,16 @@ public class Arm {
             return this.run(() -> {
                 io.setExtensionTargetLength(meters);
             });
+        }
+
+        public Command homeArmCommand() {
+            return this.run(() -> {
+                io.setExtensionMotorVolts(-1);
+            }).until(() -> {
+                boolean highCurrent = Math.abs(inputs.extensionStatorCurrent) > 5;
+                boolean standingStill = Math.abs(inputs.extensionLengthMetersPerSecond) < 0.001;
+                return highCurrent && standingStill;
+            }).andThen(new InstantCommand(() -> {io.zeroExtensionPosition();}));
         }
 
     }

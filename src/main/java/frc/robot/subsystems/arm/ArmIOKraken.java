@@ -8,8 +8,6 @@ import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 
-import javax.net.ssl.ExtendedSSLSession;
-
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.StatusCode;
@@ -35,11 +33,11 @@ import frc.robot.VendorWrappers.Kraken;
 /** Add your docs here. */
 public class ArmIOKraken implements ArmIO{
 
-    TalonFX leftShoulder = new TalonFX(ArmConstants.leftShoulderMotorID, UniversalConstants.canivoreName);
-    TalonFX rightShoulder = new TalonFX(ArmConstants.rightShoulderMotorID, UniversalConstants.canivoreName);
+    Kraken leftShoulder = new Kraken(ArmConstants.leftShoulderMotorID, UniversalConstants.canivoreName);
+    Kraken rightShoulder = new Kraken(ArmConstants.rightShoulderMotorID, UniversalConstants.canivoreName);
 
-    TalonFX frontExtensionMotor = new TalonFX(ArmConstants.frontExtensionMotorID, UniversalConstants.canivoreName);
-    TalonFX backExtensionMotor = new TalonFX(ArmConstants.backExtensionMotorID, UniversalConstants.canivoreName);
+    Kraken frontExtensionMotor = new Kraken(ArmConstants.frontExtensionMotorID, UniversalConstants.canivoreName);
+    Kraken backExtensionMotor = new Kraken(ArmConstants.backExtensionMotorID, UniversalConstants.canivoreName);
 
     TalonFXConfiguration extensionConfig;
     TalonFXConfiguration shoulderConfig;
@@ -100,10 +98,10 @@ public class ArmIOKraken implements ArmIO{
         extensionConfig.Slot0.kD = ArmConstants.kDExtensionVoltsPerMeterPerSecond;
 
         extensionConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
-        frontExtensionMotor.getConfigurator().apply(extensionConfig);
+        frontExtensionMotor.applyConfig(extensionConfig);
 
         extensionConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        backExtensionMotor.getConfigurator().apply(extensionConfig);
+        backExtensionMotor.applyConfig(extensionConfig);
 
         frontExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
         backExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
@@ -144,10 +142,10 @@ public class ArmIOKraken implements ArmIO{
         shoulderConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
         shoulderConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        leftShoulder.getConfigurator().apply(shoulderConfig);
+        leftShoulder.applyConfig(shoulderConfig);
 
         shoulderConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        rightShoulder.getConfigurator().apply(shoulderConfig);
+        rightShoulder.applyConfig(shoulderConfig);
 
         leftShoulder.setPosition(leftPivotEncoder.getAbsolutePosition().getValueAsDouble());
         rightShoulder.setPosition(leftPivotEncoder.getAbsolutePosition().getValueAsDouble());
@@ -156,10 +154,20 @@ public class ArmIOKraken implements ArmIO{
     private void homeExtensionIfRetracted() {
         if (Math.abs(extensionMeters - ArmConstants.minExtensionMeters) < 0.15
                 && frontExtensionMotor.getMotorVoltage().getValueAsDouble() < 0
-                    && frontExtensionMotor.getFault_StatorCurrLimit().getValue()) {
-                        frontExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
-                        backExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
-                    }
+                    && frontExtensionMotor.getFault_StatorCurrLimit().getValue()
+                        && Math.abs(frontExtensionMotor.getVelocity().getValueAsDouble()) < 0.001) {
+                frontExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
+                backExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
+                Logger.recordOutput("arm/homing", true);
+            }
+        else {
+            Logger.recordOutput("arm/homing", false);
+        }
+    }
+
+    public void zeroExtensionPosition() {
+        frontExtensionMotor.setPosition(0);
+        backExtensionMotor.setPosition(0);
     }
 
     @Override
@@ -209,8 +217,10 @@ public class ArmIOKraken implements ArmIO{
                                          + rightShoulder.getTorqueCurrent().getValueAsDouble())/2.;
 
 
-        Logger.recordOutput("arm/closedLoopReferencePosition", leftShoulder.getClosedLoopReference().getValueAsDouble());
-        Logger.recordOutput("arm/closedLoopReferenceSlope", leftShoulder.getClosedLoopReferenceSlope().getValueAsDouble());
+        Logger.recordOutput("arm/pivotReferencePosition", leftShoulder.getClosedLoopReference().getValueAsDouble());
+        Logger.recordOutput("arm/pivotReferenceSlope", leftShoulder.getClosedLoopReferenceSlope().getValueAsDouble());
+        Logger.recordOutput("arm/extensionReferencePosition", backExtensionMotor.getClosedLoopReference().getValueAsDouble());
+        Logger.recordOutput("arm/extensionReferenceSlope", backExtensionMotor.getClosedLoopReferenceSlope().getValueAsDouble());
         Logger.recordOutput("arm/targetShoulderAngleDegrees", targetShoulderAngleDegrees);
         Logger.recordOutput("arm/targetExtensionLengthMeters", targetExtensionMeters);
         Logger.recordOutput("arm/statorCurrentLimitReached", leftShoulder.getFault_StatorCurrLimit().getValue());
@@ -241,9 +251,9 @@ public class ArmIOKraken implements ArmIO{
         this.targetExtensionMeters = meters;
         Logger.recordOutput("arm/extensionFeedforward", calculateExtensionFeedForwardVolts());
 
-        frontExtensionMotor.setControl(
+        backExtensionMotor.setControl(
             new MotionMagicVoltage(meters).withFeedForward(calculateExtensionFeedForwardVolts()).withEnableFOC(true));
-        backExtensionMotor.setControl(new Follower(ArmConstants.frontExtensionMotorID, true));
+        frontExtensionMotor.setControl(new Follower(ArmConstants.backExtensionMotorID, true));
     }
 
 

@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.PlayingField.FieldConstants;
 
@@ -119,4 +120,10 @@ public class FlyingCircuitUtils {
         // Should never get to this point as long as we're connected to the driver station.
         return valueWhenNoComms;
     }
+
+    // public String getBigCommandName(Command command) {
+    //     String name = command.toString();
+    //     command.raceWith(null)
+    //     if (command instanceof )
+    // }
 }

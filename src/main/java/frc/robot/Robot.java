@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.PlayingField.FieldElement;
@@ -55,6 +56,9 @@ public class Robot extends LoggedRobot {
         
 
         gcTimer.restart();
+
+        // CommandScheduler.getInstance().onCommandExecute(null);
+        SmartDashboard.putData(CommandScheduler.getInstance());
     }
 
     @Override

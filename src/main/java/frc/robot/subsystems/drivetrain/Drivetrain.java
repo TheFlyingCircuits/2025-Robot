@@ -6,8 +6,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.simulation.VisionTargetSim;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -22,6 +24,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -42,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.FlyingCircuitUtils;
+import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefFace;
 import frc.robot.PlayingField.ReefStalk;
@@ -724,5 +728,20 @@ public class Drivetrain extends SubsystemBase {
 
 
         Logger.recordOutput("drivetrain/speedMetersPerSecond", getSpeedMetersPerSecond());
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        // Move the simulation forward by 1 timestep
+        FieldConstants.simulatedTagLayout.update(wheelsOnlyPoseEstimator.getEstimatedPosition());
+        FieldConstants.simulatedCoralLayout.update(wheelsOnlyPoseEstimator.getEstimatedPosition());
+
+        // Log the poses of the simulated gamepieces for visualization in advantage scope.
+        Set<VisionTargetSim> simulatedCorals = FieldConstants.simulatedCoralLayout.getVisionTargets("coral");
+        List<Pose3d> simCoralPoses = new ArrayList<>();
+        for (VisionTargetSim simulatedCoral : simulatedCorals) {
+            simCoralPoses.add(simulatedCoral.getPose());
+        }
+        Logger.recordOutput("simulatedCorals", simCoralPoses.toArray(new Pose3d[0]));
     }
 }
