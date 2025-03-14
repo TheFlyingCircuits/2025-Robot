@@ -160,6 +160,12 @@ public class ScoreOnReef extends Command {
     @Override
     public void initialize() {
         coralSide = coralSideSupplier.get();
+        Logger.recordOutput("ScoringOnReef", true);
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        Logger.recordOutput("ScoringOnReef", false);
     }
 
     @Override
