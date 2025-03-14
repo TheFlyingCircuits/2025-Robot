@@ -7,7 +7,9 @@ package frc.robot.subsystems.arm;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -71,19 +73,29 @@ public class Arm {
 
         
         public Command setTargetLengthCommand(double meters) {
-            return this.run(() -> {
+            return retractThenHome().onlyIf(() -> {return meters == ArmConstants.minExtensionMeters;})
+            .andThen(this.run(() -> {
                 io.setExtensionTargetLength(meters);
-            });
+            }));
         }
 
-        public Command homeArmCommand() {
+        private Command retractThenHome() {
+            return this.run(() -> {
+                io.setExtensionTargetLength(ArmConstants.minExtensionMeters);
+            }).until(() -> {
+                return inputs.extensionLengthMeters < (ArmConstants.minExtensionMeters + Units.inchesToMeters(1));
+            })
+            .andThen(homeExtensionCommand());
+        }
+
+        public Command homeExtensionCommand() {
             return this.run(() -> {
                 io.setExtensionMotorVolts(-1);
             }).until(() -> {
                 boolean highCurrent = Math.abs(inputs.extensionStatorCurrent) > 5;
                 boolean standingStill = Math.abs(inputs.extensionLengthMetersPerSecond) < 0.001;
                 return highCurrent && standingStill;
-            }).andThen(new InstantCommand(() -> {io.zeroExtensionPosition();}));
+            }).andThen(new InstantCommand(() -> {io.setExtensionEncoderPositionToMin();;}));
         }
 
     }

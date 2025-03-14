@@ -320,7 +320,7 @@ public class RobotContainer {
 
 
         //reset gyro
-        duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement));
+        duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement).repeatedly().until(drivetrain::seesTag));
         
 
 

@@ -165,15 +165,15 @@ public class ArmIOKraken implements ArmIO{
         }
     }
 
-    public void zeroExtensionPosition() {
-        frontExtensionMotor.setPosition(0);
-        backExtensionMotor.setPosition(0);
+    public void setExtensionEncoderPositionToMin() {
+        frontExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
+        backExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
     }
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
 
-        homeExtensionIfRetracted();
+        // homeExtensionIfRetracted();
 
         extensionMeters = frontExtensionMotor.getPosition().getValueAsDouble();
         inputs.extensionLengthMeters = extensionMeters;
