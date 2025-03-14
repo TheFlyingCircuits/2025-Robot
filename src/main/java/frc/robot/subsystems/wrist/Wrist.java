@@ -4,6 +4,7 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
@@ -20,12 +21,17 @@ public class Wrist extends SubsystemBase {
 
     private double maxVolts;
 
+    private Timer homingTimer;
+
     public Wrist(WristIO io) {
         this.io = io;
         inputs = new WristIOInputsAutoLogged();
 
         wristNeoPID = new PIDController(0.25,0,0); // kp has units of volts per degree
         wristNeoPID.setTolerance(1); // degrees
+
+        homingTimer = new Timer();
+        homingTimer.restart();
 
     }
 
@@ -38,6 +44,11 @@ public class Wrist extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("wristInputs", inputs);
+
+        if (homingTimer.advanceIfElapsed(5) && inputs.wristDegreesPerSecond == 0 && Math.abs(inputs.motorOutputVoltage) < 0.1) {
+            io.setWristPosition(inputs.absoluteAngleDegrees);
+            homingTimer.restart();
+        }
 
         moveToTargetPosition();
 
