@@ -698,7 +698,7 @@ public class Drivetrain extends SubsystemBase {
         Logger.recordOutput("assistedIntake/pickupPose", pickupPose);
 
         if (DriverStation.isAutonomous()) {
-            this.pidToPose(pickupPose, 3); 
+            this.pidToPose(pickupPose, 2);
         }
         else {
             this.fieldOrientedDriveOnALine(rawSpeedRequest, lineToDriveOn);

@@ -283,10 +283,11 @@ public class RobotContainer {
         amaraController.rightBumper().onTrue(new InstantCommand(() -> desiredStalk = Direction.right));
         amaraController.leftBumper().onTrue(new InstantCommand(() -> desiredStalk = Direction.left));
 
-        amaraController.b().onTrue(new InstantCommand(() -> desiredLevel = 1));
-        amaraController.a().onTrue(new InstantCommand(() -> desiredLevel = 2));
-        amaraController.x().onTrue(new InstantCommand(() -> desiredLevel = 3));
-        amaraController.y().onTrue(new InstantCommand(() -> desiredLevel = 4));
+        amaraController.b().onTrue(new InstantCommand(() -> {desiredLevel = 1; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        amaraController.a().onTrue(new InstantCommand(() -> {desiredLevel = 2; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        amaraController.x().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+
 
         amaraController.leftTrigger().onTrue(new InstantCommand(() -> {visionAssistedIntakeInTeleop = false;
             Logger.recordOutput("escapeHatch", visionAssistedIntakeInTeleop);}));
@@ -324,6 +325,9 @@ public class RobotContainer {
                     duncan::getRequestedFieldOrientedVelocity, 
                     this::getDesiredBranch,
                     this::isFacingReef)
+                .alongWith(
+                    Commands.run(() -> drivetrain.setPoseToVisionMeasurement()).until(() -> drivetrain.seesTag())
+                )
             );
 
         //eject
@@ -647,7 +651,8 @@ public class RobotContainer {
                     drivetrain.pidToPose(targetRobotPose2d, 1);
                 } else {
                     // can see coral
-                    drivetrain.driveTowardsCoral(new ChassisSpeeds()); // auto is accounted for within this function
+                    // drivetrain.driveTowardsCoral(new ChassisSpeeds()); // auto is accounted for within this function
+                    drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
                 }
             })
             .raceWith(intakeUntilCoralAcquired()).withName("intakeTowardsCoralInAuto");
