@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Rotation;
+
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
@@ -348,13 +350,13 @@ public class RobotContainer {
         );
 
         //source intake
-        duncanController.b().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6)
-            .alongWith(
-                arm.shoulder.setTargetAngleCommand(35.23),
-                arm.extension.setTargetLengthCommand(0.737),
-                wrist.setTargetPositionCommand(53.5)
-            ).until(() -> placerGrabber.doesHaveCoral())
-        );
+        // duncanController.b().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6)
+        //     .alongWith(
+        //         arm.shoulder.setTargetAngleCommand(35.23),
+        //         arm.extension.setTargetLengthCommand(0.737),
+        //         wrist.setTargetPositionCommand(53.5)
+        //     ).until(() -> placerGrabber.doesHaveCoral())
+        // );
 
 
         //reset gyro
@@ -488,9 +490,10 @@ public class RobotContainer {
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Supplier<Boolean> isFacingReef) {
         ScoreOnReef align = new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), isFacingReef);
         align.setName("alignToReef");
+        Command manualScoreRequested = new WaitUntilCommand(duncanController.b());
         Command waitForAlignment = new WaitUntilCommand(align::readyToScore).withName("waitForAlignmentToReef");
         Command scoreCoral = scoreCoral(false).withName("scoreCoral");
-        return align.raceWith(waitForAlignment.andThen(scoreCoral)).withName("alignWithReefRace").andThen(
+        return align.raceWith(waitForAlignment.raceWith(manualScoreRequested).andThen(scoreCoral)).withName("alignWithReefRace").andThen(
             drivetrain.run(() -> {
                 ChassisSpeeds driveBackwards = this.isFacingReef() ? new ChassisSpeeds(-0.5, 0, 0) : new ChassisSpeeds(0.5, 0, 0);
                 drivetrain.robotOrientedDrive(driveBackwards, true);
@@ -558,7 +561,7 @@ public class RobotContainer {
             return drivetrain.getTranslationError() < 0.2;
         });
 
-        Command prepArm = arm.shoulder.setTargetAngleCommand(53)
+        Command prepArm = arm.shoulder.setTargetAngleCommand(51)
             .alongWith(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5));
 
         Command waitThenPunch = new WaitUntilCommand(() -> {
@@ -595,7 +598,7 @@ public class RobotContainer {
             return drivetrain.getTranslationError() < 0.2;
         });
 
-        Command prepArm = arm.shoulder.setTargetAngleCommand(36)
+        Command prepArm = arm.shoulder.setTargetAngleCommand(35)
             .alongWith(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5));
 
         Command waitThenPunch = new WaitUntilCommand(() -> {
@@ -625,7 +628,10 @@ public class RobotContainer {
             wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5),
             drivetrain.run(() -> {
                 Transform2d poseAdjustment = new Transform2d(2, 0, new Rotation2d());
-                drivetrain.pidToPose(drivetrain.getClosestSourceSide().getPose2d().plus(poseAdjustment), 3.5);
+                Translation2d desiredTranslation = drivetrain.getClosestSourceSide().getPose2d().plus(poseAdjustment).getTranslation();
+
+                Rotation2d desiredRotation = FlyingCircuitUtils.getAllianceDependentValue(Rotation2d.k180deg, Rotation2d.kZero, Rotation2d.kZero);
+                drivetrain.pidToPose(new Pose2d(desiredTranslation, desiredRotation), 3.5);
             })
         ).until(() -> arm.getShoulderAngleDegrees() < 40);
     }
@@ -641,7 +647,7 @@ public class RobotContainer {
                     drivetrain.pidToPose(targetRobotPose2d, 1);
                 } else {
                     // can see coral
-                    drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+                    drivetrain.driveTowardsCoral(new ChassisSpeeds()); // auto is accounted for within this function
                 }
             })
             .raceWith(intakeUntilCoralAcquired()).withName("intakeTowardsCoralInAuto");
@@ -650,7 +656,7 @@ public class RobotContainer {
 
     private Command driveTowardsReef() {
         return drivetrain.run(() -> {
-                Transform2d poseAdjustment = new Transform2d(2, 0, new Rotation2d());
+                Transform2d poseAdjustment = new Transform2d(2,0, new Rotation2d());
                 drivetrain.pidToPose(drivetrain.getClosestSourceSide().getPose2d().plus(poseAdjustment), 3.5);
         }).alongWith(arm.shoulder.setTargetAngleCommand(45))
             .until(() -> {

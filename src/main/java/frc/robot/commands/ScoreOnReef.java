@@ -35,6 +35,7 @@ public class ScoreOnReef extends Command {
     private Supplier<Direction> coralSideSupplier;
     private Direction coralSide;
     private ArmPosition desiredArmPosition;
+    private boolean extensionTargetSet = false;
 
 
     /**
@@ -67,6 +68,10 @@ public class ScoreOnReef extends Command {
         Logger.recordOutput("scoreOnReef/driveTranslationGood", driveTranslationGood);
 
         return shoulderReady && extensionReady && wristReady && driveAngleGood && driveTranslationGood;
+    }
+
+    public boolean shouldStartEarlyExitTimer() {
+        return this.extensionTargetSet && (Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02);
     }
 
 
@@ -164,6 +169,7 @@ public class ScoreOnReef extends Command {
     
     @Override
     public void initialize() {
+        this.extensionTargetSet = false;
         coralSide = coralSideSupplier.get();
         Logger.recordOutput("ScoringOnReef", true);
     }
@@ -204,17 +210,20 @@ public class ScoreOnReef extends Command {
             boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10;
             if (shoulderNearTarget) {
                 arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
+                this.extensionTargetSet = true;
                 
                 double maxWristVolts = 8;
                 if (reefBranch.get().getLevel() == 4) maxWristVolts = 6;
                 wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, maxWristVolts);
             }
             else {
+                this.extensionTargetSet = false;
                 arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
                 wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
             }
         }
         else {
+            this.extensionTargetSet = false;
             arm.setShoulderTargetAngle(45);
             arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
             wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);

@@ -18,6 +18,7 @@ import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.UniversalConstants;
 import edu.wpi.first.math.system.NumericalIntegration;
@@ -80,6 +81,8 @@ public class ArmIOSim implements ArmIO {
 
     @Override
     public void updateInputs(ArmIOInputs inputs) {
+        inputs.shoulderAngleDegrees = SmartDashboard.getNumber("simArmAngleDegs", 0);
+        SmartDashboard.putNumber("simArmAngleDegs", inputs.shoulderAngleDegrees);
         // StatusSignal<Voltage> extensionVoltage = extensionTalon.getMotorVoltage();
         // StatusSignal<Current> shoulderCurrent = shoulderTalon.getTorqueCurrent();
 

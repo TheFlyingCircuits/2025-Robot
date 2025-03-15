@@ -690,9 +690,19 @@ public class Drivetrain extends SubsystemBase {
         Pose2d anchor = lineThroughEffectiveCenter.plus(new Transform2d(0, -offsetY, Rotation2d.kZero));
 
         Pose2d lineToDriveOn = new Pose2d(anchor.getTranslation(), targetOrientation);
-        Logger.recordOutput("teleopAssistedIntake/lineToDriveOn", lineToDriveOn);
+        Logger.recordOutput("assistedIntake/lineToDriveOn", lineToDriveOn);
 
-        this.fieldOrientedDriveOnALine(rawSpeedRequest, lineToDriveOn);
+        Translation2d lineToCoral = targetCoral.minus(lineToDriveOn.getTranslation());
+        double distanceAlongLine = lineToCoral.getX() * targetOrientation.getCos() + lineToCoral.getY() * targetOrientation.getSin();
+        Pose2d pickupPose = lineToDriveOn.plus(new Transform2d(distanceAlongLine, 0, Rotation2d.kZero));
+        Logger.recordOutput("assistedIntake/pickupPose", pickupPose);
+
+        if (DriverStation.isAutonomous()) {
+            this.pidToPose(pickupPose, 3); 
+        }
+        else {
+            this.fieldOrientedDriveOnALine(rawSpeedRequest, lineToDriveOn);
+        }
     }
 
     /**
