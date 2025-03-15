@@ -70,7 +70,7 @@ public class Robot extends LoggedRobot {
 
         // System.gc();
 
-        if (gcTimer.advanceIfElapsed(2)) {
+        if (gcTimer.advanceIfElapsed(5)) {
             System.gc();
             // System.out.println("Hello world!");
         }

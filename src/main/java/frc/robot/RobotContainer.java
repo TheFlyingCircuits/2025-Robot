@@ -7,6 +7,9 @@ package frc.robot;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
+import javax.security.auth.login.FailedLoginException;
+import javax.xml.crypto.dsig.Transform;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -39,6 +42,7 @@ import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
+import frc.robot.PlayingField.ReefFace;
 import frc.robot.commands.ScoreOnReef;
 import frc.robot.commands.SourceIntake;
 import frc.robot.commands.leds.ReefFaceLED;
@@ -289,11 +293,7 @@ public class RobotContainer {
         //trough score
         duncanController.leftTrigger()
             .whileTrue(
-                arm.shoulder.setTargetAngleCommand(12.5)
-                    .alongWith(
-                        arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
-                        wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees)
-                    )
+                troughScore()
             ).onFalse(
                 scoreCoral(true)
                 .raceWith(
@@ -474,22 +474,45 @@ public class RobotContainer {
     }
 
     public Command scoreCoral(boolean troughScore) {
-        return placerGrabber.run(() -> {
-                double volts = this.isFacingReef() ? 11 : -11;
-                placerGrabber.setFrontRollerVolts(volts);
-            }).until(() -> !placerGrabber.doesHaveCoral()).andThen(placerGrabber.run(() -> {
 
-                double volts = this.isFacingReef() ? 11 : -11;
-                placerGrabber.setFrontRollerVolts(volts);
+        if (troughScore) {
+            return placerGrabber.run(() -> {
+                placerGrabber.setFrontRollerVolts(8);
+            }).withTimeout(0.12)
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(8, -8))
+                .withTimeout(0.5);
+        }
+        
+        else {
+            return placerGrabber.run(() -> {
+                    double volts = 11;
+                    volts = this.isFacingReef() ? volts : -volts;
+                    placerGrabber.setFrontRollerVolts(volts);
+                }).until(() -> !placerGrabber.doesHaveCoral()).andThen(placerGrabber.run(() -> {
+                    double volts = 11;
+                    volts = this.isFacingReef() ? volts : -volts;
+                    placerGrabber.setFrontRollerVolts(volts);
+                }).withTimeout(0.25)
+            );
+        }
+    }
 
-                if (troughScore) {
-                    placerGrabber.setSideRollerVolts(-8);
-                }
-                else {
-                    placerGrabber.setSideRollerVolts(0);
-                }
+    public Command troughScore() {
+        return drivetrain.run(() -> {
+            Pose2d facePose = drivetrain.getClosestReefFace().getPose2d();
+            Translation2d translationToReef = drivetrain.getPoseMeters().getTranslation().minus(facePose.getTranslation());
+            Rotation2d angleToReefCenter = translationToReef.getAngle().minus(facePose.getRotation());
+            Transform2d positionShift = new Transform2d(
+                Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1),
+                angleToReefCenter.getSin() * translationToReef.getNorm(),
+                Rotation2d.k180deg
+            );
 
-            }).withTimeout(0.25)
+            drivetrain.pidToPose(facePose.plus(positionShift), 0.5);
+        }).alongWith(
+                arm.shoulder.setTargetAngleCommand(14),
+                arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
+                wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees)
         );
     }
 
