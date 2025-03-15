@@ -135,7 +135,7 @@ public class RobotContainer {
         }
         
         
-        drivetrain.setDefaultCommand(drivetrain.run(() -> {drivetrain.fieldOrientedDrive(duncan.getRequestedFieldOrientedVelocity(), true);}));
+        drivetrain.setDefaultCommand(drivetrain.drivetrainDefaultCommand(duncan::getRequestedFieldOrientedVelocity));
         leds.setDefaultCommand(leds.heartbeatCommand(1.).ignoringDisable(true));
         
         
@@ -160,6 +160,8 @@ public class RobotContainer {
 
     private int desiredLevel = 2;
     private Direction desiredStalk = Direction.left;
+
+    private boolean visionAssistedIntakeInTeleop = true;
 
     private void testBindings() {
 
@@ -237,6 +239,7 @@ public class RobotContainer {
                 new ParallelDeadlineGroup(
                     new WaitUntilCommand(() -> placerGrabber.doesHaveCoral()),
                     intakeTowardsCoral(duncan::getRequestedFieldOrientedVelocity)
+                        .alongWith(drivetrain.drivetrainDefaultCommand(duncan::getRequestedFieldOrientedVelocity))
                 ).withName("intakeTowardsCoral")
                 
                 .andThen(new PrintCommand("intake ended!!!!!!!!"))
@@ -283,11 +286,19 @@ public class RobotContainer {
         amaraController.x().onTrue(new InstantCommand(() -> desiredLevel = 3));
         amaraController.y().onTrue(new InstantCommand(() -> desiredLevel = 4));
 
+        amaraController.leftTrigger().onTrue(new InstantCommand(() -> {visionAssistedIntakeInTeleop = false;
+            Logger.recordOutput("escapeHatch", visionAssistedIntakeInTeleop);}));
+        amaraController.rightTrigger().onTrue(new InstantCommand(() -> {visionAssistedIntakeInTeleop = true;
+            Logger.recordOutput("escapeHatch", visionAssistedIntakeInTeleop);}));
+
 
         //ground intake
         duncanController.rightTrigger()
             .whileTrue(
-                intakeUntilCoralAcquired()
+                new ConditionalCommand(
+                intakeTowardsCoralBrandNewUntested(duncan::getRequestedFieldOrientedVelocity),
+                intakeUntilCoralAcquired().alongWith(null),
+                () -> visionAssistedIntakeInTeleop)
         );
         
         //trough score
@@ -438,6 +449,19 @@ public class RobotContainer {
             // drive towards the coral when the intake camera does see a coral.
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         }).raceWith(intakeUntilCoralAcquired());
+    }
+
+    private Command intakeTowardsCoralBrandNewUntested(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
+        return drivetrain.run(() -> {
+            // have driver stay in control when the intake camera doesn't see a coral
+            if (drivetrain.getBestCoralLocation().isEmpty()) {
+                drivetrain.fieldOrientedDrive(howToDriveWhenNoCoralDetected.get(), true);
+                return;
+            }
+
+            // drive towards the coral when the intake camera does see a coral.
+            drivetrain.driveTowardsCoral(howToDriveWhenNoCoralDetected.get());
+        }).raceWith(intakeUntilCoralAcquired());        
     }
 
     /**** SCORING ****/

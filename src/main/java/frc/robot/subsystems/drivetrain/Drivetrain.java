@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.simulation.VisionTargetSim;
@@ -27,6 +28,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -50,6 +52,7 @@ import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefFace;
 import frc.robot.PlayingField.ReefStalk;
+import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.vision.ColorCamera;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
@@ -216,6 +219,10 @@ public class Drivetrain extends SubsystemBase {
         this.robotOrientedDrive(robotOrientedSpeeds, closedLoop);
     }
 
+    public Command drivetrainDefaultCommand(Supplier<ChassisSpeeds> controllerInput) {
+        return this.run(() -> this.fieldOrientedDrive(controllerInput.get(), true));
+    }
+    
     /**
      * Drives the robot at a desired chassis speeds, while automatically aiming
      * at a rotation target. The coordinate system is the same as the one as the 
@@ -642,25 +649,50 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public void driveTowardsCoral(ChassisSpeeds rawSpeedRequest) {
+        Pose2d effectiveCenter = this.getPoseMeters();
+        Translation2d targetCoral;
+        double offsetY = 0;
+
         Optional<Translation3d> bestLeftGamePiece = intakeCam.getBestGamepieceForLeftIntake();
         Optional<Translation3d> bestRightGamePiece = intakeCam.getBestGamepieceForRightIntake();
-        Translation2d targetGamepiece;
-        boolean isLeft;
         if (bestLeftGamePiece.isPresent() && bestRightGamePiece.isPresent()) {
             double leftDistMeters = Math.abs(ColorCamera.signedDistanceToIntake(Direction.left, bestLeftGamePiece.get(), getPoseMeters()));
             double rightDistMeters = Math.abs(ColorCamera.signedDistanceToIntake(Direction.right, bestRightGamePiece.get(), getPoseMeters()));
 
-            // anchor
+            if (leftDistMeters < rightDistMeters) {
+                targetCoral = bestLeftGamePiece.get().toTranslation2d();
+                offsetY = PlacerGrabber.widthMeters / 2.0;
+                effectiveCenter = this.getPoseMeters().plus(new Transform2d(0, offsetY, Rotation2d.kZero));
+            }
+            else {
+                targetCoral = bestRightGamePiece.get().toTranslation2d();
+                offsetY = -PlacerGrabber.widthMeters / 2.0;
+                effectiveCenter = this.getPoseMeters().plus(new Transform2d(0, offsetY, Rotation2d.kZero));
+            }
         }
         else if (bestLeftGamePiece.isPresent()) {
-            // targetGamePieceField = bestLeftGamePiece.get().toTranslation2d();
+            targetCoral = bestLeftGamePiece.get().toTranslation2d();
+            offsetY = PlacerGrabber.widthMeters / 2.0;
+            effectiveCenter = this.getPoseMeters().plus(new Transform2d(0, offsetY, Rotation2d.kZero));
         }
         else if (bestRightGamePiece.isPresent()) {
-            // targetGamePieceField = bestRightGamePiece.get().toTranslation2d();
+            targetCoral = bestRightGamePiece.get().toTranslation2d();
+            offsetY = -PlacerGrabber.widthMeters / 2.0;
+            effectiveCenter = this.getPoseMeters().plus(new Transform2d(0, offsetY, Rotation2d.kZero));
         }
         else {
+            this.robotOrientedDrive(new ChassisSpeeds(), true);
             return;
         }
+
+        Rotation2d targetOrientation = targetCoral.minus(effectiveCenter.getTranslation()).getAngle();
+        Pose2d lineThroughEffectiveCenter = new Pose2d(effectiveCenter.getTranslation(), targetOrientation);
+        Pose2d anchor = lineThroughEffectiveCenter.plus(new Transform2d(0, -offsetY, Rotation2d.kZero));
+
+        Pose2d lineToDriveOn = new Pose2d(anchor.getTranslation(), targetOrientation);
+        Logger.recordOutput("teleopAssistedIntake/lineToDriveOn", lineToDriveOn);
+
+        this.fieldOrientedDriveOnALine(rawSpeedRequest, lineToDriveOn);
     }
 
     /**

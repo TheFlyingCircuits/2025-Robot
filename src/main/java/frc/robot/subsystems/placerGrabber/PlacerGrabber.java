@@ -18,7 +18,7 @@ import frc.robot.PlayingField.FieldConstants;
 public class PlacerGrabber extends SubsystemBase {
 
     /** center to center distance between the two holding positions for coral */
-    public static final double widthMeters = Units.inchesToMeters(7);
+    public static final double widthMeters = 0.5 * Units.inchesToMeters(7);
 
     private PlacerGrabberIO io;
     private PlacerGrabberIOInputsAutoLogged inputs;
