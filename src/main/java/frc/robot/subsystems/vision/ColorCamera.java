@@ -14,13 +14,17 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.FlyingCircuitUtils;
 import frc.robot.Constants.DrivetrainConstants;
+import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.PlayingField.FieldConstants;
+import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 
 public class ColorCamera {
 
@@ -30,6 +34,22 @@ public class ColorCamera {
 
     // "Sensor" readings
     private Optional<Translation3d> closestValidGamepiece = Optional.empty();
+    private Optional<Translation3d> bestGamepieceForLeftIntake = Optional.empty();
+    private Optional<Translation3d> bestGamepieceForRightIntake = Optional.empty();
+    private Optional<Translation3d> mostCentralValidGamepiece = Optional.empty();
+
+    public Optional<Translation3d> getBestGamepieceForLeftIntake() {
+        return this.bestGamepieceForLeftIntake;
+    }
+
+    public Optional<Translation3d> getBestGamepieceForRightIntake() {
+        return this.bestGamepieceForRightIntake;
+    }
+
+    public Optional<Translation3d> getMostCentralValidGamepiece() {
+        return this.mostCentralValidGamepiece;
+    }
+
 
 
     public ColorCamera(String name, Translation3d camLocation_robotFrame, Rotation3d camOrientation_robotFrame) {
@@ -71,10 +91,35 @@ public class ColorCamera {
     }
 
 
+    public static double signedDistanceToIntake(Direction intakeSide, Translation3d coralLocation_fieldCoords, Pose2d robotPose) {
+        // center to center distance between both coral locations when in the intake
+        double intakeWidthMeters = PlacerGrabber.widthMeters;
+
+
+        // Only left-right distance matters for signed distance.
+        // Positive Y is to the left of the robot.
+        double intakeOffsetFromRobotY = intakeWidthMeters / 2.0;
+        if (intakeSide == Direction.right) {
+            intakeOffsetFromRobotY *= -1;
+        }
+
+        Transform2d intakeLocation_robotCoords = new Transform2d(0, intakeOffsetFromRobotY, Rotation2d.kZero);
+        Pose2d intakePose = robotPose.plus(intakeLocation_robotCoords);
+
+        return FlyingCircuitUtils.signedDistanceToLine(coralLocation_fieldCoords.toTranslation2d(), intakePose);
+    }
+
+
     public void periodic(SwerveDrivePoseEstimator fusedPoseEstimator) {
         // Reset for a new iteration of the main loop
         this.closestValidGamepiece = Optional.empty();
+        this.bestGamepieceForLeftIntake = Optional.empty();
+        this.bestGamepieceForRightIntake = Optional.empty();
+        this.mostCentralValidGamepiece = Optional.empty();
         double metersToClosestGamepiece = -1;
+        double lateralMetersToBestGamepieceForLeftIntake = -1;
+        double lateralMetersToBestGamepieceForRightIntake = -1;
+        double metersToMostCentralGamepiece = -1;
         List<Translation3d> validGamepieces = new ArrayList<>();
         List<Translation3d> invalidGamepieces = new ArrayList<>();
         // Logger.processInputs(cam.getName(), cam);
@@ -107,7 +152,7 @@ public class ColorCamera {
             }
 
             // Don't track gamepieces too far away from the robot.
-            double maxMetersFromRobot = 2.5;
+            double maxMetersFromRobot = 2.0;
             double minMetersFromRobot = 0.6;//(DrivetrainConstants.frameWidthMeters / 2.0) + Units.inchesToMeters(8);
             double metersFromRobot = gamepieceLocation_fieldCoords.toTranslation2d().getDistance(robotPoseNow.getTranslation()); // gamepieceLocation_robotCoords.toTranslation2d().getNorm() doesn't take into account any robot travel since the pic was taken.
             if (metersFromRobot > maxMetersFromRobot || metersFromRobot < minMetersFromRobot) {
@@ -130,6 +175,32 @@ public class ColorCamera {
                 this.closestValidGamepiece = Optional.of(gamepieceLocation_fieldCoords);
                 metersToClosestGamepiece = metersFromRobot;
             }
+
+
+            double signedDistanceToLeftIntake = ColorCamera.signedDistanceToIntake(Direction.left, gamepieceLocation_fieldCoords, robotPoseNow);
+            double unsignedDistanceToLeftIntake = Math.abs(signedDistanceToLeftIntake);
+            if (this.bestGamepieceForLeftIntake.isEmpty() || (unsignedDistanceToLeftIntake < lateralMetersToBestGamepieceForLeftIntake)) {
+                this.bestGamepieceForLeftIntake = Optional.of(gamepieceLocation_fieldCoords);
+                lateralMetersToBestGamepieceForLeftIntake = unsignedDistanceToLeftIntake;
+            }
+
+
+
+            double signedDistanceToRightIntake = ColorCamera.signedDistanceToIntake(Direction.right, gamepieceLocation_fieldCoords, robotPoseNow);
+            double unsignedDistanceToRightIntake = Math.abs(signedDistanceToRightIntake);
+            if (this.bestGamepieceForRightIntake.isEmpty() || (unsignedDistanceToRightIntake < lateralMetersToBestGamepieceForRightIntake)) {
+                this.bestGamepieceForRightIntake = Optional.of(gamepieceLocation_fieldCoords);
+                lateralMetersToBestGamepieceForRightIntake = unsignedDistanceToRightIntake;
+            }
+
+            double signedDistanceToCenter = FlyingCircuitUtils.signedDistanceToLine(gamepieceLocation_fieldCoords.toTranslation2d(), robotPoseNow);
+            double unsignedDistanceToCenter = Math.abs(signedDistanceToCenter);
+            if (this.mostCentralValidGamepiece.isEmpty() || (unsignedDistanceToCenter < metersToMostCentralGamepiece)) {
+                this.mostCentralValidGamepiece = Optional.of(gamepieceLocation_fieldCoords);
+                metersToMostCentralGamepiece = unsignedDistanceToCenter;
+            }
+
+
         }
 
 
@@ -143,6 +214,35 @@ public class ColorCamera {
         // as an array of size 0 when it isn't present, and an array of size 1 when it is present.
         Logger.recordOutput(cam.getName()+"/closestValidGamepiece/location_fieldCoords", (closestValidGamepiece.isPresent()) ? new Translation3d[] {closestValidGamepiece.get()} : new Translation3d[0]);
         Logger.recordOutput(cam.getName()+"/closestValidGamepiece/distanceMeters", metersToClosestGamepiece);
+
+        Logger.recordOutput(cam.getName()+"/mostCentralValidGamepiece/location_fieldCoords", (mostCentralValidGamepiece.isPresent()) ? new Translation3d[] {mostCentralValidGamepiece.get()} : new Translation3d[0]);
+        Logger.recordOutput(cam.getName()+"/mostCentralValidGamepiece/lateralDistanceMeters", metersToMostCentralGamepiece);
+
+        Logger.recordOutput(cam.getName()+"/bestGamepieceForLeftIntake/location_fieldCoords", (bestGamepieceForLeftIntake.isPresent()) ? new Translation3d[] {bestGamepieceForLeftIntake.get()} : new Translation3d[0]);
+        Logger.recordOutput(cam.getName()+"/bestGamepieceForLeftIntake/lateralDistanceMeters", lateralMetersToBestGamepieceForLeftIntake);
+
+        Logger.recordOutput(cam.getName()+"/bestGamepieceForRightIntake/location_fieldCoords", (bestGamepieceForRightIntake.isPresent()) ? new Translation3d[] {bestGamepieceForRightIntake.get()} : new Translation3d[0]);
+        Logger.recordOutput(cam.getName()+"/bestGamepieceForRightIntake/lateralDistanceMeters", lateralMetersToBestGamepieceForRightIntake);
+
+        Optional<Translation3d> bestGamepieceForEitherIntake = Optional.empty();
+        double lateralMetersToBestGamepieceForEitherIntake = -1;
+        if (bestGamepieceForLeftIntake.isPresent() && bestGamepieceForRightIntake.isPresent()) {
+            boolean leftCloserThanRight = lateralMetersToBestGamepieceForLeftIntake <= lateralMetersToBestGamepieceForRightIntake;
+
+            bestGamepieceForEitherIntake = leftCloserThanRight ? bestGamepieceForLeftIntake : bestGamepieceForRightIntake;
+            lateralMetersToBestGamepieceForEitherIntake = leftCloserThanRight ? lateralMetersToBestGamepieceForLeftIntake : lateralMetersToBestGamepieceForRightIntake;
+        }
+        else if (bestGamepieceForLeftIntake.isPresent()) {
+            bestGamepieceForEitherIntake = bestGamepieceForLeftIntake;
+            lateralMetersToBestGamepieceForEitherIntake = lateralMetersToBestGamepieceForLeftIntake;
+        }
+        else if (bestGamepieceForRightIntake.isPresent()) {
+            bestGamepieceForEitherIntake = bestGamepieceForRightIntake;
+            lateralMetersToBestGamepieceForEitherIntake = lateralMetersToBestGamepieceForRightIntake;
+        }
+
+        Logger.recordOutput(cam.getName()+"/bestGamepieceForEitherIntake/location_fieldCoords", (bestGamepieceForEitherIntake.isPresent()) ? new Translation3d[] {bestGamepieceForEitherIntake.get()} : new Translation3d[0]);
+        Logger.recordOutput(cam.getName()+"/bestGamepieceForEitherIntake/lateralDistanceMeters", lateralMetersToBestGamepieceForEitherIntake);
     }
 
 

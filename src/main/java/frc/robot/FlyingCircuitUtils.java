@@ -121,6 +121,19 @@ public class FlyingCircuitUtils {
         return valueWhenNoComms;
     }
 
+    /** Positive to the left of the line, negative to the right of the line */
+    public static double signedDistanceToLine(Translation2d point, Pose2d line) {
+        Translation2d anchor = line.getTranslation();
+        Translation2d anchorToPoint = point.minus(anchor);
+
+        // normalToLine = new Translation2d(-line.getRotation().getSin(), line.getRotation().getCos());
+        double normalToLineX = -line.getRotation().getSin();
+        double normalToLineY =  line.getRotation().getCos();
+
+        // project onto line normal to get signed distance (same as <directionVectorAlongLine> cross <anchorToPoint>)
+        return anchorToPoint.getX() * normalToLineX + anchorToPoint.getY() * normalToLineY;
+    }
+
     // public String getBigCommandName(Command command) {
     //     String name = command.toString();
     //     command.raceWith(null)

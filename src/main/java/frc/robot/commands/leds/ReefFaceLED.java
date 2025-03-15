@@ -26,10 +26,10 @@ public class ReefFaceLED extends Command {
   public void execute() {
     String closestStalkName = drivetrain.getClosestReefFace().getName();
     if (closestStalkName.toLowerCase() == "a" || closestStalkName.toLowerCase() == "b"  || closestStalkName.toLowerCase() == "i" || closestStalkName.toLowerCase() == "j"|| closestStalkName.toLowerCase() == "f" || closestStalkName.toLowerCase() == "e") {
-      leds.red();
+    //   leds.red();
     }
     else {
-      leds.blue();
+    //   leds.blue();
     }
   }
 }

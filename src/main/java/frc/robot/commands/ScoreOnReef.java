@@ -221,6 +221,6 @@ public class ScoreOnReef extends Command {
         }
         
 
-        leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
+        // leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
     }
 }

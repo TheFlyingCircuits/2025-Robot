@@ -18,6 +18,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
@@ -149,7 +150,7 @@ public class RobotContainer {
 
         // testBindings();
         realBindings();
-        // triggers();
+        triggers();
 
     }
 
@@ -377,12 +378,14 @@ public class RobotContainer {
             return distanceToNearestStalk.getTranslation().getNorm() < 2;
         });
 
-        inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
+        // inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
 
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
-        hasCoral.onTrue(new ScheduleCommand(leds.coralControlledCommand()))
-            .onTrue(duncan.rumbleController(1.0).withTimeout(0.5))
-            .onFalse(new ScheduleCommand(leds.scoreCompleteCommand()));
+        hasCoral.onTrue(leds.strobeCommand(Color.kWhite, 4, 0.5).ignoringDisable(true));
+        hasCoral.onFalse(leds.strobeCommand(Color.kYellow, 4, 0.5).ignoringDisable(true));
+        // hasCoral.onTrue(new ScheduleCommand(leds.coralControlledCommand()))
+        //     .onTrue(duncan.rumbleController(1.0).withTimeout(0.5))
+        //     .onFalse(new ScheduleCommand(leds.scoreCompleteCommand()));
 
 
         inScoringDistance.and(hasCoral).and(DriverStation::isTeleop)
@@ -425,15 +428,6 @@ public class RobotContainer {
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
 
-        Command ledCommand = new ScheduleCommand(leds.run(() -> {
-            if (drivetrain.getBestCoralLocation().isEmpty()) {
-                leds.orange();
-            }
-            else {
-                leds.green();
-            }
-        }));
-
         return drivetrain.run(() -> {
             // have driver stay in control when the intake camera doesn't see a coral
             if (drivetrain.getBestCoralLocation().isEmpty()) {
@@ -443,7 +437,7 @@ public class RobotContainer {
 
             // drive towards the coral when the intake camera does see a coral.
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
-        }).alongWith(ledCommand).raceWith(intakeUntilCoralAcquired());
+        }).raceWith(intakeUntilCoralAcquired());
     }
 
     /**** SCORING ****/

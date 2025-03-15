@@ -44,6 +44,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.FlyingCircuitUtils;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
@@ -640,10 +641,33 @@ public class Drivetrain extends SubsystemBase {
         }
     }
 
+    public void driveTowardsCoral(ChassisSpeeds rawSpeedRequest) {
+        Optional<Translation3d> bestLeftGamePiece = intakeCam.getBestGamepieceForLeftIntake();
+        Optional<Translation3d> bestRightGamePiece = intakeCam.getBestGamepieceForRightIntake();
+        Translation2d targetGamepiece;
+        boolean isLeft;
+        if (bestLeftGamePiece.isPresent() && bestRightGamePiece.isPresent()) {
+            double leftDistMeters = Math.abs(ColorCamera.signedDistanceToIntake(Direction.left, bestLeftGamePiece.get(), getPoseMeters()));
+            double rightDistMeters = Math.abs(ColorCamera.signedDistanceToIntake(Direction.right, bestRightGamePiece.get(), getPoseMeters()));
+
+            // anchor
+        }
+        else if (bestLeftGamePiece.isPresent()) {
+            // targetGamePieceField = bestLeftGamePiece.get().toTranslation2d();
+        }
+        else if (bestRightGamePiece.isPresent()) {
+            // targetGamePieceField = bestRightGamePiece.get().toTranslation2d();
+        }
+        else {
+            return;
+        }
+    }
+
     /**
      * Drives towards the given location while pointing the intake at that location
      * @param noteLocation
      */
+    //TODO: REMOVE ARGUMENT AND DECIDE ON ONE APPROACH
     public void driveTowardsCoral(Translation2d coralLocation) {
 
         Translation2d frontOfRobot = fieldCoordsFromRobotCoords(new Translation2d(Units.inchesToMeters(10), 0));
@@ -651,6 +675,7 @@ public class Drivetrain extends SubsystemBase {
 
         Rotation2d directionToPointIn = coralToRobot.getAngle();
 
+        
         //if the coral is far, approach with strafe (otherwise rotate back straight)
         if (coralToRobot.getNorm() > DrivetrainConstants.frameWidthMeters) {
             //if the coral is left side of the robot, rotate left
