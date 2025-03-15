@@ -297,7 +297,8 @@ public class RobotContainer {
             .whileTrue(
                 new ConditionalCommand(
                 intakeTowardsCoralBrandNewUntested(duncan::getRequestedFieldOrientedVelocity),
-                intakeUntilCoralAcquired().alongWith(null),
+                intakeUntilCoralAcquired().alongWith(
+                    drivetrain.drivetrainDefaultCommand(duncan::getRequestedFieldOrientedVelocity)),
                 () -> visionAssistedIntakeInTeleop)
         );
         

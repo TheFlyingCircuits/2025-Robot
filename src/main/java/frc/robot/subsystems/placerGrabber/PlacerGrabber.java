@@ -4,6 +4,7 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -27,6 +28,12 @@ public class PlacerGrabber extends SubsystemBase {
 
     private PIDController frontNeoPID;
     private PIDController sideNeoPID;
+
+    Debouncer leftDebouncer = new Debouncer(0.05);
+    Debouncer rightDebouncer = new Debouncer(0.05);
+
+    boolean leftHasCoral;
+    boolean rightHasCoral;
 
     LinearFilter frontCurrentMovingWindow = LinearFilter.singlePoleIIR(0.4, 0.02);
     double frontRollerAvgCurrent = 0;
@@ -63,7 +70,7 @@ public class PlacerGrabber extends SubsystemBase {
 
 
     public boolean doesHaveCoral() {
-        return inputs.leftSensorSeesCoral || inputs.rightSensorSeesCoral;
+        return leftHasCoral || rightHasCoral;
     }
 
     public boolean hasSingleCoral() {
@@ -71,11 +78,11 @@ public class PlacerGrabber extends SubsystemBase {
     }
 
     public boolean doesHaveTwoCoral() {
-        return inputs.leftSensorSeesCoral && inputs.rightSensorSeesCoral;
+        return leftHasCoral && rightHasCoral;
     }
 
     public Direction sideCoralIsIn() {
-        if (inputs.leftSensorSeesCoral)
+        if (leftHasCoral)
             return Direction.left;
         else
              return Direction.right;
@@ -92,6 +99,8 @@ public class PlacerGrabber extends SubsystemBase {
 
         frontRollerAvgCurrent = frontCurrentMovingWindow.calculate(inputs.frontMotorAppliedCurrent);
 
+        leftHasCoral = leftDebouncer.calculate(inputs.leftSensorSeesCoral);
+        rightHasCoral = rightDebouncer.calculate(inputs.rightSensorSeesCoral);
 
         
         Logger.processInputs("placerGrabberInputs", inputs);
