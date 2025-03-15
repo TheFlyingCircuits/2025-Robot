@@ -42,7 +42,7 @@ public class WristIONeo implements WristIO{
             .velocityConversionFactor(360/60/WristConstants.gearReduction);
 
         config.idleMode(IdleMode.kBrake)
-            .smartCurrentLimit(30)
+            .smartCurrentLimit(20)
             .inverted(true);
 
         config.softLimit.forwardSoftLimitEnabled(false);
@@ -54,7 +54,8 @@ public class WristIONeo implements WristIO{
     }
 
     private double getAbsoluteAngleDegrees(double analogInputVolts) {
-        double magnetDegreesWhenWristAtZero = -204.1;
+        // double magnetDegreesWhenWristAtZero = -204.1; //original placergrabber
+        double magnetDegreesWhenWristAtZero = -369;
         return analogInputVolts * this.getAnalogInputDegreesPerVolt() - magnetDegreesWhenWristAtZero;
     }
 

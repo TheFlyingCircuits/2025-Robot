@@ -81,6 +81,7 @@ public class Arm {
 
         private Command retractThenHome() {
             return this.run(() -> {
+                // Logger.recordOutput("homingExtentsion", true);
                 io.setExtensionTargetLength(ArmConstants.minExtensionMeters);
             }).until(() -> {
                 return inputs.extensionLengthMeters < (ArmConstants.minExtensionMeters + Units.inchesToMeters(1));
@@ -90,12 +91,17 @@ public class Arm {
 
         public Command homeExtensionCommand() {
             return this.run(() -> {
+                Logger.recordOutput("arm/homingExtension", true);
                 io.setExtensionMotorVolts(-1);
             }).until(() -> {
-                boolean highCurrent = Math.abs(inputs.extensionStatorCurrent) > 5;
-                boolean standingStill = Math.abs(inputs.extensionLengthMetersPerSecond) < 0.001;
+                boolean highCurrent = Math.abs(inputs.extensionStatorCurrent) > 15;
+                boolean standingStill = Math.abs(inputs.extensionLengthMetersPerSecond) < 0.005;
                 return highCurrent && standingStill;
-            }).andThen(new InstantCommand(() -> {io.setExtensionEncoderPositionToMin();;}));
+            }).andThen(
+                new InstantCommand(() -> {
+                    io.setExtensionEncoderPositionToMin();
+                    Logger.recordOutput("arm/homingExtension", false);
+                }));
         }
 
     }

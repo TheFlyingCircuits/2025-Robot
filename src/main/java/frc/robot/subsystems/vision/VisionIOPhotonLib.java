@@ -44,13 +44,17 @@ public class VisionIOPhotonLib implements VisionIO {
         // intakeCamera = new PhotonCamera("intakeCam");
 
         System.gc();
-
-        tagCameras = Arrays.asList(
-            new PhotonCamera(VisionConstants.tagCameraNames[0]),
-            new PhotonCamera(VisionConstants.tagCameraNames[1]),
-            new PhotonCamera(VisionConstants.tagCameraNames[2]),
-            new PhotonCamera(VisionConstants.tagCameraNames[3])
-        );
+        
+        tagCameras = new ArrayList<PhotonCamera>();
+        for (String name : VisionConstants.tagCameraNames) {
+            tagCameras.add(new PhotonCamera(name));
+        }
+        // tagCameras = Arrays.asList(
+        //     new PhotonCamera(VisionConstants.tagCameraNames[0]),
+        //     new PhotonCamera(VisionConstants.tagCameraNames[1]),
+        //     new PhotonCamera(VisionConstants.tagCameraNames[2])
+        //     // new PhotonCamera(VisionConstants.tagCameraNames[3])
+        // );
 
         /* When in demo mode, the apriltags will probably be pitched/rolled a bit
          * relative to their normal vertical orientation because they will be held

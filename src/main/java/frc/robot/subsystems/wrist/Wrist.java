@@ -45,7 +45,10 @@ public class Wrist extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("wristInputs", inputs);
 
-        if (homingTimer.advanceIfElapsed(5) && inputs.wristDegreesPerSecond == 0 && Math.abs(inputs.motorOutputVoltage) < 0.1) {
+        if (homingTimer.advanceIfElapsed(2)
+                && Math.abs(inputs.wristDegreesPerSecond) < 0.01
+                    && inputs.wristAngleDegrees > 135
+                        && inputs.absoluteAngleDegrees > 135) {
             io.setWristPosition(inputs.absoluteAngleDegrees);
             homingTimer.restart();
         }
@@ -57,7 +60,7 @@ public class Wrist extends SubsystemBase {
 
 
     public double getWristAngleDegrees() {
-        return inputs.absoluteAngleDegrees;
+        return inputs.wristAngleDegrees;
     }
 
     public double getTargetWristDegrees() {
@@ -66,7 +69,7 @@ public class Wrist extends SubsystemBase {
 
     private void moveToTargetPosition() {
         
-        double outputVolts = (wristNeoPID.calculate(inputs.absoluteAngleDegrees, desiredWristPositionDegrees));
+        double outputVolts = (wristNeoPID.calculate(inputs.wristAngleDegrees, desiredWristPositionDegrees));
         // if (wristNeoPID.atSetpoint()) {
         //     outputVolts = 0;
         // }

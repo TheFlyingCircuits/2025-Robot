@@ -30,7 +30,7 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
         // configures both Neos
         SparkMaxConfig sideNeoConfig = new SparkMaxConfig();
         sideNeoConfig.idleMode(IdleMode.kBrake);
-        sideNeoConfig.smartCurrentLimit(50);
+        sideNeoConfig.smartCurrentLimit(40);
 
         sideNeoConfig.inverted(false);
         sideNeoConfig.limitSwitch.reverseLimitSwitchEnabled(false);

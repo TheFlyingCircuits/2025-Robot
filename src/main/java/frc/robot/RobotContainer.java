@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -13,6 +14,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -30,8 +32,10 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.Constants.WristConstants;
+import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.ScoreOnReef;
@@ -145,7 +149,7 @@ public class RobotContainer {
 
         // testBindings();
         realBindings();
-        triggers();
+        // triggers();
 
     }
 
@@ -194,8 +198,8 @@ public class RobotContainer {
 
         //eject
         duncanController.leftBumper().whileTrue(
-            placerGrabber.setPlacerGrabberVoltsCommand(-9, 0).until(() -> !placerGrabber.doesHaveCoral())
-                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(-9, 0).withTimeout(0.5))
+            placerGrabber.setPlacerGrabberVoltsCommand(-9, 0).withName("startEject").until(() -> !placerGrabber.doesHaveCoral()).withName("ejectUntilSensor")
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(-9, 0).withName("finishEject").withTimeout(0.5).withName("finishEjectWithTimeout")).withName("fullEjectCommand")
         );
                 
 
@@ -235,21 +239,21 @@ public class RobotContainer {
    
 
         //CLIMB PREP
-        duncanController.povUp().onTrue(
-            new ParallelCommandGroup(
-                arm.shoulder.setTargetAngleCommand(101.4),
-                wrist.setTargetPositionCommand(0)
-            )
-        );
+        // duncanController.povUp().onTrue(
+        //     new ParallelCommandGroup(
+        //         arm.shoulder.setTargetAngleCommand(101.4),
+        //         wrist.setTargetPositionCommand(0)
+        //     )
+        // );
 
         //CLIMB PULL
-        duncanController.povDown().whileTrue(
-            arm.shoulder.run(() -> arm.setShoulderVoltage(-3))
-                .alongWith(
-                    wrist.setTargetPositionCommand(13),
-                    arm.extension.setTargetLengthCommand(0.75))
+        // duncanController.povDown().whileTrue(
+        //     arm.shoulder.run(() -> arm.setShoulderVoltage(-3))
+        //         .alongWith(
+        //             wrist.setTargetPositionCommand(13),
+        //             arm.extension.setTargetLengthCommand(0.75))
 
-        );
+        // );
 
         //reset arm
         duncanController.x().onTrue(
@@ -260,14 +264,16 @@ public class RobotContainer {
                 )   
         );
 
+        //DESCORE ALGAE
 
-        
+        // duncanController.povDown().whileTrue(descoreAlgaeSwipe());
     }
 
     private void realBindings() {
         amaraController.rightBumper().onTrue(new InstantCommand(() -> desiredStalk = Direction.right));
         amaraController.leftBumper().onTrue(new InstantCommand(() -> desiredStalk = Direction.left));
 
+        amaraController.b().onTrue(new InstantCommand(() -> desiredLevel = 1));
         amaraController.a().onTrue(new InstantCommand(() -> desiredLevel = 2));
         amaraController.x().onTrue(new InstantCommand(() -> desiredLevel = 3));
         amaraController.y().onTrue(new InstantCommand(() -> desiredLevel = 4));
@@ -279,6 +285,22 @@ public class RobotContainer {
                 intakeUntilCoralAcquired()
         );
         
+        //trough score
+        duncanController.leftTrigger()
+            .whileTrue(
+                arm.shoulder.setTargetAngleCommand(12.5)
+                    .alongWith(
+                        arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
+                        wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees)
+                    )
+            ).onFalse(
+                scoreCoral(true)
+                .raceWith(
+                    arm.shoulder.setTargetAngleCommand(12.5),
+                    arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
+                    wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees)
+                )
+            );
 
         //reef score
         duncanController.rightBumper()
@@ -297,7 +319,10 @@ public class RobotContainer {
         
         //descore algae
         duncanController.a().whileTrue(
-            new ConditionalCommand(descoreAlgaeHigh(), descoreAlgaeLow(), () -> drivetrain.getClosestReefFace().getIfAlgaeL3())
+            new ConditionalCommand(
+                descoreAlgaeHigh(),
+                descoreAlgaeLow(),
+                () -> drivetrain.getClosestReefFace().isHighAlgae())
         );
 
         //reset arm
@@ -342,7 +367,7 @@ public class RobotContainer {
 
         // removes algae
         duncanController.a().whileTrue(
-            new ConditionalCommand(descoreAlgaeHigh(), descoreAlgaeLow(), () -> drivetrain.getClosestReefFace().getIfAlgaeL3())
+            new ConditionalCommand(descoreAlgaeHigh(), descoreAlgaeLow(), () -> drivetrain.getClosestReefFace().isHighAlgae())
         );
     }
 
@@ -387,12 +412,14 @@ public class RobotContainer {
     private Command intakeUntilCoralAcquired() {
         Command armToIntake = new ParallelCommandGroup(
             arm.shoulder.safeSetTargetAngleCommand(ArmConstants.armMinAngleDegrees),
-            arm.extension.setTargetLengthCommand(0.76),
+            arm.extension.setTargetLengthCommand(0.77),
             wrist.setTargetPositionCommand(-3)
         ).withName("armToIntakePositionCommand");
 
-        return armToIntake.raceWith(placerGrabber.intakeOrEjectOrStop().until(placerGrabber::hasSingleCoral))
+        return armToIntake.raceWith(placerGrabber.intakeOrEjectOrStop().until(placerGrabber::doesHaveCoral))
         .withName("intakeUntilCoralAcquired");
+
+        // return armToIntake.alongWith(placerGrabber.setPlacerGrabberVoltsCommand(11, 11));
 
     }
 
@@ -443,7 +470,7 @@ public class RobotContainer {
         ScoreOnReef align = new ScoreOnReef(drivetrain, arm, wrist, translationController, reefBranch, leds, () -> placerGrabber.sideCoralIsIn(), isFacingReef);
         align.setName("alignToReef");
         Command waitForAlignment = new WaitUntilCommand(align::readyToScore).withName("waitForAlignmentToReef");
-        Command scoreCoral = scoreCoral().withName("scoreCoral");
+        Command scoreCoral = scoreCoral(false).withName("scoreCoral");
         return align.raceWith(waitForAlignment.andThen(scoreCoral)).withName("alignWithReefRace").andThen(
             drivetrain.run(() -> {
                 ChassisSpeeds driveBackwards = this.isFacingReef() ? new ChassisSpeeds(-0.5, 0, 0) : new ChassisSpeeds(0.5, 0, 0);
@@ -452,7 +479,7 @@ public class RobotContainer {
         ).withName("fullScoreOnReefCommand");
     }
 
-    public Command scoreCoral() {
+    public Command scoreCoral(boolean troughScore) {
         return placerGrabber.run(() -> {
                 double volts = this.isFacingReef() ? 11 : -11;
                 placerGrabber.setFrontRollerVolts(volts);
@@ -461,76 +488,91 @@ public class RobotContainer {
                 double volts = this.isFacingReef() ? 11 : -11;
                 placerGrabber.setFrontRollerVolts(volts);
 
+                if (troughScore) {
+                    placerGrabber.setSideRollerVolts(-8);
+                }
+                else {
+                    placerGrabber.setSideRollerVolts(0);
+                }
+
             }).withTimeout(0.25)
         );
     }
 
-    //TODO: GET SETPOINTS AND TEST THIS
-    public Command descoreAlgaeLowSwipe() {
-        return new ParallelCommandGroup( //in parallel, prep arm angle and get on driving line
-                arm.shoulder.setTargetAngleCommand(34),
-                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() > 25).andThen(arm.extension.setTargetLengthCommand(0.77)),
-                wrist.setTargetPositionCommand(WristConstants.minAngleDegrees),
-                drivetrain.run(() -> {
-                    Pose2d lineToDriveOn = new Pose2d(
-                        drivetrain.getClosestReefFace().getPose2d().getTranslation(),
-                        drivetrain.getClosestReefFace().getPose2d().getRotation().rotateBy(Rotation2d.fromDegrees(180))
-                    );
+    public Command descoreAlgaeHigh() {
 
-                    drivetrain.fieldOrientedDriveOnALine(
-                        duncan.getRequestedFieldOrientedVelocity(), 
-                        lineToDriveOn
-                    );
-            })).raceWith(new WaitUntilCommand( //wait until we approach the algae
-                () -> {
-                    Translation2d reefFace = drivetrain.getClosestReefFace().getPose2d().getTranslation();
-                    Translation2d robot = drivetrain.getPoseMeters().getTranslation();
-                    return reefFace.getDistance(robot) < 1;
-                }
-            )).andThen( //swipe up with the arm
-                arm.shoulder.setTargetAngleCommand(50).until(() -> arm.getShoulderAngleDegrees() > 45)
+        Command driveToReef = drivetrain.run(() -> {
+                Pose2d reefFacePose = drivetrain.getClosestReefFace().getPose2d();
+                Transform2d adjustmentRelativeToFace = new Transform2d(
+                    DrivetrainConstants.frameWidthMeters/2 + Units.inchesToMeters(3.5) + FieldConstants.coralOuterDiameterMeters,
+                    0,
+                    Rotation2d.k180deg);
+
+                drivetrain.pidToPose(reefFacePose.plus(adjustmentRelativeToFace), 2);
+            });
+
+
+        Command waitUntilCloseEnough = new WaitUntilCommand(() -> {
+            return drivetrain.getTranslationError() < 0.2;
+        });
+
+        Command prepArm = arm.shoulder.setTargetAngleCommand(53)
+            .alongWith(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5));
+
+        Command waitThenPunch = new WaitUntilCommand(() -> {
+            return arm.getShoulderAngleDegrees() > 45 && arm.getShoulderAngleDegrees() < 56;})
+            .andThen(arm.extension.setTargetLengthCommand(1.27))
+            .until(() -> arm.getExtensionMeters() > 1.15);
+
+        Command swingUp = arm.shoulder.setTargetAngleCommand(73)
+            .alongWith(
+                arm.extension.setTargetLengthCommand(1.27),
+                wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5)
             );
+
+        return driveToReef.raceWith(
+            waitUntilCloseEnough.andThen(prepArm),
+            waitThenPunch //this command will end, the others never do
+        ).andThen(new ScheduleCommand(swingUp));           
     }
 
     public Command descoreAlgaeLow() {
-        return arm.shoulder.setTargetAngleCommand(34)
-            .alongWith(
-                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() > 25).andThen(arm.extension.setTargetLengthCommand(0.77)),
-                wrist.setTargetPositionCommand(WristConstants.minAngleDegrees),
-                placerGrabber.setPlacerGrabberVoltsCommand(-10, 0),
-                drivetrain.run(() -> {
-                    Pose2d lineToDriveOn = new Pose2d(
-                        drivetrain.getClosestReefFace().getPose2d().getTranslation(),
-                        drivetrain.getClosestReefFace().getPose2d().getRotation().rotateBy(Rotation2d.fromDegrees(180))
-                    );
 
-                    drivetrain.fieldOrientedDriveOnALine(
-                        duncan.getRequestedFieldOrientedVelocity(), 
-                        lineToDriveOn
-                    );
-                })
-        );
+        Command driveToReef = drivetrain.run(() -> {
+                Pose2d reefFacePose = drivetrain.getClosestReefFace().getPose2d();
+                Transform2d adjustmentRelativeToFace = new Transform2d(
+                    DrivetrainConstants.frameWidthMeters/2 + Units.inchesToMeters(3.5) + FieldConstants.coralOuterDiameterMeters,
+                    0,
+                    Rotation2d.k180deg);
+
+                drivetrain.pidToPose(reefFacePose.plus(adjustmentRelativeToFace), 2);
+            });
+
+
+        Command waitUntilCloseEnough = new WaitUntilCommand(() -> {
+            return drivetrain.getTranslationError() < 0.2;
+        });
+
+        Command prepArm = arm.shoulder.setTargetAngleCommand(36)
+            .alongWith(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5));
+
+        Command waitThenPunch = new WaitUntilCommand(() -> {
+            return arm.getShoulderAngleDegrees() > 26 && arm.getShoulderAngleDegrees() < 46;})
+            .andThen(arm.extension.setTargetLengthCommand(0.90))
+            .until(() -> arm.getExtensionMeters() > 0.8);
+
+        Command swingUp = arm.shoulder.setTargetAngleCommand(73)
+            .alongWith(
+                arm.extension.setTargetLengthCommand(0.90),
+                wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5)
+            );
+
+        return driveToReef.raceWith(
+            waitUntilCloseEnough.andThen(prepArm),
+            waitThenPunch //this command will end, the others never do
+        ).andThen(new ScheduleCommand(swingUp));           
     }
 
-    public Command descoreAlgaeHigh() {
-        return arm.shoulder.setTargetAngleCommand(47)
-            .alongWith(
-                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() > 40).andThen(arm.extension.setTargetLengthCommand(0.93)),
-                wrist.setTargetPositionCommand(0),
-                placerGrabber.setPlacerGrabberVoltsCommand(10, 0),
-                drivetrain.run(() -> {
-                    Pose2d lineToDriveOn = new Pose2d(
-                        drivetrain.getClosestReefFace().getPose2d().getTranslation(),
-                        drivetrain.getClosestReefFace().getPose2d().getRotation().rotateBy(Rotation2d.fromDegrees(180))
-                    );
-
-                    drivetrain.fieldOrientedDriveOnALine(
-                        duncan.getRequestedFieldOrientedVelocity(), 
-                        lineToDriveOn
-                    );
-                })
-        );
-    }
 
     /*** AUTO ***/
 

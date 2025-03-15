@@ -86,7 +86,7 @@ public class ArmIOKraken implements ArmIO{
         extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.maxExtensionMeters;
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.minExtensionMeters;
+        extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.minExtensionMeters-0.05;
 
         extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 4; //mps of the extension
         extensionConfig.MotionMagic.MotionMagicAcceleration = 6; //m/s^2 of the extension

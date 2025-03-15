@@ -54,14 +54,19 @@ public class ScoreOnReef extends Command {
     }
 
     public boolean readyToScore() {
-        if ((Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees())) < 0.7 && 
-                (Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02) &&
-                    (Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 1) && 
-                        drivetrain.isAngleAligned() &&
-                            drivetrain.translationControllerAtSetpoint()) {
-            return true;
-        }
-        return false;
+        boolean shoulderReady = Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees()) < 1;
+        boolean extensionReady = Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02;
+        boolean wristReady = Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 1;
+        boolean driveAngleGood = drivetrain.isAngleAligned();
+        boolean driveTranslationGood = drivetrain.translationControllerAtSetpoint();
+
+        Logger.recordOutput("scoreOnReef/shoulderReady", shoulderReady);
+        Logger.recordOutput("scoreOnReef/extensionReady", extensionReady);
+        Logger.recordOutput("scoreOnReef/wristReady", wristReady);
+        Logger.recordOutput("scoreOnReef/driveAngleGood", driveAngleGood);
+        Logger.recordOutput("scoreOnReef/driveTranslationGood", driveTranslationGood);
+
+        return shoulderReady && extensionReady && wristReady && driveAngleGood && driveTranslationGood;
     }
 
 
@@ -83,13 +88,14 @@ public class ScoreOnReef extends Command {
         double adjustedY;
         Rotation2d rotation = Rotation2d.fromDegrees(180);
 
-        // commenting out pivot side score for now because haven't tested it
         if (isFacingForward) {
             rotation = Rotation2d.fromDegrees(180);
         } else {
             rotation = new Rotation2d();
         }
 
+
+        
         if (((sideCoralIsIn == Direction.left) & isFacingForward) || ((sideCoralIsIn == Direction.right) & !isFacingForward)) {
             adjustedY = Units.inchesToMeters(3.25);
         } else {
@@ -125,8 +131,7 @@ public class ScoreOnReef extends Command {
         if (isFacingReef.get()) {            
             switch (reefBranch.get().getLevel()) {
                 case 1:
-                    //TODO: implement
-                    break;
+                    return new ArmPosition(13, WristConstants.maxAngleDegrees - 5, ArmConstants.minExtensionMeters);
                 case 2:
                     //2 coral distance
                     return new ArmPosition(35.3, 98, 0.845);

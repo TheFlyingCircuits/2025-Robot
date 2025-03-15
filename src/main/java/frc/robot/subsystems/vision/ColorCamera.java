@@ -100,7 +100,7 @@ public class ColorCamera {
             Translation3d gamepieceLocation_fieldCoords = gamepieceLocation_robotCoords.rotateBy(robotPoseWhenPicTaken.getRotation()).plus(robotPoseWhenPicTaken.getTranslation());
 
             // Don't track gamepieces outside the field perimeter.
-            double inFieldToleranceMeters = 0.;
+            double inFieldToleranceMeters = 0.1;
             if (!FlyingCircuitUtils.isInField(gamepieceLocation_fieldCoords, inFieldToleranceMeters)) {
                 invalidGamepieces.add(gamepieceLocation_fieldCoords);
                 continue;
@@ -108,7 +108,7 @@ public class ColorCamera {
 
             // Don't track gamepieces too far away from the robot.
             double maxMetersFromRobot = 2.5;
-            double minMetersFromRobot = (DrivetrainConstants.frameWidthMeters / 2.0) + Units.inchesToMeters(8);
+            double minMetersFromRobot = 0.6;//(DrivetrainConstants.frameWidthMeters / 2.0) + Units.inchesToMeters(8);
             double metersFromRobot = gamepieceLocation_fieldCoords.toTranslation2d().getDistance(robotPoseNow.getTranslation()); // gamepieceLocation_robotCoords.toTranslation2d().getNorm() doesn't take into account any robot travel since the pic was taken.
             if (metersFromRobot > maxMetersFromRobot || metersFromRobot < minMetersFromRobot) {
                 invalidGamepieces.add(gamepieceLocation_fieldCoords);

@@ -4,6 +4,7 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -21,6 +22,9 @@ public class PlacerGrabber extends SubsystemBase {
 
     private PIDController frontNeoPID;
     private PIDController sideNeoPID;
+
+    LinearFilter frontCurrentMovingWindow = LinearFilter.singlePoleIIR(0.4, 0.02);
+    double frontRollerAvgCurrent = 0;
 
     public PlacerGrabber(PlacerGrabberIO io) {
         this.io = io;
@@ -52,14 +56,6 @@ public class PlacerGrabber extends SubsystemBase {
         io.setFrontNeoVolts(feedforwardVolts + pidVolts);
     }
 
-    /** Sets the RPM of the side roller with feedback control. A positive rpm represents an intake. */
-    public void setSideRollerRPM(double rpm) {
-
-        double feedforwardVolts = motorFeedforward.calculate(rpm);
-        double pidVolts = sideNeoPID.calculate(inputs.sideRollerRPM, rpm);
-
-        io.setFrontNeoVolts(feedforwardVolts + pidVolts);
-    }
 
     public boolean doesHaveCoral() {
         return inputs.leftSensorSeesCoral || inputs.rightSensorSeesCoral;
@@ -79,10 +75,17 @@ public class PlacerGrabber extends SubsystemBase {
         else
              return Direction.right;
     }
+    
+    public double getFrontRollerAvgCurrent() {
+        // 6 as cutoff for intaking
+        return frontRollerAvgCurrent;
+    }
 
     @Override
     public void periodic() {
         io.updateInputs(inputs);
+
+        frontRollerAvgCurrent = frontCurrentMovingWindow.calculate(inputs.frontMotorAppliedCurrent);
 
 
         
@@ -90,6 +93,7 @@ public class PlacerGrabber extends SubsystemBase {
 
         Logger.recordOutput("frontRollerRPM", inputs.frontRollerRPM);
         Logger.recordOutput("sideRollerRPM", inputs.sideRollerRPM);
+        Logger.recordOutput("frontRollerAvgCurrent", frontRollerAvgCurrent);
     }
 
     public Command setPlacerGrabberVoltsCommand(double frontRollerVolts, double sideRollervolts) {
@@ -97,6 +101,10 @@ public class PlacerGrabber extends SubsystemBase {
             setFrontRollerVolts(frontRollerVolts);
             setSideRollerVolts(sideRollervolts);
         });
+    }
+
+    public boolean doesHaveCoralBasedOnAmps() {
+        return this.frontRollerAvgCurrent > 8.0;
     }
 
     public Command intakeOrEjectOrStop() {

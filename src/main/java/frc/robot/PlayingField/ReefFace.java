@@ -70,7 +70,7 @@ public class ReefFace implements FieldElement {
         return new ReefBranch[] {leftStalk.getBranch(branchLevel), rightStalk.getBranch(branchLevel)};
     }
 
-    public Boolean getIfAlgaeL3() {
+    public Boolean isHighAlgae() {
         return isAlgaeInL3;
     }
 

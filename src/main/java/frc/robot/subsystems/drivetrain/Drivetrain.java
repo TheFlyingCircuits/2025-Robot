@@ -672,6 +672,10 @@ public class Drivetrain extends SubsystemBase {
         return angleController.getError();
     }
 
+    public double getTranslationError() {
+        return translationController.getError();
+    }
+
     @Override
     public void periodic() {
         gyroIO.updateInputs(gyroInputs);
