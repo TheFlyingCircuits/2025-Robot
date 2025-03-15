@@ -599,10 +599,10 @@ public class RobotContainer {
             arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
             wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5),
             drivetrain.run(() -> {
-                Transform2d poseAdjustment = new Transform2d(2, 0, Rotation2d.k180deg);
+                Transform2d poseAdjustment = new Transform2d(2, 0, new Rotation2d());
                 drivetrain.pidToPose(drivetrain.getClosestSourceSide().getPose2d().plus(poseAdjustment), 3.5);
             })
-        ).until(() -> arm.getShoulderAngleDegrees() < 30);
+        ).until(() -> arm.getShoulderAngleDegrees() < 40);
     }
 
 
