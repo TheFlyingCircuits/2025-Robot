@@ -246,9 +246,9 @@ public final class Constants {
 
 
         //Follow the mount calibration process in Phoenix Tuner to determine these
-        public static final double mountPoseYawDegrees = 0.7333114147186279;
-        public static final double mountPosePitchDegrees = -0.11852765083312988;
-        public static final double mountPoseRollDegrees = -1.0425487756729126;
+        public static final double mountPoseYawDegrees = 92.07196807861328;
+        public static final double mountPosePitchDegrees = -0.24960607290267944;
+        public static final double mountPoseRollDegrees = -0.591957151889801;
     }
 
     public final static class VisionConstants {
