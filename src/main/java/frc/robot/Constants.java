@@ -282,7 +282,7 @@ public final class Constants {
         );
 
         public final static Transform3d robotToBackLeft = new Transform3d(
-            new Translation3d(-0.184-0.057, Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
+            new Translation3d(-0.184, Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
             new Rotation3d(0, Math.toRadians(8), Math.toRadians(17.772-180))
         );
 
@@ -293,7 +293,7 @@ public final class Constants {
         );
 
         public final static Transform3d robotToBackRight = new Transform3d(
-            new Translation3d(-Units.inchesToMeters(7.248)-0.051, -Units.inchesToMeters(11.275)+0.032, Units.inchesToMeters(7.281)),
+            new Translation3d(-Units.inchesToMeters(7.248), -Units.inchesToMeters(11.275), Units.inchesToMeters(7.281)),
             new Rotation3d(0, Math.toRadians(8), Math.toRadians(-17.772+180))
         );
 

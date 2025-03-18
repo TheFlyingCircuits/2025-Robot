@@ -75,7 +75,7 @@ public class Arm {
                     }
 
                     if (!isFacingReef.getAsBoolean()) {
-                        setShoulderTargetAngle(90);
+                        setShoulderTargetAngle(60);
                         return;
                     }
 

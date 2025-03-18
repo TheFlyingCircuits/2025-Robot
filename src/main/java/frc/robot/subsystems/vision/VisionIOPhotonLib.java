@@ -162,8 +162,6 @@ public class VisionIOPhotonLib implements VisionIO {
     private Optional<VisionMeasurement> updateTagCamera(PhotonCamera camera, PhotonPoseEstimator estimator) {
         VisionMeasurement output = new VisionMeasurement();
 
-        System.out.println("updateTagCameraStart: " + camera.getName());
-
         List<PhotonPipelineResult> pipelineResults = camera.getAllUnreadResults();
 
         if (pipelineResults.isEmpty()) return Optional.empty();
