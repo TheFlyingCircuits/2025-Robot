@@ -53,6 +53,7 @@ import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIOKraken;
 import frc.robot.subsystems.arm.ArmIOSim;
+import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
@@ -143,9 +144,12 @@ public class RobotContainer {
         
         arm.extension.setDefaultCommand(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters));
 
-        //wait until extension retracts to lower arm
         arm.shoulder.setDefaultCommand(
-            arm.shoulder.safeSetTargetAngleCommand(0)
+            arm.shoulder.shoulderDefaultCommand(
+                () -> placerGrabber.doesHaveCoral() && drivetrain.inScoringDistance(),
+                () -> isFacingReef(),
+                () -> desiredLevel
+            )
         );
 
         wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-10)); // 10 volts
@@ -163,7 +167,7 @@ public class RobotContainer {
     private int desiredLevel = 2;
     private Direction desiredStalk = Direction.left;
 
-    private boolean visionAssistedIntakeInTeleop = true;
+    private boolean visionAssistedIntakeInTeleop = false;
 
     private void testBindings() {
 
@@ -235,17 +239,6 @@ public class RobotContainer {
         // );
 
 
-        //alternate intake sequence for testing
-        duncanController.rightTrigger()
-            .whileTrue(
-                new ParallelDeadlineGroup(
-                    new WaitUntilCommand(() -> placerGrabber.doesHaveCoral()),
-                    intakeTowardsCoral(duncan::getRequestedFieldOrientedVelocity)
-                        .alongWith(drivetrain.drivetrainDefaultCommand(duncan::getRequestedFieldOrientedVelocity))
-                ).withName("intakeTowardsCoral")
-                
-                .andThen(new PrintCommand("intake ended!!!!!!!!"))
-        );
    
 
         //CLIMB PREP
@@ -299,7 +292,7 @@ public class RobotContainer {
         duncanController.rightTrigger()
             .whileTrue(
                 new ConditionalCommand(
-                intakeTowardsCoralBrandNewUntested(duncan::getRequestedFieldOrientedVelocity),
+                intakeTowardsCoral(duncan::getRequestedFieldOrientedVelocity),
                 intakeUntilCoralAcquired().alongWith(
                     drivetrain.drivetrainDefaultCommand(duncan::getRequestedFieldOrientedVelocity)),
                 () -> visionAssistedIntakeInTeleop)
@@ -391,23 +384,11 @@ public class RobotContainer {
     }
 
     private void triggers() {
-        Trigger inScoringDistance = new Trigger(()-> { // becomes true when distance to nearest reef stalk is within x meters
-            Transform2d distanceToNearestStalk = drivetrain.getClosestReefStalk().getPose2d().minus(drivetrain.getPoseMeters());
-            return distanceToNearestStalk.getTranslation().getNorm() < 2;
-        });
-
-        // inScoringDistance.whileTrue(new ReefFaceLED(leds,drivetrain));
 
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.strobeCommand(Color.kWhite, 4, 0.5).ignoringDisable(true));
         hasCoral.onFalse(leds.strobeCommand(Color.kYellow, 4, 0.5).ignoringDisable(true));
-        // hasCoral.onTrue(new ScheduleCommand(leds.coralControlledCommand()))
-        //     .onTrue(duncan.rumbleController(1.0).withTimeout(0.5))
-        //     .onFalse(new ScheduleCommand(leds.scoreCompleteCommand()));
-
-
-        inScoringDistance.and(hasCoral).and(DriverStation::isTeleop)
-            .whileTrue(arm.shoulder.safeSetTargetAngleCommand(45).repeatedly());
+        hasCoral.onTrue(duncan.rumbleController(1.0).withTimeout(0.5));
 
         if (RobotBase.isReal()) {
             Trigger coastModeLimitSwitch = new Trigger(() -> coastModeButton.get() && DriverStation.isDisabled());
@@ -456,19 +437,6 @@ public class RobotContainer {
             // drive towards the coral when the intake camera does see a coral.
             drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
         }).raceWith(intakeUntilCoralAcquired());
-    }
-
-    private Command intakeTowardsCoralBrandNewUntested(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
-        return drivetrain.run(() -> {
-            // have driver stay in control when the intake camera doesn't see a coral
-            if (drivetrain.getBestCoralLocation().isEmpty()) {
-                drivetrain.fieldOrientedDrive(howToDriveWhenNoCoralDetected.get(), true);
-                return;
-            }
-
-            // drive towards the coral when the intake camera does see a coral.
-            drivetrain.driveTowardsCoral(howToDriveWhenNoCoralDetected.get());
-        }).raceWith(intakeUntilCoralAcquired());        
     }
 
     /**** SCORING ****/
@@ -542,9 +510,9 @@ public class RobotContainer {
 
             drivetrain.pidToPose(facePose.plus(positionShift), 0.5);
         }).alongWith(
-                arm.shoulder.setTargetAngleCommand(14),
-                arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
-                wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees)
+                arm.shoulder.setTargetAngleCommand(ArmPosition.frontL1.shoulderAngleDegrees),
+                arm.extension.setTargetLengthCommand(ArmPosition.frontL1.extensionMeters),
+                wrist.setTargetPositionCommand(ArmPosition.frontL1.wristAngleDegrees)
         );
     }
 
@@ -570,8 +538,8 @@ public class RobotContainer {
 
         Command waitThenPunch = new WaitUntilCommand(() -> {
             return arm.getShoulderAngleDegrees() > 45 && arm.getShoulderAngleDegrees() < 56;})
-            .andThen(arm.extension.setTargetLengthCommand(1.27))
-            .until(() -> arm.getExtensionMeters() > 1.15);
+                .andThen(arm.extension.setTargetLengthCommand(1.27))
+                .until(() -> arm.getExtensionMeters() > 1.15);
 
         Command swingUp = arm.shoulder.setTargetAngleCommand(73)
             .alongWith(
@@ -667,18 +635,6 @@ public class RobotContainer {
             .until(() -> {
                 Translation2d sourceTranslation = drivetrain.getClosestSourceSide().getPose2d().getTranslation();
                 return drivetrain.getPoseMeters().getTranslation().minus(sourceTranslation).getNorm() > 1.5;
-        });
-    }
-
-    //DO NOT USE
-    private Command sourceIntakeIfDoesntHaveCoral() {
-        return new SourceIntake(drivetrain, arm, wrist, placerGrabber).onlyIf(() -> !(placerGrabber.doesHaveCoral()));
-    }
-    
-    private Command waitUntilInRangeOfSource() {
-        return new WaitUntilCommand(() -> {
-            Translation2d robotTranslation = drivetrain.getPoseMeters().getTranslation();
-            return robotTranslation.getDistance(drivetrain.getClosestSourceSide().getLocation2d()) < 1;
         });
     }
 

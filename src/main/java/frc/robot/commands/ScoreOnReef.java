@@ -136,16 +136,16 @@ public class ScoreOnReef extends Command {
         if (isFacingReef.get()) {            
             switch (reefBranch.get().getLevel()) {
                 case 1:
-                    return new ArmPosition(13, WristConstants.maxAngleDegrees - 5, ArmConstants.minExtensionMeters);
+                    return ArmPosition.frontL1;
                 case 2:
                     //2 coral distance
-                    return new ArmPosition(35.3, 98, 0.845);
+                    return ArmPosition.frontL2;
                 case 3:
                     //2 coral distance
-                    return new ArmPosition(52.2, 80, 1.08);
+                    return ArmPosition.frontL3;
                 case 4:
                     //1 coral distance
-                    return new ArmPosition(71, 35, 1.6);
+                    return ArmPosition.frontL4;
             }
         }
         else {
@@ -156,10 +156,10 @@ public class ScoreOnReef extends Command {
                     break; //no good angle
                 case 3:
                     //2 coral distance
-                    return new ArmPosition(108, 105, 0.86);
+                    return ArmPosition.backL3;
                 case 4:
                     //1 coral distance
-                    return new ArmPosition(95, 144, 1.59);
+                    return ArmPosition.backL4;
             }
         }
 
@@ -204,8 +204,10 @@ public class ScoreOnReef extends Command {
 
         boolean closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
         boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 1;
+
+        arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
+
         if (closeToReef && movingSlow) {
-            arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
 
             boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10;
             if (shoulderNearTarget) {

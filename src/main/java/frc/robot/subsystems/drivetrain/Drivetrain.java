@@ -44,6 +44,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
@@ -646,6 +647,11 @@ public class Drivetrain extends SubsystemBase {
         } else {
             return FieldElement.RIGHT_LOADING_STATION;
         }
+    }
+
+    public boolean inScoringDistance() {
+        Transform2d distanceToNearestStalk = this.getClosestReefFace().getPose2d().minus(this.getPoseMeters());
+        return distanceToNearestStalk.getTranslation().getNorm() < 2;
     }
 
     public void driveTowardsCoral(ChassisSpeeds rawSpeedRequest) {

@@ -49,12 +49,6 @@ public class VisionIOPhotonLib implements VisionIO {
         for (String name : VisionConstants.tagCameraNames) {
             tagCameras.add(new PhotonCamera(name));
         }
-        // tagCameras = Arrays.asList(
-        //     new PhotonCamera(VisionConstants.tagCameraNames[0]),
-        //     new PhotonCamera(VisionConstants.tagCameraNames[1]),
-        //     new PhotonCamera(VisionConstants.tagCameraNames[2])
-        //     // new PhotonCamera(VisionConstants.tagCameraNames[3])
-        // );
 
         /* When in demo mode, the apriltags will probably be pitched/rolled a bit
          * relative to their normal vertical orientation because they will be held
@@ -82,7 +76,6 @@ public class VisionIOPhotonLib implements VisionIO {
                 new PhotonPoseEstimator(
                     VisionConstants.aprilTagFieldLayout,
                     estimationStrat,
-                    // tagCameras.get(i)
                     VisionConstants.tagCameraTransforms[i]
                 )
             );
@@ -120,18 +113,6 @@ public class VisionIOPhotonLib implements VisionIO {
             slopeStdDevMetersPerMeterY*distToTargetMeters,
             99999
         );
-
-
-        
-        // double squareFactor = 0.5;
-        // return VecBuilder.fill(0.04, 0.04, 99999);
-
-        // // square model
-        // return VecBuilder.fill(
-        //     squareFactor*slopeStdDevMetersPerMeterX*Math.pow(distToTargetMeters, 3),
-        //     squareFactor*slopeStdDevMetersPerMeterY*Math.pow(distToTargetMeters, 3),
-        //     99999
-        // );
     }
 
     
@@ -181,7 +162,14 @@ public class VisionIOPhotonLib implements VisionIO {
     private Optional<VisionMeasurement> updateTagCamera(PhotonCamera camera, PhotonPoseEstimator estimator) {
         VisionMeasurement output = new VisionMeasurement();
 
-        Optional<EstimatedRobotPose> poseEstimatorResult = estimator.update(camera.getLatestResult());
+        System.out.println("updateTagCameraStart: " + camera.getName());
+
+        List<PhotonPipelineResult> pipelineResults = camera.getAllUnreadResults();
+
+        if (pipelineResults.isEmpty()) return Optional.empty();
+
+        //TODO: don't just use the first result in the list
+        Optional<EstimatedRobotPose> poseEstimatorResult = estimator.update(pipelineResults.get(0));
         if (poseEstimatorResult.isEmpty()) {
             return Optional.empty();
         }
@@ -216,8 +204,6 @@ public class VisionIOPhotonLib implements VisionIO {
         for (int i = 0; i < seenTags.size(); i += 1) {
             output.tagsUsed[i] = seenTags.get(i).getFiducialId();
         }
-
-        Logger.recordOutput("demoMode/robotFullPose", poseEstimate.estimatedPose);
 
         return Optional.of(output);
     }

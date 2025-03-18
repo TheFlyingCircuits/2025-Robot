@@ -13,6 +13,23 @@ public class ArmPosition {
     public double wristAngleDegrees;
     public double extensionMeters;
 
+    //2 coral distance
+    public static final ArmPosition frontL1 = new ArmPosition(14, WristConstants.maxAngleDegrees, ArmConstants.minExtensionMeters);
+
+    //2 coral distance
+    public static final ArmPosition frontL2 = new ArmPosition(35.3, 98, 0.845);
+
+    //2 coral distance
+    public static final ArmPosition frontL3 = new ArmPosition(52.2, 80, 1.08);
+
+    //1 coral distance
+    public static final ArmPosition frontL4 = new ArmPosition(71, 35, 1.6);
+
+    //2 coral distance
+    public static final ArmPosition backL3 = new ArmPosition(108, 105, 0.86);
+    
+    //1 coral distance
+    public static final ArmPosition backL4 = new ArmPosition(95, 144, 1.59);
 
     /**
         * Creates a new ArmPosition object, representing the position of the arm at a given point.

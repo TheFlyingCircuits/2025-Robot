@@ -199,7 +199,7 @@ public final class Constants {
     }
 
     public final static class ControllerConstants {
-        public static final double controllerDeadzone = 0.175;
+        public static final double controllerDeadzone = 0.075;
         public static final double maxThrottle = 1.0;
     }
 
@@ -311,14 +311,14 @@ public final class Constants {
             "frontLeft",
             "frontRight",
             // "backLeft",
-            // "backRight"
+            "backRight"
         };
 
         public final static Transform3d tagCameraTransforms[] = {
             robotToFrontLeft,
             robotToFrontRight,
             // robotToBackLeft,
-            // robotToBackRight
+            robotToBackRight
         };
 
     }
