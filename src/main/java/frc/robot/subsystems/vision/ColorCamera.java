@@ -149,12 +149,23 @@ public class ColorCamera {
             Logger.recordOutput("hasIntakeCameCalibration", true);
         }
         else {
-            // TODO: real backup values
-            fX = 0;
-            fY = 0;
-            cX = 0;
-            cY = 0;
             Logger.recordOutput("hasIntakeCamCalibration", false);
+            // cam resolution 640x480
+            double width = 640;
+            double height = 480;
+            double hFov = Units.degreesToRadians(70);
+
+            double minX = 0;
+            double maxX = width-1;
+            cX = (minX + maxX) / 2.0;
+
+            double minY = 0;
+            double maxY = height-1;
+            cY = (minY + maxY) / 2.0;
+
+            // maybe use cX instead of width/2? (off by 0.5).
+            fX = (width / 2.0) / Math.tan(hFov / 2.0);
+            fY = fX;
         }
 
         double wpilibYaw = -1 * Math.atan2(pixel.x - cX, fX); // positive deltaX -> rightOfCenter -> negativeYaw
