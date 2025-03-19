@@ -262,7 +262,7 @@ public class RobotContainer {
                 .alongWith(
                     arm.shoulder.setTargetAngleCommand(ArmConstants.armMinAngleDegrees),
                     wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5)
-                )   
+                )
         );
 
         //DESCORE ALGAE

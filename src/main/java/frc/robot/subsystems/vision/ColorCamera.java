@@ -41,6 +41,7 @@ public class ColorCamera {
     private Optional<Translation3d> bestGamepieceForRightIntake = Optional.empty();
     private Optional<Translation3d> mostCentralValidGamepiece = Optional.empty();
     private List<Translation3d> validGamepieces_fieldCoords = new ArrayList<>();
+    private Optional<Pose3d> closestValidPose = Optional.empty();
 
     public Optional<Translation3d> getBestGamepieceForLeftIntake() {
         return this.bestGamepieceForLeftIntake;
@@ -147,7 +148,11 @@ public class ColorCamera {
             cY = cam.getCameraMatrix().get().get(1, 2);
         }
         else {
-
+            // TODO: real backup values
+            fX = 0;
+            fY = 0;
+            cX = 0;
+            cY = 0;
         }
 
         double wpilibYaw = -1 * Math.atan2(pixel.x - cX, fX); // positive deltaX -> rightOfCenter -> negativeYaw
@@ -197,6 +202,7 @@ public class ColorCamera {
         this.bestGamepieceForLeftIntake = Optional.empty();
         this.bestGamepieceForRightIntake = Optional.empty();
         this.mostCentralValidGamepiece = Optional.empty();
+        this.closestValidPose = Optional.empty();
         double metersToClosestGamepiece = -1;
         double lateralMetersToBestGamepieceForLeftIntake = -1;
         double lateralMetersToBestGamepieceForRightIntake = -1;
@@ -226,7 +232,6 @@ public class ColorCamera {
             // robotCoords -> fieldCoords
             Translation3d gamepieceLocation_fieldCoords = gamepieceLocation_robotCoords.rotateBy(robotPoseWhenPicTaken.getRotation()).plus(robotPoseWhenPicTaken.getTranslation());
 
-            corners3d.addAll(this.getCornerRays(target, robotPoseWhenPicTaken));
 
             // Don't track gamepieces outside the field perimeter.
             double inFieldToleranceMeters = 0.1;
@@ -257,6 +262,10 @@ public class ColorCamera {
             validGamepieces.add(gamepieceLocation_fieldCoords);
             if (this.closestValidGamepiece.isEmpty() || (metersFromRobot < metersToClosestGamepiece)) {
                 this.closestValidGamepiece = Optional.of(gamepieceLocation_fieldCoords);
+                Rotation3d predicted = this.getPredictedOrientation(target, robotPoseWhenPicTaken);
+                this.closestValidPose = Optional.of(new Pose3d(gamepieceLocation_fieldCoords, predicted));
+                Logger.recordOutput("coralBoundingBoxCorners", this.getCornerRays(target, robotPoseWhenPicTaken).toArray(new Translation3d[0]));
+                Logger.recordOutput("orientedCoralPose", new Pose3d[] {this.closestValidPose.get()});
                 metersToClosestGamepiece = metersFromRobot;
             }
 
@@ -294,7 +303,11 @@ public class ColorCamera {
         Logger.recordOutput(logPrefix+"validGamepieces", validGamepieces.toArray(new Translation3d[0]));
         Logger.recordOutput(logPrefix+"invalidGamepieces", invalidGamepieces.toArray(new Translation3d[0]));
         this.validGamepieces_fieldCoords = validGamepieces;
-        Logger.recordOutput(logPrefix+"corners", corners3d.toArray(new Translation3d[0]));
+        // Logger.recordOutput(logPrefix+"corners", corners3d.toArray(new Translation3d[0]));
+        if (!closestValidGamepiece.isPresent()) {
+            Logger.recordOutput("coralBoundingBoxCorners", new Translation3d[0]);
+            Logger.recordOutput("orientedCoralPose", new Pose3d[0]);
+        }
 
         // AdvantageKit doesn't support logging optionals, so we log "closestValidGamepiece"
         // as an array of size 0 when it isn't present, and an array of size 1 when it is present.

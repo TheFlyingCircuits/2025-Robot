@@ -665,8 +665,8 @@ public class Drivetrain extends SubsystemBase {
 
     public Command driveTowardsCoralCommand(Supplier<ChassisSpeeds> rawSpeedRequest) { return this.runOnce(this::enableRotationAroundIntake).andThen(this.run(() -> {
 
-        // Optional<Translation3d> targetCoral = this.getClosestCoralToRobot();
-        Optional<Translation3d> targetCoral = this.getIntendedCoral(rawSpeedRequest.get());
+        Optional<Translation3d> targetCoral = this.getClosestCoralToRobot();
+        // Optional<Translation3d> targetCoral = this.getIntendedCoral(rawSpeedRequest.get());
 
         Logger.recordOutput("targetCoral", targetCoral.isPresent() ? (new Translation3d[] {targetCoral.get()}) : (new Translation3d[0]));
 
@@ -903,6 +903,13 @@ public class Drivetrain extends SubsystemBase {
         List<Pose3d> simCoralPoses = new ArrayList<>();
         for (VisionTargetSim simulatedCoral : simulatedCorals) {
             simCoralPoses.add(simulatedCoral.getPose());
+
+            Translation3d simLocation = simulatedCoral.getPose().getTranslation();
+            double lilRotationsPerSecond = 0.25;
+            double lilRadiansPerSecond = Units.rotationsToRadians(lilRotationsPerSecond);
+            Rotation3d simRotation = new Rotation3d(0, 0, Timer.getTimestamp() * lilRadiansPerSecond);
+            simulatedCoral.setPose(new Pose3d(simLocation, simRotation));
+
         }
         Logger.recordOutput("simulatedCorals", simCoralPoses.toArray(new Pose3d[0]));
     }
