@@ -9,8 +9,6 @@ import static edu.wpi.first.units.Units.Rotation;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-import javax.security.auth.login.FailedLoginException;
-import javax.xml.crypto.dsig.Transform;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -167,7 +165,7 @@ public class RobotContainer {
     private int desiredLevel = 2;
     private Direction desiredStalk = Direction.left;
 
-    private boolean visionAssistedIntakeInTeleop = false;
+    private boolean visionAssistedIntakeInTeleop = true;
 
     private void testBindings() {
 
@@ -426,17 +424,18 @@ public class RobotContainer {
     }
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
+        return drivetrain.driveTowardsCoralCommand(howToDriveWhenNoCoralDetected).withDeadline(intakeUntilCoralAcquired());
 
-        return drivetrain.run(() -> {
-            // have driver stay in control when the intake camera doesn't see a coral
-            if (drivetrain.getBestCoralLocation().isEmpty()) {
-                drivetrain.fieldOrientedDrive(howToDriveWhenNoCoralDetected.get(), true);
-                return;
-            }
+        // return drivetrain.run(() -> {
+        //     // have driver stay in control when the intake camera doesn't see a coral
+        //     if (drivetrain.getBestCoralLocation().isEmpty()) {
+        //         drivetrain.fieldOrientedDrive(howToDriveWhenNoCoralDetected.get(), true);
+        //         return;
+        //     }
 
-            // drive towards the coral when the intake camera does see a coral.
-            drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
-        }).raceWith(intakeUntilCoralAcquired());
+        //     // drive towards the coral when the intake camera does see a coral.
+        //     drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+        // }).raceWith(intakeUntilCoralAcquired());
     }
 
     /**** SCORING ****/

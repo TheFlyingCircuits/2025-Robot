@@ -10,6 +10,7 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
+import org.photonvision.targeting.TargetCorner;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -37,6 +38,7 @@ public class ColorCamera {
     private Optional<Translation3d> bestGamepieceForLeftIntake = Optional.empty();
     private Optional<Translation3d> bestGamepieceForRightIntake = Optional.empty();
     private Optional<Translation3d> mostCentralValidGamepiece = Optional.empty();
+    private List<Translation3d> validGamepieces_fieldCoords = new ArrayList<>();
 
     public Optional<Translation3d> getBestGamepieceForLeftIntake() {
         return this.bestGamepieceForLeftIntake;
@@ -90,6 +92,11 @@ public class ColorCamera {
         return this.closestValidGamepiece;
     }
 
+    public List<Translation3d> getValidGamepieces_fieldCoords() {
+        return this.validGamepieces_fieldCoords;
+    }
+
+
 
     public static double signedDistanceToIntake(Direction intakeSide, Translation3d coralLocation_fieldCoords, Pose2d robotPose) {
         // center to center distance between both coral locations when in the intake
@@ -122,6 +129,7 @@ public class ColorCamera {
         double metersToMostCentralGamepiece = -1;
         List<Translation3d> validGamepieces = new ArrayList<>();
         List<Translation3d> invalidGamepieces = new ArrayList<>();
+        List<Translation3d> corners3d = new ArrayList<>();
         // Logger.processInputs(cam.getName(), cam);
 
 
@@ -143,6 +151,10 @@ public class ColorCamera {
 
             // robotCoords -> fieldCoords
             Translation3d gamepieceLocation_fieldCoords = gamepieceLocation_robotCoords.rotateBy(robotPoseWhenPicTaken.getRotation()).plus(robotPoseWhenPicTaken.getTranslation());
+
+            // for (TargetCorner corner : target.minAreaRectCorners) {
+            //     // orientation detection....
+            // }
 
             // Don't track gamepieces outside the field perimeter.
             double inFieldToleranceMeters = 0.1;
@@ -209,6 +221,7 @@ public class ColorCamera {
         Logger.recordOutput(logPrefix+"timestampSeconds", mostRecentFrame.getTimestampSeconds());
         Logger.recordOutput(logPrefix+"validGamepieces", validGamepieces.toArray(new Translation3d[0]));
         Logger.recordOutput(logPrefix+"invalidGamepieces", invalidGamepieces.toArray(new Translation3d[0]));
+        this.validGamepieces_fieldCoords = validGamepieces;
 
         // AdvantageKit doesn't support logging optionals, so we log "closestValidGamepiece"
         // as an array of size 0 when it isn't present, and an array of size 1 when it is present.
