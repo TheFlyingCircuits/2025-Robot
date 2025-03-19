@@ -68,7 +68,7 @@ public class HumanDriver {
         // Increase sensitivity at slower speeds
         // adjust this power value for diffferences in how the robot handles (recommended between 1.5 and 3)
         // ^ old comment from original JoystickDrive command
-        totalThrottle = Math.pow(totalThrottle, 2.3);
+        totalThrottle = Math.pow(totalThrottle, 4);
         double desiredSpeed = totalThrottle * DrivetrainConstants.maxDesiredTeleopVelocityMetersPerSecond;
 
         // Get desired rotation speed from right stick
@@ -79,7 +79,7 @@ public class HumanDriver {
         if (Math.abs(angularThrottle) > 1.0) {
             angularThrottle = Math.signum(angularThrottle) * 1.0;
         }
-        angularThrottle = Math.signum(angularThrottle) * Math.pow(Math.abs(angularThrottle), 2.3);
+        angularThrottle = Math.signum(angularThrottle) * Math.pow(Math.abs(angularThrottle), 4);
         double desiredAngularSpeed = angularThrottle * DrivetrainConstants.maxDesiredTeleopAngularVelocityRadiansPerSecond;
 
         ChassisSpeeds requestedVelocity = new ChassisSpeeds();

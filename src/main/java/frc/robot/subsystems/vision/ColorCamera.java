@@ -146,6 +146,7 @@ public class ColorCamera {
             fY = cam.getCameraMatrix().get().get(1, 1);
             cX = cam.getCameraMatrix().get().get(0, 2);
             cY = cam.getCameraMatrix().get().get(1, 2);
+            Logger.recordOutput("hasIntakeCameCalibration", true);
         }
         else {
             // TODO: real backup values
@@ -153,6 +154,7 @@ public class ColorCamera {
             fY = 0;
             cX = 0;
             cY = 0;
+            Logger.recordOutput("hasIntakeCamCalibration", false);
         }
 
         double wpilibYaw = -1 * Math.atan2(pixel.x - cX, fX); // positive deltaX -> rightOfCenter -> negativeYaw

@@ -323,8 +323,8 @@ public class RobotContainer {
 
         //eject
         duncanController.leftBumper().whileTrue(
-            placerGrabber.setPlacerGrabberVoltsCommand(9, 0).until(() -> !placerGrabber.doesHaveCoral())
-                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, 0).withTimeout(0.5))
+            placerGrabber.setPlacerGrabberVoltsCommand(9, -9).until(() -> !placerGrabber.doesHaveCoral())
+                .andThen(placerGrabber.setPlacerGrabberVoltsCommand(9, -9).withTimeout(0.5))
         );
         
         //descore algae
