@@ -125,8 +125,8 @@ public class PlacerGrabber extends SubsystemBase {
         return this.run(() -> {
             if (!this.doesHaveCoral()) {
                 // intake if no corals
-                this.setFrontRollerVolts(11);
-                this.setSideRollerVolts(11);
+                this.setFrontRollerVolts(9);
+                this.setSideRollerVolts(9);
             }
             else if (this.doesHaveTwoCoral()) {
                 // spit if two corals

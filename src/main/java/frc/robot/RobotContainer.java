@@ -355,7 +355,8 @@ public class RobotContainer {
 
 
         //reset gyro
-        duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement).repeatedly().until(drivetrain::seesTag));
+        // duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement).repeatedly().until(drivetrain::seesTag));
+        duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
         
 
 
@@ -417,9 +418,14 @@ public class RobotContainer {
         ).withName("armToIntakePositionCommand");
 
         return armToIntake.raceWith(placerGrabber.intakeOrEjectOrStop().until(placerGrabber::doesHaveCoral))
-        .withName("intakeUntilCoralAcquired");
+        .withName("intakeUntilCoralAcquired").alongWith(new ScheduleCommand(leds.playIntakeAnimationCommand(drivetrain::doesSeeCoral)));
 
         // return armToIntake.alongWith(placerGrabber.setPlacerGrabberVoltsCommand(11, 11));
+
+        // private Command intakeNote() {
+        //     return new ScheduleCommand(leds.playIntakeAnimationCommand(() -> {return drivetrain.getBestNoteLocationFieldFrame().isPresent();}).withName("intake animation"))
+        //         .alongWith(this.runIntake(false).until(intake::ringJustEnteredIntake));
+        // }
 
     }
 

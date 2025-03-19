@@ -19,8 +19,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.FlyingCircuitUtils;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
@@ -117,6 +119,78 @@ public class ColorCamera {
     }
 
 
+
+    private List<Translation3d> getCornerRays(PhotonTrackedTarget target, Pose3d robotPoseWhenPicWasTaken) {
+        List<Translation3d> output = new ArrayList<>();
+
+        for (TargetCorner corner : target.minAreaRectCorners) {
+            Rotation3d directionVector = pixelCoordsToRotation3d(corner);
+            double wpilibPitch = directionVector.getY();
+            double wpilibYaw = directionVector.getZ();
+            Translation3d physicalCorner_robotFrame = getGamepieceLocationInRobotCoords(-wpilibPitch, wpilibYaw, FieldConstants.coralOuterRadiusMeters);
+            Translation3d physicalCorner_fieldFrame = physicalCorner_robotFrame.rotateBy(robotPoseWhenPicWasTaken.getRotation()).plus(robotPoseWhenPicWasTaken.getTranslation());
+            output.add(physicalCorner_fieldFrame);
+        }
+
+        // put first one last to make trajectory
+        output.add(output.get(0));
+        return output;
+    }
+
+    private Rotation3d pixelCoordsToRotation3d(TargetCorner pixel) {
+        // extract info from camera matrix for calculations
+        double fX, fY, cX, cY;
+        if (cam.getCameraMatrix().isPresent()) {
+            fX = cam.getCameraMatrix().get().get(0, 0);
+            fY = cam.getCameraMatrix().get().get(1, 1);
+            cX = cam.getCameraMatrix().get().get(0, 2);
+            cY = cam.getCameraMatrix().get().get(1, 2);
+        }
+        else {
+
+        }
+
+        double wpilibYaw = -1 * Math.atan2(pixel.x - cX, fX); // positive deltaX -> rightOfCenter -> negativeYaw
+
+        double baseInTermsOfPixelWidth = Math.hypot(fX, (pixel.x - cX));
+        double baseInTermsOfPixelHeight = (fY/fX) * baseInTermsOfPixelWidth;
+        double wpilibPitch = Math.atan2(pixel.y - cY, baseInTermsOfPixelHeight); // positive deltaY -> belowHorizion -> positivePitch
+
+        return new Rotation3d(0, wpilibPitch, wpilibYaw);
+    }
+
+    private Rotation3d getPredictedOrientation(PhotonTrackedTarget target, Pose3d robotPoseWhenPicWasTaken) {
+        List<Translation3d> cornerLocations_fieldCords = this.getCornerRays(target, robotPoseWhenPicWasTaken);
+
+        // find the longest edge of the bounding box, have coral be aligned to that
+        double longestEdge = 0;
+        Rotation2d output = new Rotation2d();
+        for (int i = 0; i < cornerLocations_fieldCords.size()-1; i += 1) {
+            Translation3d base = cornerLocations_fieldCords.get(i);
+            Translation3d tip = cornerLocations_fieldCords.get(i);
+
+            Translation2d boundingBoxEdge = tip.minus(base).toTranslation2d();
+            if (boundingBoxEdge.getNorm() > longestEdge) {
+                longestEdge = boundingBoxEdge.getNorm();
+
+                Rotation2d robotDirection = robotPoseWhenPicWasTaken.getRotation().toRotation2d();
+                Rotation2d directionAlongEdge = boundingBoxEdge.getAngle();
+                double dotProduct = (robotDirection.getCos() * directionAlongEdge.getCos()) + (robotDirection.getSin() * directionAlongEdge.getSin());
+                boolean sameGeneralDirection = dotProduct >= 0;
+                
+                if (sameGeneralDirection) {
+                    output = directionAlongEdge;
+                }
+                else {
+                    output = boundingBoxEdge.unaryMinus().getAngle();
+                }
+            }
+        }
+
+        return new Rotation3d(output);
+    }
+
+
     public void periodic(SwerveDrivePoseEstimator fusedPoseEstimator) {
         // Reset for a new iteration of the main loop
         this.closestValidGamepiece = Optional.empty();
@@ -152,13 +226,11 @@ public class ColorCamera {
             // robotCoords -> fieldCoords
             Translation3d gamepieceLocation_fieldCoords = gamepieceLocation_robotCoords.rotateBy(robotPoseWhenPicTaken.getRotation()).plus(robotPoseWhenPicTaken.getTranslation());
 
-            // for (TargetCorner corner : target.minAreaRectCorners) {
-            //     // orientation detection....
-            // }
+            corners3d.addAll(this.getCornerRays(target, robotPoseWhenPicTaken));
 
             // Don't track gamepieces outside the field perimeter.
             double inFieldToleranceMeters = 0.1;
-            if (!FlyingCircuitUtils.isInField(gamepieceLocation_fieldCoords, inFieldToleranceMeters)) {
+            if (!FlyingCircuitUtils.isInField(gamepieceLocation_fieldCoords, inFieldToleranceMeters) && DriverStation.isFMSAttached()) {
                 invalidGamepieces.add(gamepieceLocation_fieldCoords);
                 continue;
             }
@@ -222,6 +294,7 @@ public class ColorCamera {
         Logger.recordOutput(logPrefix+"validGamepieces", validGamepieces.toArray(new Translation3d[0]));
         Logger.recordOutput(logPrefix+"invalidGamepieces", invalidGamepieces.toArray(new Translation3d[0]));
         this.validGamepieces_fieldCoords = validGamepieces;
+        Logger.recordOutput(logPrefix+"corners", corners3d.toArray(new Translation3d[0]));
 
         // AdvantageKit doesn't support logging optionals, so we log "closestValidGamepiece"
         // as an array of size 0 when it isn't present, and an array of size 1 when it is present.

@@ -33,11 +33,11 @@ import frc.robot.VendorWrappers.Kraken;
 /** Add your docs here. */
 public class ArmIOKraken implements ArmIO{
 
-    Kraken leftShoulder = new Kraken(ArmConstants.leftShoulderMotorID, UniversalConstants.canivoreName);
-    Kraken rightShoulder = new Kraken(ArmConstants.rightShoulderMotorID, UniversalConstants.canivoreName);
+    Kraken leftShoulder = new Kraken("leftShoulder", ArmConstants.leftShoulderMotorID, UniversalConstants.canivoreName);
+    Kraken rightShoulder = new Kraken("rightShoulder", ArmConstants.rightShoulderMotorID, UniversalConstants.canivoreName);
 
-    Kraken frontExtensionMotor = new Kraken(ArmConstants.frontExtensionMotorID, UniversalConstants.canivoreName);
-    Kraken backExtensionMotor = new Kraken(ArmConstants.backExtensionMotorID, UniversalConstants.canivoreName);
+    Kraken frontExtensionMotor = new Kraken("frontExtension", ArmConstants.frontExtensionMotorID, UniversalConstants.canivoreName);
+    Kraken backExtensionMotor = new Kraken("backExtension", ArmConstants.backExtensionMotorID, UniversalConstants.canivoreName);
 
     TalonFXConfiguration extensionConfig;
     TalonFXConfiguration shoulderConfig;

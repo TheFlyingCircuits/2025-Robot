@@ -85,7 +85,7 @@ public class Kraken extends TalonFX {
         /** Wait up to 0.25 seconds for an error code after each config attempt. */
         super.getConfigurator().DefaultTimeoutSeconds = 0.25;
 
-        while(true) {
+        for (int attempt = 0; attempt < 20; attempt += 1) {
             /** Attempt to apply configs */
             StatusCode configStatus = super.getConfigurator().apply(config);
 
