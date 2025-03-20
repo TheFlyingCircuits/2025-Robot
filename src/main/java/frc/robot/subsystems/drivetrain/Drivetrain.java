@@ -83,7 +83,7 @@ public class Drivetrain extends SubsystemBase {
 
     /** used to rotate about the intake instead of the center of the robot */
     private Transform2d centerOfRotation_robotFrame = new Transform2d();
-    private double intakeX_robotFrame = 0;//(DrivetrainConstants.frameWithBumpersWidthMeters / 2.0);// + Units.inchesToMeters(6); // TODO: placeholder value! needs measurement!
+    private double intakeX_robotFrame = 0; //(DrivetrainConstants.frameWithBumpersWidthMeters / 2.0);// + Units.inchesToMeters(6); // TODO: placeholder value! needs measurement!
     private Transform2d intakePose_robotFrame = new Transform2d(intakeX_robotFrame, 0, Rotation2d.kZero);
 
     public Drivetrain(

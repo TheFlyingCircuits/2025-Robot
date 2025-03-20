@@ -57,7 +57,7 @@ public class ScoreOnReef extends Command {
     public boolean readyToScore() {
         boolean shoulderReady = Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees()) < 1;
         boolean extensionReady = Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02;
-        boolean wristReady = Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 1;
+        boolean wristReady = Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 2;
         boolean driveAngleGood = drivetrain.isAngleAligned();
         boolean driveTranslationGood = drivetrain.translationControllerAtSetpoint();
 
@@ -226,7 +226,7 @@ public class ScoreOnReef extends Command {
         }
         else {
             this.extensionTargetSet = false;
-            arm.setShoulderTargetAngle(45);
+            // arm.setShoulderTargetAngle(45);
             arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
             wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
         }

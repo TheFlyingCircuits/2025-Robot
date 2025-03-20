@@ -122,22 +122,25 @@ public class PlacerGrabber extends SubsystemBase {
     }
 
     public Command intakeOrEjectOrStop() {
-        return this.run(() -> {
-            if (!this.doesHaveCoral()) {
-                // intake if no corals
-                this.setFrontRollerVolts(9);
-                this.setSideRollerVolts(9);
-            }
-            else if (this.doesHaveTwoCoral()) {
-                // spit if two corals
-                this.setFrontRollerVolts(-9);
-                this.setSideRollerVolts(-9);
-            }
-            else {
-                // stop if single coral
-                this.setFrontRollerVolts(0);
-                this.setSideRollerVolts(0);
-            }
-        });
+        // return this.run(() -> {
+        //     if (!this.doesHaveCoral()) {
+        //         // intake if no corals
+        //         this.setFrontRollerVolts(9);
+        //         this.setSideRollerVolts(9);
+        //     }
+        //     else if (this.doesHaveTwoCoral()) {
+        //         // spit if two corals
+        //         this.setFrontRollerVolts(-9);
+        //         this.setSideRollerVolts(-9);
+        //     }
+        //     else {
+        //         // stop if single coral
+        //         this.setFrontRollerVolts(0);
+        //         this.setSideRollerVolts(0);
+        //     }
+        // });
+
+        return setPlacerGrabberVoltsCommand(9, 11);//.withTimeout(9.0/10.0)
+        //.andThen(setPlacerGrabberVoltsCommand(0, 0).withTimeout(1.0/10.0)).repeatedly();
     }
 }
