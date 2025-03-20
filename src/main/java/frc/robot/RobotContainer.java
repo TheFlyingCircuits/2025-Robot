@@ -395,6 +395,17 @@ public class RobotContainer {
     /** Called by Robot.java, convenience function for logging. */
     public void periodic() {
         Logger.recordOutput("robotContainer/coastModeLimitSwitch", coastModeButton.get());
+        ArmPosition desiredArmState = new ArmPosition();
+        desiredArmState.shoulderAngleDegrees = arm.getTargetShoulderAngleDegrees();
+        desiredArmState.extensionMeters = arm.getTargetExtensionMeters();
+        desiredArmState.wristAngleDegrees = wrist.getTargetWristDegrees();
+        AdvantageScopeDrawingUtils.logArmWireframe("arm/desiredWireframe", desiredArmState, drivetrain.getPoseMeters());
+
+        ArmPosition measuredArmState = new ArmPosition();
+        measuredArmState.shoulderAngleDegrees = arm.getShoulderAngleDegrees();
+        measuredArmState.extensionMeters = arm.getExtensionMeters();
+        measuredArmState.wristAngleDegrees = wrist.getWristAngleDegrees();
+        AdvantageScopeDrawingUtils.logArmWireframe("arm/measuredWireframe", desiredArmState, drivetrain.getPoseMeters());
     }    
 
     /**** INTAKE ****/
