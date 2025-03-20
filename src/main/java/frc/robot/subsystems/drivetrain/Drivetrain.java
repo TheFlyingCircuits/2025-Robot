@@ -83,7 +83,7 @@ public class Drivetrain extends SubsystemBase {
 
     /** used to rotate about the intake instead of the center of the robot */
     private Transform2d centerOfRotation_robotFrame = new Transform2d();
-    private double intakeX_robotFrame = 0;//(DrivetrainConstants.frameWithBumpersWidthMeters / 2.0);// + Units.inchesToMeters(6); // TODO: placeholder value! needs measurement!
+    private double intakeX_robotFrame = (DrivetrainConstants.frameWithBumpersWidthMeters / 2.0);// + Units.inchesToMeters(6); // TODO: placeholder value! needs measurement!
     private Transform2d intakePose_robotFrame = new Transform2d(intakeX_robotFrame, 0, Rotation2d.kZero);
 
     public Drivetrain(
@@ -663,7 +663,9 @@ public class Drivetrain extends SubsystemBase {
         return Optional.of(targetCoral);
     }
 
-    public Command driveTowardsCoralCommand(Supplier<ChassisSpeeds> rawSpeedRequest) { return this.runOnce(this::enableRotationAroundIntake).andThen(this.run(() -> {
+    public Command driveTowardsCoralWithForwardRotationCommand(Supplier<ChassisSpeeds> rawSpeedRequest) 
+        { return this.runOnce(this::enableRotationAroundIntake).andThen(this.driveTowardsCoralCommand(rawSpeedRequest));}
+    public Command driveTowardsCoralCommand(Supplier<ChassisSpeeds> rawSpeedRequest) {return this.run(() -> {
 
         Optional<Translation3d> targetCoral = this.getClosestCoralToRobot();
         // Optional<Translation3d> targetCoral = this.getIntendedCoral(rawSpeedRequest.get());
@@ -684,7 +686,7 @@ public class Drivetrain extends SubsystemBase {
         // this.fieldOrientedDriveWhileAiming(rawSpeedRequest.get(), intakeToCoral.getAngle()); // angle spins out as you get close
 
 
-    })).finallyDo(this::resetCenterOfRotation);}
+    }).finallyDo(this::resetCenterOfRotation);}
 
     public ReefFace getClosestReefFace() {
         ReefFace[] reefFaces = FieldElement.ALL_REEF_FACES;

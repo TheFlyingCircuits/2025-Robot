@@ -616,6 +616,7 @@ public class RobotContainer {
 
     private Command intakeTowardsCoralInAuto() {
             return drivetrain.run(() -> {
+                drivetrain.enableRotationAroundIntake();
                 if (drivetrain.getBestCoralLocation().isEmpty()) {
                     // can't see coral
                     FieldElement sourceSide = drivetrain.getClosestSourceSide();
@@ -628,7 +629,7 @@ public class RobotContainer {
                     drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
                 }
             })
-            .raceWith(intakeUntilCoralAcquired()).withName("intakeTowardsCoralInAuto");
+            .raceWith(intakeUntilCoralAcquired()).withName("intakeTowardsCoralInAuto").withDeadline(new InstantCommand(() -> {drivetrain.resetCenterOfRotation();}));
     }
     
 
