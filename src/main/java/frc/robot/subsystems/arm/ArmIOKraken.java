@@ -151,19 +151,6 @@ public class ArmIOKraken implements ArmIO{
         rightShoulder.setPosition(leftPivotEncoder.getAbsolutePosition().getValueAsDouble());
     }
 
-    private void homeExtensionIfRetracted() {
-        if (Math.abs(extensionMeters - ArmConstants.minExtensionMeters) < 0.15
-                && frontExtensionMotor.getMotorVoltage().getValueAsDouble() < 0
-                    && frontExtensionMotor.getFault_StatorCurrLimit().getValue()
-                        && Math.abs(frontExtensionMotor.getVelocity().getValueAsDouble()) < 0.001) {
-                frontExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
-                backExtensionMotor.setPosition(ArmConstants.minExtensionMeters);
-                Logger.recordOutput("arm/homing", true);
-            }
-        else {
-            Logger.recordOutput("arm/homing", false);
-        }
-    }
 
     public void setExtensionEncoderPositionToMin() {
         frontExtensionMotor.setPosition(ArmConstants.minExtensionMeters);

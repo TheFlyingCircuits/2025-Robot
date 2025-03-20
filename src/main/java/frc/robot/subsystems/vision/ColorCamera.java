@@ -185,7 +185,7 @@ public class ColorCamera {
         Rotation2d output = new Rotation2d();
         for (int i = 0; i < cornerLocations_fieldCords.size()-1; i += 1) {
             Translation3d base = cornerLocations_fieldCords.get(i);
-            Translation3d tip = cornerLocations_fieldCords.get(i);
+            Translation3d tip = cornerLocations_fieldCords.get(i+1);
 
             Translation2d boundingBoxEdge = tip.minus(base).toTranslation2d();
             if (boundingBoxEdge.getNorm() > longestEdge) {

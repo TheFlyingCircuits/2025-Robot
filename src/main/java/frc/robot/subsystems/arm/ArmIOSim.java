@@ -34,6 +34,12 @@ public class ArmIOSim implements ArmIO {
 
     Matrix<N2, N1> systemInputs = VecBuilder.fill(0, 0);
 
+
+    double targetExtensionMeters = ArmConstants.minExtensionMeters;
+    double extensionMeters = ArmConstants.minExtensionMeters;
+    double targetShoulderAngleDegrees = 0;
+    double shoulderAngleDegrees = 0;
+
      
     public ArmIOSim() {
 
@@ -115,6 +121,8 @@ public class ArmIOSim implements ArmIO {
 
         // inputs.extensionLengthMetersPerSecond = nextState.get(3, 0);
         // inputs.extensionAppliedVolts = this.systemInputs.get(1, 0);
+        inputs.targetExtensionLengthMeters = targetExtensionMeters;
+        inputs.targetShoulderAngleDegrees = targetShoulderAngleDegrees;
     }
 
 
@@ -176,11 +184,13 @@ public class ArmIOSim implements ArmIO {
     @Override
     public void setShoulderTargetAngle(double degrees) {
         StatusCode code = shoulderTalon.setControl(new MotionMagicVoltage(degrees));
+        this.targetShoulderAngleDegrees = degrees;
         // System.out.println("shoulder target angle set:" + code.getName());
     }
 
     @Override
     public void setExtensionTargetLength(double meters) {
+        this.targetExtensionMeters = meters;
         //all units for extension are with meters
         StatusCode code = extensionTalon.setControl(new MotionMagicVoltage(meters));
         // System.out.println("extension target length set:" + code.getName());

@@ -4,11 +4,7 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Rotation;
-
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
-
 
 import org.littletonrobotics.junction.Logger;
 
@@ -27,11 +23,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -42,10 +35,7 @@ import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
-import frc.robot.PlayingField.ReefFace;
 import frc.robot.commands.ScoreOnReef;
-import frc.robot.commands.SourceIntake;
-import frc.robot.commands.leds.ReefFaceLED;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
@@ -58,7 +48,6 @@ import frc.robot.subsystems.drivetrain.GyroIOSim;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOKraken;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
 import frc.robot.subsystems.placerGrabber.PlacerGrabber;
-import frc.robot.subsystems.placerGrabber.PlacerGrabberIO;
 import frc.robot.subsystems.placerGrabber.PlacerGrabberIONeo;
 import frc.robot.subsystems.placerGrabber.PlacerGrabberSim;
 import frc.robot.subsystems.vision.VisionIO;
@@ -318,7 +307,7 @@ public class RobotContainer {
                     this::isFacingReef)
                 .alongWith(
                     Commands.run(() -> drivetrain.setPoseToVisionMeasurement()).until(() -> drivetrain.seesTag())
-                )
+                ).alongWith(Commands.run(() ->duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement).repeatedly().until(drivetrain::seesTag))))
             );
 
         //eject
@@ -355,8 +344,8 @@ public class RobotContainer {
 
 
         //reset gyro
-        // duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement).repeatedly().until(drivetrain::seesTag));
-        duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
+        duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement).repeatedly().until(drivetrain::seesTag));
+        // duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
         
 
 
@@ -406,6 +395,17 @@ public class RobotContainer {
     /** Called by Robot.java, convenience function for logging. */
     public void periodic() {
         Logger.recordOutput("robotContainer/coastModeLimitSwitch", coastModeButton.get());
+        ArmPosition desiredArmState = new ArmPosition();
+        desiredArmState.shoulderAngleDegrees = arm.getTargetShoulderAngleDegrees();
+        desiredArmState.extensionMeters = arm.getTargetExtensionMeters();
+        desiredArmState.wristAngleDegrees = wrist.getTargetWristDegrees();
+        AdvantageScopeDrawingUtils.logArmWireframe("arm/desiredWireframe", desiredArmState, drivetrain.getPoseMeters());
+
+        ArmPosition measuredArmState = new ArmPosition();
+        measuredArmState.shoulderAngleDegrees = arm.getShoulderAngleDegrees();
+        measuredArmState.extensionMeters = arm.getExtensionMeters();
+        measuredArmState.wristAngleDegrees = wrist.getWristAngleDegrees();
+        AdvantageScopeDrawingUtils.logArmWireframe("arm/measuredWireframe", desiredArmState, drivetrain.getPoseMeters());
     }    
 
     /**** INTAKE ****/

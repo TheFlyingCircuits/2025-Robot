@@ -55,6 +55,20 @@ public final class Constants {
          */
         public final static double shoulderBracketLengthMeters = -0.2;
         public final static Translation2d shoulderPivotPositionMeters = new Translation2d(-0.4, 0.4);
+
+
+
+        // ↑ ← → ↓
+        // TODO: ascii art
+        public final static Translation3d shoulderLocation_robotFrame = new Translation3d(Units.inchesToMeters(-10.25), 0, Units.inchesToMeters(17.80750));
+        public final static Translation3d elbowLocation_shoulderFrame = new Translation3d(0, 0, Units.inchesToMeters(-8.0));
+        public final static Translation3d retractionHardStop_elbowFrame = new Translation3d(Units.inchesToMeters(-3.0), 0, 0);
+        public final static Translation3d tipOfStationaryStage_elbowFrame = new Translation3d(Units.inchesToMeters(25-3.0), 0, 0);
+        public final static Translation3d wristLocation_elbowFrame_retracted = tipOfStationaryStage_elbowFrame.plus(new Translation3d(Units.inchesToMeters((0.93417 + 0.93321)/2.0), 0, 0));
+        public final static double wristWidthMeters = Units.inchesToMeters(10.18); // center to center distance of omni wheel axles
+        public final static double stationaryStageWidthMeters = Units.inchesToMeters(4.0);
+        public final static double stationaryStageHeightMeters = Units.inchesToMeters(4.0);
+        public final static Translation3d orangeWheels_wristFrame = new Translation3d(Units.inchesToMeters(11.15338), 0, Units.inchesToMeters(-4.27657));
         
         /** Minimum length of the arm when fully retracted, 0.64 meters*/
         public final static double minExtensionMeters = Units.inchesToMeters(25);
