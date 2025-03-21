@@ -237,7 +237,9 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public Command drivetrainDefaultCommand(Supplier<ChassisSpeeds> controllerInput) {
-        return this.run(() -> this.fieldOrientedDrive(controllerInput.get(), true));
+        return this.run(() -> {this.fieldOrientedDrive(controllerInput.get(), true);
+            Logger.recordOutput("drivetrainDefaultCommand", true);})
+            .finallyDo(() -> {Logger.recordOutput("drivetrainDefaultCommand", false);});
     }
     
     /**

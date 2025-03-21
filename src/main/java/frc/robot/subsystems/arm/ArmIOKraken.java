@@ -204,14 +204,15 @@ public class ArmIOKraken implements ArmIO{
                                          + rightShoulder.getTorqueCurrent().getValueAsDouble())/2.;
 
 
-        Logger.recordOutput("arm/pivotReferencePosition", leftShoulder.getClosedLoopReference().getValueAsDouble());
-        Logger.recordOutput("arm/pivotReferenceSlope", leftShoulder.getClosedLoopReferenceSlope().getValueAsDouble());
+        Logger.recordOutput("arm/pivotReferencePosition", Units.rotationsToDegrees(leftShoulder.getClosedLoopReference().getValueAsDouble()));
+        Logger.recordOutput("arm/pivotReferenceSlope", Units.rotationsToDegrees(leftShoulder.getClosedLoopReferenceSlope().getValueAsDouble()));
         Logger.recordOutput("arm/extensionReferencePosition", backExtensionMotor.getClosedLoopReference().getValueAsDouble());
         Logger.recordOutput("arm/extensionReferenceSlope", backExtensionMotor.getClosedLoopReferenceSlope().getValueAsDouble());
         Logger.recordOutput("arm/targetShoulderAngleDegrees", targetShoulderAngleDegrees);
         Logger.recordOutput("arm/targetExtensionLengthMeters", targetExtensionMeters);
         Logger.recordOutput("arm/statorCurrentLimitReached", leftShoulder.getFault_StatorCurrLimit().getValue());
     }
+
 
     @Override
     public void setShoulderTargetAngle(double degrees) {

@@ -55,6 +55,7 @@ import frc.robot.subsystems.vision.VisionIOPhotonLib;
 import frc.robot.subsystems.wrist.Wrist;
 import frc.robot.subsystems.wrist.WristIO;
 import frc.robot.subsystems.wrist.WristIONeo;
+import frc.robot.subsystems.wrist.WristIOSim;
 
 
 public class RobotContainer {
@@ -116,8 +117,8 @@ public class RobotContainer {
             );
 
             arm = new Arm(new ArmIOSim());
-            wrist = new Wrist(new WristIO(){});
-            placerGrabber = new PlacerGrabber(new PlacerGrabberSim(){});
+            wrist = new Wrist(new WristIOSim());
+            placerGrabber = new PlacerGrabber(new PlacerGrabberSim());
 
             leds = new Leds();
 
@@ -305,9 +306,9 @@ public class RobotContainer {
                     duncan::getRequestedFieldOrientedVelocity, 
                     this::getDesiredBranch,
                     this::isFacingReef)
-                .alongWith(
-                    Commands.run(() -> drivetrain.setPoseToVisionMeasurement()).until(() -> drivetrain.seesTag())
-                ).alongWith(Commands.run(() ->duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement).repeatedly().until(drivetrain::seesTag))))
+                .deadlineFor( // allow command to end if we somehow score before seeing a tag
+                    Commands.run(drivetrain::setPoseToVisionMeasurement).until(drivetrain::seesTag)
+                )
             );
 
         //eject
@@ -395,6 +396,7 @@ public class RobotContainer {
     /** Called by Robot.java, convenience function for logging. */
     public void periodic() {
         Logger.recordOutput("robotContainer/coastModeLimitSwitch", coastModeButton.get());
+
         ArmPosition desiredArmState = new ArmPosition();
         desiredArmState.shoulderAngleDegrees = arm.getTargetShoulderAngleDegrees();
         desiredArmState.extensionMeters = arm.getTargetExtensionMeters();
@@ -405,7 +407,7 @@ public class RobotContainer {
         measuredArmState.shoulderAngleDegrees = arm.getShoulderAngleDegrees();
         measuredArmState.extensionMeters = arm.getExtensionMeters();
         measuredArmState.wristAngleDegrees = wrist.getWristAngleDegrees();
-        AdvantageScopeDrawingUtils.logArmWireframe("arm/measuredWireframe", desiredArmState, drivetrain.getPoseMeters());
+        AdvantageScopeDrawingUtils.logArmWireframe("arm/measuredWireframe", measuredArmState, drivetrain.getPoseMeters());
     }    
 
     /**** INTAKE ****/
@@ -472,9 +474,10 @@ public class RobotContainer {
         Command scoreCoral = scoreCoral(false).withName("scoreCoral");
         return align.raceWith(waitForAlignment.raceWith(manualScoreRequested).andThen(scoreCoral)).withName("alignWithReefRace").andThen(
             drivetrain.run(() -> {
+                Logger.recordOutput("backingUp", true);
                 ChassisSpeeds driveBackwards = this.isFacingReef() ? new ChassisSpeeds(-0.5, 0, 0) : new ChassisSpeeds(0.5, 0, 0);
                 drivetrain.robotOrientedDrive(driveBackwards, true);
-            }).withTimeout(0.3).withName("dirveBackFromReefCommand")
+            }).withTimeout(0.3).andThen(() -> {Logger.recordOutput("backingUp", false);}).withName("dirveBackFromReefCommand")
         ).withName("fullScoreOnReefCommand");
     }
 
