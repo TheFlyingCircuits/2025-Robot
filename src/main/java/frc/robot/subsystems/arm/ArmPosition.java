@@ -25,11 +25,15 @@ public class ArmPosition {
     //1 coral distance
     public static final ArmPosition frontL4 = new ArmPosition(71, 35, 1.6);
 
-    //2 coral distance
-    public static final ArmPosition backL3 = new ArmPosition(108, 105, 0.86);
     
     //1 coral distance
-    public static final ArmPosition backL4 = new ArmPosition(95, 144, 1.59);
+    public static final ArmPosition backL2 = new ArmPosition(95.45, 133.58, ArmConstants.minExtensionMeters);
+
+    //1 coral distance
+    public static final ArmPosition backL3 = new ArmPosition(96.85, 110.86, 0.85);
+    
+    //1 coral distance
+    public static final ArmPosition backL4 = new ArmPosition(92.81, 134.95, ArmConstants.maxExtensionMeters);
 
     /**
         * Creates a new ArmPosition object, representing the position of the arm at a given point.

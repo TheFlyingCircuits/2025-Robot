@@ -46,9 +46,9 @@ public class ScoreOnReef extends Command {
         this.drivetrain = drivetrain;
         this.arm = arm;
         this.wrist = wrist;
+        this.leds = leds;
         this.translationController = translationController;
         this.reefBranch=reefBranch;
-        this.leds = leds;
         this.coralSideSupplier=sideCoralIsIn;
         this.isFacingReef = isFacingReef;
         addRequirements(drivetrain, arm.shoulder, arm.extension, wrist);
@@ -75,40 +75,43 @@ public class ScoreOnReef extends Command {
     }
 
 
-    // bumper 37 inches
+    // bumper 34 inches
     private Pose2d adjustedReefScoringPose(Pose2d stalkPose, Direction sideCoralIsIn, boolean isFacingForward) {
         double adjustedX;
-        //17.5 inches of robot space, 4.5 inches is one coral dist
+        // 17 inches of robot space, 4.5 inches is one coral dist
         if (reefBranch.get().getLevel() == 4) {
+            //                   edgeOfReef                      halfBumperLength                coralOuterDiameter (plus one inch)
             adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1);
         }
         else {
+            //                   edgeOfReef                      halfBumperLength             2x coralOuterDiameter
             adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(9);
         }
 
+        // all pivot side scoring was calibrated at 1 coral distance away
         if (!isFacingForward) {
-            adjustedX -= Units.inchesToMeters(1);
+            //                   edgeOfReef                      halfBumperLength                coralOuterDiameter
+            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5);
         }
+
+
+        Rotation2d rotationAdjustment;
+        if (isFacingForward) {
+            rotationAdjustment = Rotation2d.k180deg;
+        } else {
+            rotationAdjustment = Rotation2d.kZero;
+        }
+
 
         double adjustedY;
-        Rotation2d rotation = Rotation2d.fromDegrees(180);
-
-        if (isFacingForward) {
-            rotation = Rotation2d.fromDegrees(180);
-        } else {
-            rotation = new Rotation2d();
-        }
-
-
-        
         if (((sideCoralIsIn == Direction.left) & isFacingForward) || ((sideCoralIsIn == Direction.right) & !isFacingForward)) {
-            adjustedY = Units.inchesToMeters(3.25);
+            adjustedY = Units.inchesToMeters(3.5);
         } else {
-            adjustedY = -Units.inchesToMeters(3.25);
+            adjustedY = Units.inchesToMeters(-3.5);
         }
 
 
-        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, rotation);
+        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, rotationAdjustment);
         return stalkPose.plus(targetPoseToRobotRelativeToStalk);
     }
 
@@ -153,9 +156,9 @@ public class ScoreOnReef extends Command {
                 case 1:
                     break;
                 case 2:
-                    break; //no good angle
+                    return ArmPosition.backL2;
                 case 3:
-                    //2 coral distance
+                    //1 coral distance
                     return ArmPosition.backL3;
                 case 4:
                     //1 coral distance
@@ -181,7 +184,6 @@ public class ScoreOnReef extends Command {
 
     @Override
     public void execute() {
-        // System.out.println("scoringOnReef");
         Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), coralSide, isFacingReef.get());
 
         //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
@@ -189,6 +191,8 @@ public class ScoreOnReef extends Command {
         ChassisSpeeds driverControl = translationController.get();
         if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
             drivetrain.pidToPose(targetPose, 1.5);
+            // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
+            // drivetrain.fieldOrientedDriveOnALine(driverControl.div(3.0), targetPose);
         }
         else {
             drivetrain.fieldOrientedDrive(driverControl.div(3), true);
@@ -196,41 +200,31 @@ public class ScoreOnReef extends Command {
 
 
         desiredArmPosition = calculateArmScoringPosition();
-
         Logger.recordOutput("scoreOnReef/armDesiredDegrees", desiredArmPosition.shoulderAngleDegrees);
         Logger.recordOutput("scoreOnReef/wristDesiredDegrees", desiredArmPosition.wristAngleDegrees);
         Logger.recordOutput("scoreOnReef/extensionDesiredMeters", desiredArmPosition.extensionMeters);
 
+        // immediately start moving shoulder
+        arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
 
         boolean closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
         boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 1;
-
-        arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
-
-        if (closeToReef && movingSlow) {
-
-            boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10;
-            if (shoulderNearTarget) {
-                arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
-                this.extensionTargetSet = true;
+        boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10;
+        if (closeToReef && movingSlow && shoulderNearTarget) {
+            // Only start moving extension & wrist when shoulder is near the setpoint
+            arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
+            this.extensionTargetSet = true;
                 
-                double maxWristVolts = 8;
-                if (reefBranch.get().getLevel() == 4) maxWristVolts = 6;
-                wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, maxWristVolts);
-            }
-            else {
-                this.extensionTargetSet = false;
-                arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
-                wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
-            }
+            double maxWristVolts = 8;
+            if (reefBranch.get().getLevel() == 4) maxWristVolts = 6;
+            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, maxWristVolts);
         }
         else {
+            // Stow extension and wrist when the shoulder isn't ready yet
             this.extensionTargetSet = false;
-            // arm.setShoulderTargetAngle(45);
             arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
             wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
         }
-        
 
         // leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
     }

@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.subsystems.arm.ArmPosition;
 
 public class AdvantageScopeDrawingUtils {
@@ -83,6 +84,38 @@ public class AdvantageScopeDrawingUtils {
         trajectory.add(boxCorners.get(0)); // back home to finish the loop
 
         return trajectory;
+    }
+
+
+    private static List<Translation3d> getBumperBox_robotFrame() {
+        double lengthX = DrivetrainConstants.frameWithBumpersWidthMeters;
+        double lengthY = DrivetrainConstants.frameWithBumpersWidthMeters;
+        double lengthZ = Units.inchesToMeters(5);
+        List<Translation3d> boxCorners = getBoxCorners(lengthX, lengthY, lengthZ);
+        List<Translation3d> output = new ArrayList<>();
+
+        // center in x & y, bottom surface of bumpers is 0.5 inches off the ground
+        Translation3d offset = new Translation3d(-lengthX/2.0, -lengthY/2.0, Units.inchesToMeters(0.5));
+        for (Translation3d corner : boxCorners) {
+            output.add(corner.plus(offset));
+        }
+        return output;
+    }
+
+    public static void drawBumpers(String nameInLog, Pose2d robotPose) {
+        List<Translation3d> bumperVertices_robotFrame = getBumperBox_robotFrame();
+
+        List<Translation3d> bumperVertices_fieldFrame = new ArrayList<>();
+        Rotation3d robotOrientation_fieldFrame = new Rotation3d(robotPose.getRotation());
+        Translation3d robotLocation_fieldFrame = new Translation3d(robotPose.getTranslation());
+
+        for (Translation3d vertex : bumperVertices_robotFrame) {
+            Translation3d vertexFieldFrame = vertex.rotateBy(robotOrientation_fieldFrame).plus(robotLocation_fieldFrame);
+            bumperVertices_fieldFrame.add(vertexFieldFrame);
+        }
+
+        List<Translation3d> drawMe = getPencilTrajectoryFromBoxCorners(bumperVertices_fieldFrame);
+        Logger.recordOutput(nameInLog, drawMe.toArray(new Translation3d[0]));
     }
 
 
@@ -244,8 +277,6 @@ public class AdvantageScopeDrawingUtils {
         Logger.recordOutput(name+"/bicep", drawMeBicep.toArray(new Translation3d[0]));
         Logger.recordOutput(name+"/extension", drawMeExtension.toArray(new Translation3d[0]));
         Logger.recordOutput(name+"/wrist", drawMeWrist.toArray(new Translation3d[0]));
-        
-
     }
     
 }
