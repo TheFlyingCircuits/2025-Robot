@@ -10,6 +10,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.PlayingField.FieldConstants;
 
@@ -19,7 +20,8 @@ import frc.robot.PlayingField.FieldConstants;
 public class PlacerGrabber extends SubsystemBase {
 
     /** center to center distance between the two holding positions for coral */
-    public static final double widthMeters = 1.0 * Units.inchesToMeters(7);
+    public static final double innerWidthMeters = 1.0 * Units.inchesToMeters(7);
+    public static final double outerWidthMeters = ArmConstants.wristWidthMeters;
 
     private PlacerGrabberIO io;
     private PlacerGrabberIOInputsAutoLogged inputs;

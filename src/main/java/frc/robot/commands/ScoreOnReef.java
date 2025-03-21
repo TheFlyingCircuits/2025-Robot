@@ -77,22 +77,24 @@ public class ScoreOnReef extends Command {
 
     // bumper 34 inches
     private Pose2d adjustedReefScoringPose(Pose2d stalkPose, Direction sideCoralIsIn, boolean isFacingForward) {
-        double adjustedX;
-        // 17 inches of robot space, 4.5 inches is one coral dist
-        if (reefBranch.get().getLevel() == 4) {
-            //                   edgeOfReef                      halfBumperLength                coralOuterDiameter (plus one inch)
-            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1);
-        }
-        else {
-            //                   edgeOfReef                      halfBumperLength             2x coralOuterDiameter
-            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(9);
-        }
+        //                          edgeOfReef                      halfBumperLength                coralOuterDiameter
+        double adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5);
 
-        // all pivot side scoring was calibrated at 1 coral distance away
-        if (!isFacingForward) {
-            //                   edgeOfReef                      halfBumperLength                coralOuterDiameter
-            adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5);
-        }
+        // // 17 inches of robot space, 4.5 inches is one coral dist
+        // if (reefBranch.get().getLevel() == 4) {
+        //     //                   edgeOfReef                      halfBumperLength                coralOuterDiameter (plus one inch)
+        //     adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1);
+        // }
+        // else {
+        //     //                   edgeOfReef                      halfBumperLength             2x coralOuterDiameter
+        //     adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(9);
+        // }
+
+        // // all pivot side scoring was calibrated at 1 coral distance away
+        // if (!isFacingForward || true) {
+        //     //                   edgeOfReef                      halfBumperLength                coralOuterDiameter
+        //     adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5);
+        // }
 
 
         Rotation2d rotationAdjustment;
@@ -112,7 +114,9 @@ public class ScoreOnReef extends Command {
 
 
         Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, rotationAdjustment);
-        return stalkPose.plus(targetPoseToRobotRelativeToStalk);
+        Pose2d scoringPose = stalkPose.plus(targetPoseToRobotRelativeToStalk);
+        Logger.recordOutput("scoreOnReef/targetDrivePose", scoringPose);
+        return scoringPose;
     }
 
     /**
@@ -142,13 +146,13 @@ public class ScoreOnReef extends Command {
                     return ArmPosition.frontL1;
                 case 2:
                     //2 coral distance
-                    return ArmPosition.frontL2;
+                    return ArmPosition.frontL2Refined;
                 case 3:
                     //2 coral distance
-                    return ArmPosition.frontL3;
+                    return ArmPosition.frontL3Refined;
                 case 4:
                     //1 coral distance
-                    return ArmPosition.frontL4;
+                    return ArmPosition.frontL4Refined;
             }
         }
         else {
@@ -208,7 +212,7 @@ public class ScoreOnReef extends Command {
         arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
 
         boolean closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
-        boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 1;
+        boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 2;
         boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10;
         if (closeToReef && movingSlow && shoulderNearTarget) {
             // Only start moving extension & wrist when shoulder is near the setpoint

@@ -408,6 +408,8 @@ public class RobotContainer {
         measuredArmState.extensionMeters = arm.getExtensionMeters();
         measuredArmState.wristAngleDegrees = wrist.getWristAngleDegrees();
         AdvantageScopeDrawingUtils.logArmWireframe("arm/measuredWireframe", measuredArmState, drivetrain.getPoseMeters());
+
+        AdvantageScopeDrawingUtils.drawBumpers("wireframeBumpers", drivetrain.getPoseMeters());
     }    
 
     /**** INTAKE ****/
@@ -420,7 +422,7 @@ public class RobotContainer {
         ).withName("armToIntakePositionCommand");
 
         return armToIntake.raceWith(placerGrabber.intakeOrEjectOrStop().until(placerGrabber::doesHaveCoral))
-        .withName("intakeUntilCoralAcquired").alongWith(new ScheduleCommand(leds.playIntakeAnimationCommand(drivetrain::doesSeeCoral)));
+        .withName("intakeUntilCoralAcquired").alongWith(new ScheduleCommand(leds.playIntakeAnimationCommand(drivetrain::seesAnyCoral)));
 
         // return armToIntake.alongWith(placerGrabber.setPlacerGrabberVoltsCommand(11, 11));
 

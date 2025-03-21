@@ -1,5 +1,6 @@
 package frc.robot.subsystems.vision;
 
+import java.lang.StackWalker.Option;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -36,23 +37,29 @@ public class ColorCamera {
     private Rotation3d camOrientation_robotFrame;
 
     // "Sensor" readings
-    private Optional<Translation3d> closestValidGamepiece = Optional.empty();
-    private Optional<Translation3d> bestGamepieceForLeftIntake = Optional.empty();
-    private Optional<Translation3d> bestGamepieceForRightIntake = Optional.empty();
-    private Optional<Translation3d> mostCentralValidGamepiece = Optional.empty();
     private List<Translation3d> validGamepieces_fieldCoords = new ArrayList<>();
-    private Optional<Pose3d> closestValidPose = Optional.empty();
+    private List<Translation3d> invalidGamepieces_fieldCoords = new ArrayList<>();
 
-    public Optional<Translation3d> getBestGamepieceForLeftIntake() {
-        return this.bestGamepieceForLeftIntake;
+
+    public Optional<Translation3d> getClosestGamepieceTo(Translation2d locationOnField) {
+        Optional<Translation3d> closest = Optional.empty();
+        double minDistance = -1;
+        for (Translation3d gamepieceLocation_fieldCoords : this.validGamepieces_fieldCoords) {
+            double distance = gamepieceLocation_fieldCoords.toTranslation2d().getDistance(locationOnField);
+            if (closest.isEmpty() || (distance < minDistance)) {
+                minDistance = distance;
+                closest = Optional.of(gamepieceLocation_fieldCoords);
+            }
+        }
+        return closest;
     }
 
-    public Optional<Translation3d> getBestGamepieceForRightIntake() {
-        return this.bestGamepieceForRightIntake;
+    public boolean seesAnyGamepieces() {
+        return this.validGamepieces_fieldCoords.size() > 0;
     }
 
-    public Optional<Translation3d> getMostCentralValidGamepiece() {
-        return this.mostCentralValidGamepiece;
+    public List<Translation3d> getValidGamepieces_fieldCoords() {
+        return this.validGamepieces_fieldCoords;
     }
 
 
@@ -85,25 +92,10 @@ public class ColorCamera {
     }
 
 
-    /** Returns closest gamepiece that is valid (within the field boundary and within a certain distance of the robot).
-     *  Returns an empty optional if no such gamepiece is detected. */
-    public Optional<Translation3d> getClosestValidGamepiece() {
-        // The actual closestValidGamepiece is calculated and cahced once per
-        // main loop in ColorCamera.periodic(). This allows us to call
-        // getClosestValidGamepiece() as many times as we want without unecessarily
-        // redoing our calculations.
-        return this.closestValidGamepiece;
-    }
 
-    public List<Translation3d> getValidGamepieces_fieldCoords() {
-        return this.validGamepieces_fieldCoords;
-    }
-
-
-
-    public static double signedDistanceToIntake(Direction intakeSide, Translation3d coralLocation_fieldCoords, Pose2d robotPose) {
+    private double signedDistanceToIntake(Direction intakeSide, Translation3d coralLocation_fieldCoords, Pose2d robotPose) {
         // center to center distance between both coral locations when in the intake
-        double intakeWidthMeters = PlacerGrabber.widthMeters;
+        double intakeWidthMeters = PlacerGrabber.innerWidthMeters;
 
 
         // Only left-right distance matters for signed distance.
@@ -211,24 +203,14 @@ public class ColorCamera {
 
     public void periodic(SwerveDrivePoseEstimator fusedPoseEstimator) {
         // Reset for a new iteration of the main loop
-        this.closestValidGamepiece = Optional.empty();
-        this.bestGamepieceForLeftIntake = Optional.empty();
-        this.bestGamepieceForRightIntake = Optional.empty();
-        this.mostCentralValidGamepiece = Optional.empty();
-        this.closestValidPose = Optional.empty();
-        double metersToClosestGamepiece = -1;
-        double lateralMetersToBestGamepieceForLeftIntake = -1;
-        double lateralMetersToBestGamepieceForRightIntake = -1;
-        double metersToMostCentralGamepiece = -1;
-        List<Translation3d> validGamepieces = new ArrayList<>();
-        List<Translation3d> invalidGamepieces = new ArrayList<>();
-        List<Translation3d> corners3d = new ArrayList<>();
+        this.validGamepieces_fieldCoords = new ArrayList<>();
+        this.invalidGamepieces_fieldCoords = new ArrayList<>();
         // Logger.processInputs(cam.getName(), cam);
 
 
         // Get the most recent frame from the camera,
         // and find where the robot was when that frame was captured.
-        PhotonPipelineResult mostRecentFrame = cam.getLatestResult();
+        PhotonPipelineResult mostRecentFrame = cam.isConnected() ? cam.getLatestResult() : new PhotonPipelineResult();
         Optional<Pose2d> interpolatedRobotPose = fusedPoseEstimator.sampleAt(mostRecentFrame.getTimestampSeconds());
         Pose3d robotPoseWhenPicTaken = new Pose3d(interpolatedRobotPose.orElse(fusedPoseEstimator.getEstimatedPosition())); // default to most recent pose if there isn't any pose history.
 
@@ -249,7 +231,7 @@ public class ColorCamera {
             // Don't track gamepieces outside the field perimeter.
             double inFieldToleranceMeters = 0.1;
             if (!FlyingCircuitUtils.isInField(gamepieceLocation_fieldCoords, inFieldToleranceMeters) && DriverStation.isFMSAttached()) {
-                invalidGamepieces.add(gamepieceLocation_fieldCoords);
+                this.invalidGamepieces_fieldCoords.add(gamepieceLocation_fieldCoords);
                 continue;
             }
 
@@ -258,103 +240,27 @@ public class ColorCamera {
             double minMetersFromRobot = 0.6;//(DrivetrainConstants.frameWidthMeters / 2.0) + Units.inchesToMeters(8);
             double metersFromRobot = gamepieceLocation_fieldCoords.toTranslation2d().getDistance(robotPoseNow.getTranslation()); // gamepieceLocation_robotCoords.toTranslation2d().getNorm() doesn't take into account any robot travel since the pic was taken.
             if (metersFromRobot > maxMetersFromRobot || metersFromRobot < minMetersFromRobot) {
-                invalidGamepieces.add(gamepieceLocation_fieldCoords);
+                this.invalidGamepieces_fieldCoords.add(gamepieceLocation_fieldCoords);
                 continue;
             }
 
                       
-            // The gamepiece passes all checks, so now we see if it's closer than our current closest.
-            //
-            // TODO: In 2024, we always tracked the first note that passed all of our validity checks,
-            //       meaning the sort order in photon vision determined the tie breaker between multiple valid notes
-            //       (we used biggest first).
-            //       While that worked, I'd like to try this method where track the closest of all the valid gamepieces
-            //       because it's less error prone (i.e. impervious to forgetting to set the sort order in photon vision),
-            //       and it also takes advantage of the new latency compensated field locations of the gamepieces.
-            //       However, if this version isn't working, we might go back to the old way, which is why the TODO is here.
-            validGamepieces.add(gamepieceLocation_fieldCoords);
-            if (this.closestValidGamepiece.isEmpty() || (metersFromRobot < metersToClosestGamepiece)) {
-                this.closestValidGamepiece = Optional.of(gamepieceLocation_fieldCoords);
-                Rotation3d predicted = this.getPredictedOrientation(target, robotPoseWhenPicTaken);
-                this.closestValidPose = Optional.of(new Pose3d(gamepieceLocation_fieldCoords, predicted));
-                Logger.recordOutput("coralBoundingBoxCorners", this.getCornerRays(target, robotPoseWhenPicTaken).toArray(new Translation3d[0]));
-                Logger.recordOutput("orientedCoralPose", new Pose3d[] {this.closestValidPose.get()});
-                metersToClosestGamepiece = metersFromRobot;
-            }
-
-
-            double signedDistanceToLeftIntake = ColorCamera.signedDistanceToIntake(Direction.left, gamepieceLocation_fieldCoords, robotPoseNow);
-            double unsignedDistanceToLeftIntake = Math.abs(signedDistanceToLeftIntake);
-            if (this.bestGamepieceForLeftIntake.isEmpty() || (unsignedDistanceToLeftIntake < lateralMetersToBestGamepieceForLeftIntake)) {
-                this.bestGamepieceForLeftIntake = Optional.of(gamepieceLocation_fieldCoords);
-                lateralMetersToBestGamepieceForLeftIntake = unsignedDistanceToLeftIntake;
-            }
-
-
-
-            double signedDistanceToRightIntake = ColorCamera.signedDistanceToIntake(Direction.right, gamepieceLocation_fieldCoords, robotPoseNow);
-            double unsignedDistanceToRightIntake = Math.abs(signedDistanceToRightIntake);
-            if (this.bestGamepieceForRightIntake.isEmpty() || (unsignedDistanceToRightIntake < lateralMetersToBestGamepieceForRightIntake)) {
-                this.bestGamepieceForRightIntake = Optional.of(gamepieceLocation_fieldCoords);
-                lateralMetersToBestGamepieceForRightIntake = unsignedDistanceToRightIntake;
-            }
-
-            double signedDistanceToCenter = FlyingCircuitUtils.signedDistanceToLine(gamepieceLocation_fieldCoords.toTranslation2d(), robotPoseNow);
-            double unsignedDistanceToCenter = Math.abs(signedDistanceToCenter);
-            if (this.mostCentralValidGamepiece.isEmpty() || (unsignedDistanceToCenter < metersToMostCentralGamepiece)) {
-                this.mostCentralValidGamepiece = Optional.of(gamepieceLocation_fieldCoords);
-                metersToMostCentralGamepiece = unsignedDistanceToCenter;
-            }
-
-
+            // The gamepiece passes all checks, so its valid.
+            this.validGamepieces_fieldCoords.add(gamepieceLocation_fieldCoords);
         }
 
 
         // Logging, then we're done!
         String logPrefix = cam.getName()+"/mostRecentFrame/";
         Logger.recordOutput(logPrefix+"timestampSeconds", mostRecentFrame.getTimestampSeconds());
-        Logger.recordOutput(logPrefix+"validGamepieces", validGamepieces.toArray(new Translation3d[0]));
-        Logger.recordOutput(logPrefix+"invalidGamepieces", invalidGamepieces.toArray(new Translation3d[0]));
-        this.validGamepieces_fieldCoords = validGamepieces;
-        // Logger.recordOutput(logPrefix+"corners", corners3d.toArray(new Translation3d[0]));
-        if (!closestValidGamepiece.isPresent()) {
-            Logger.recordOutput("coralBoundingBoxCorners", new Translation3d[0]);
-            Logger.recordOutput("orientedCoralPose", new Pose3d[0]);
-        }
+        Logger.recordOutput(logPrefix+"validGamepieces", this.validGamepieces_fieldCoords.toArray(new Translation3d[0]));
+        Logger.recordOutput(logPrefix+"invalidGamepieces", this.invalidGamepieces_fieldCoords.toArray(new Translation3d[0]));
 
-        // AdvantageKit doesn't support logging optionals, so we log "closestValidGamepiece"
-        // as an array of size 0 when it isn't present, and an array of size 1 when it is present.
-        Logger.recordOutput(cam.getName()+"/closestValidGamepiece/location_fieldCoords", (closestValidGamepiece.isPresent()) ? new Translation3d[] {closestValidGamepiece.get()} : new Translation3d[0]);
-        Logger.recordOutput(cam.getName()+"/closestValidGamepiece/distanceMeters", metersToClosestGamepiece);
 
-        Logger.recordOutput(cam.getName()+"/mostCentralValidGamepiece/location_fieldCoords", (mostCentralValidGamepiece.isPresent()) ? new Translation3d[] {mostCentralValidGamepiece.get()} : new Translation3d[0]);
-        Logger.recordOutput(cam.getName()+"/mostCentralValidGamepiece/lateralDistanceMeters", metersToMostCentralGamepiece);
-
-        Logger.recordOutput(cam.getName()+"/bestGamepieceForLeftIntake/location_fieldCoords", (bestGamepieceForLeftIntake.isPresent()) ? new Translation3d[] {bestGamepieceForLeftIntake.get()} : new Translation3d[0]);
-        Logger.recordOutput(cam.getName()+"/bestGamepieceForLeftIntake/lateralDistanceMeters", lateralMetersToBestGamepieceForLeftIntake);
-
-        Logger.recordOutput(cam.getName()+"/bestGamepieceForRightIntake/location_fieldCoords", (bestGamepieceForRightIntake.isPresent()) ? new Translation3d[] {bestGamepieceForRightIntake.get()} : new Translation3d[0]);
-        Logger.recordOutput(cam.getName()+"/bestGamepieceForRightIntake/lateralDistanceMeters", lateralMetersToBestGamepieceForRightIntake);
-
-        Optional<Translation3d> bestGamepieceForEitherIntake = Optional.empty();
-        double lateralMetersToBestGamepieceForEitherIntake = -1;
-        if (bestGamepieceForLeftIntake.isPresent() && bestGamepieceForRightIntake.isPresent()) {
-            boolean leftCloserThanRight = lateralMetersToBestGamepieceForLeftIntake <= lateralMetersToBestGamepieceForRightIntake;
-
-            bestGamepieceForEitherIntake = leftCloserThanRight ? bestGamepieceForLeftIntake : bestGamepieceForRightIntake;
-            lateralMetersToBestGamepieceForEitherIntake = leftCloserThanRight ? lateralMetersToBestGamepieceForLeftIntake : lateralMetersToBestGamepieceForRightIntake;
-        }
-        else if (bestGamepieceForLeftIntake.isPresent()) {
-            bestGamepieceForEitherIntake = bestGamepieceForLeftIntake;
-            lateralMetersToBestGamepieceForEitherIntake = lateralMetersToBestGamepieceForLeftIntake;
-        }
-        else if (bestGamepieceForRightIntake.isPresent()) {
-            bestGamepieceForEitherIntake = bestGamepieceForRightIntake;
-            lateralMetersToBestGamepieceForEitherIntake = lateralMetersToBestGamepieceForRightIntake;
-        }
-
-        Logger.recordOutput(cam.getName()+"/bestGamepieceForEitherIntake/location_fieldCoords", (bestGamepieceForEitherIntake.isPresent()) ? new Translation3d[] {bestGamepieceForEitherIntake.get()} : new Translation3d[0]);
-        Logger.recordOutput(cam.getName()+"/bestGamepieceForEitherIntake/lateralDistanceMeters", lateralMetersToBestGamepieceForEitherIntake);
+        // // AdvantageKit doesn't support logging optionals, so we log "closestValidGamepiece"
+        // // as an array of size 0 when it isn't present, and an array of size 1 when it is present.
+        // Logger.recordOutput(cam.getName()+"/closestValidGamepiece/location_fieldCoords", (closestValidGamepiece.isPresent()) ? new Translation3d[] {closestValidGamepiece.get()} : new Translation3d[0]);
+        // Logger.recordOutput(cam.getName()+"/closestValidGamepiece/distanceMeters", metersToClosestGamepiece);
     }
 
 

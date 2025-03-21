@@ -25,6 +25,17 @@ public class ArmPosition {
     //1 coral distance
     public static final ArmPosition frontL4 = new ArmPosition(71, 35, 1.6);
 
+
+
+    //1 coral distance
+    public static final ArmPosition frontL2Refined = new ArmPosition(39.37, 113.20, 0.72);
+
+    //1 coral distance
+    public static final ArmPosition frontL3Refined = new ArmPosition(58.0, 91.91, 0.97);
+
+    //1 coral distance
+    public static final ArmPosition frontL4Refined = new ArmPosition(72.59, 33.28, 1.6);
+
     
     //1 coral distance
     public static final ArmPosition backL2 = new ArmPosition(95.45, 133.58, ArmConstants.minExtensionMeters);

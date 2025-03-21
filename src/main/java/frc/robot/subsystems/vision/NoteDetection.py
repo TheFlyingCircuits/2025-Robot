@@ -15,14 +15,16 @@ def initCamera():
     camera.set(cv.CAP_PROP_FOURCC, desiredFourcc)
 
     # set picture size and fps
-    # Monochrome Camera (Arducam B0332) can do all settings
-    # Color Camera (Arducam b0385) can only do 100, 90, 60, 30, or sometimes 15 fps depending on resolution
+    # Monochrome Camera (Arducam B0332, OV9281 sensor) can do all settings
+    # Color Camera (Arducam B0385, OV9782 sensor) can only do 100, 90, 60, 30, or sometimes 15 fps depending on resolution
     # Both cameras claim a 70 degree horizontal FOV on the datasheet.
     # 1280 x 800 (MJPG 100/120, YUYV 10)
     # 1280 x 720 (MJPG 100/120, YUYV 10)
     #  800 x 600 (MJPG 100/120)
     #  640 x 480 (MJPG 100/120)
     #  320 x 240 (MJPG 100/120)
+
+    # High-res Monochrome Camera (Arducam B0322, OV2311 sensor)
 
     camera.set(cv.CAP_PROP_FRAME_WIDTH, 800)
     camera.set(cv.CAP_PROP_FRAME_HEIGHT, 600)
