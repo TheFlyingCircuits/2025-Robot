@@ -126,7 +126,7 @@ public class RobotContainer {
         }
         
         
-        drivetrain.setDefaultCommand(drivetrain.drivetrainDefaultCommand(duncan::getRequestedFieldOrientedVelocity));
+        drivetrain.setDefaultCommand(driverFullyControlDrivetrain());
         leds.setDefaultCommand(leds.heartbeatCommand(1.).ignoringDisable(true));
         
         
@@ -155,7 +155,7 @@ public class RobotContainer {
     private int desiredLevel = 2;
     private Direction desiredStalk = Direction.left;
 
-    private boolean visionAssistedIntakeInTeleop = true;
+    private boolean visionAssistedIntakeInTeleop = false;
 
     private void testBindings() {
 
@@ -269,21 +269,31 @@ public class RobotContainer {
         amaraController.x().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
         amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
 
+        if (RobotBase.isSimulation()) { // use a single controller in sim for convenience
+            duncanController.povDown().onTrue(new InstantCommand(() -> {desiredLevel = 1; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+            duncanController.povLeft().onTrue(new InstantCommand(() -> {desiredLevel = 2; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+            duncanController.povRight().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+            duncanController.povUp().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        }
 
-        amaraController.leftTrigger().onTrue(new InstantCommand(() -> {visionAssistedIntakeInTeleop = false;
-            Logger.recordOutput("escapeHatch", visionAssistedIntakeInTeleop);}));
-        amaraController.rightTrigger().onTrue(new InstantCommand(() -> {visionAssistedIntakeInTeleop = true;
-            Logger.recordOutput("escapeHatch", visionAssistedIntakeInTeleop);}));
+
+        amaraController.leftTrigger().onTrue(new InstantCommand(() -> {
+            visionAssistedIntakeInTeleop = false;
+            Logger.recordOutput("escapeHatch", visionAssistedIntakeInTeleop);
+        }));
+        amaraController.rightTrigger().onTrue(new InstantCommand(() -> {
+            visionAssistedIntakeInTeleop = true;
+            Logger.recordOutput("escapeHatch", visionAssistedIntakeInTeleop);
+        }));
 
 
         //ground intake
-        duncanController.rightTrigger()
-            .whileTrue(
-                new ConditionalCommand(
+        duncanController.rightTrigger().whileTrue(
+            new ConditionalCommand(
                 intakeTowardsCoral(duncan::getRequestedFieldOrientedVelocity),
-                intakeUntilCoralAcquired().alongWith(
-                    drivetrain.drivetrainDefaultCommand(duncan::getRequestedFieldOrientedVelocity)),
-                () -> visionAssistedIntakeInTeleop)
+                intakeUntilCoralAcquired().alongWith(driverFullyControlDrivetrain()),
+                () -> visionAssistedIntakeInTeleop
+            )
         );
         
         //trough score
@@ -350,21 +360,23 @@ public class RobotContainer {
         
 
 
-        //climb prep
-        duncanController.povUp().onTrue(
-            new ParallelCommandGroup(
-                arm.shoulder.setTargetAngleCommand(101.4),
-                wrist.setTargetPositionCommand(0)
-            )
-        );
+        if (RobotBase.isReal()) { // climb buttons used for reef target level selection in sim
+            //climb prep
+            duncanController.povUp().onTrue(
+                new ParallelCommandGroup(
+                    arm.shoulder.setTargetAngleCommand(101.4),
+                    wrist.setTargetPositionCommand(0)
+                )
+            );
 
-        //climb pull
-        duncanController.povDown().whileTrue(
-            arm.shoulder.run(() -> arm.setShoulderVoltage(-3))
-                .alongWith(
-                    wrist.setTargetPositionCommand(13),
-                    arm.extension.setTargetLengthCommand(0.75))
-        );
+            //climb pull
+            duncanController.povDown().whileTrue(
+                arm.shoulder.run(() -> arm.setShoulderVoltage(-3))
+                    .alongWith(
+                        wrist.setTargetPositionCommand(13),
+                        arm.extension.setTargetLengthCommand(0.75))
+            );
+        }
 
         // removes algae
         duncanController.a().whileTrue(
@@ -401,16 +413,27 @@ public class RobotContainer {
         desiredArmState.shoulderAngleDegrees = arm.getTargetShoulderAngleDegrees();
         desiredArmState.extensionMeters = arm.getTargetExtensionMeters();
         desiredArmState.wristAngleDegrees = wrist.getTargetWristDegrees();
-        AdvantageScopeDrawingUtils.logArmWireframe("arm/desiredWireframe", desiredArmState, drivetrain.getPoseMeters());
+        AdvantageScopeDrawingUtils.logArmWireframe("arm/desiredWireframe", desiredArmState, drivetrain.getPoseMeters(), placerGrabber.leftHasCoral(), placerGrabber.rightHasCoral());
 
         ArmPosition measuredArmState = new ArmPosition();
         measuredArmState.shoulderAngleDegrees = arm.getShoulderAngleDegrees();
         measuredArmState.extensionMeters = arm.getExtensionMeters();
         measuredArmState.wristAngleDegrees = wrist.getWristAngleDegrees();
-        AdvantageScopeDrawingUtils.logArmWireframe("arm/measuredWireframe", measuredArmState, drivetrain.getPoseMeters());
+        AdvantageScopeDrawingUtils.logArmWireframe("arm/measuredWireframe", measuredArmState, drivetrain.getPoseMeters(), placerGrabber.leftHasCoral(), placerGrabber.rightHasCoral());
 
         AdvantageScopeDrawingUtils.drawBumpers("wireframeBumpers", drivetrain.getPoseMeters());
     }    
+
+
+    private Command driverFullyControlDrivetrain() { return drivetrain.run(() -> {
+        drivetrain.fieldOrientedDrive(duncan.getRequestedFieldOrientedVelocity(), true);
+        Logger.recordOutput("drivetrain/runningDefaultCommand", true);
+        }).finallyDo(() -> {
+            Logger.recordOutput("drivetrain/runningDefaultCommand", false);
+        });
+    }
+
+
 
     /**** INTAKE ****/
 
@@ -435,7 +458,7 @@ public class RobotContainer {
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
         return new SequentialCommandGroup(
-            intakeUntilCoralAcquired().alongWith(drivetrain.drivetrainDefaultCommand(howToDriveWhenNoCoralDetected)).until(() -> {return Math.abs(wrist.getWristAngleDegrees()) < 1;}),
+            intakeUntilCoralAcquired().alongWith(driverFullyControlDrivetrain()).until(() -> {return Math.abs(wrist.getWristAngleDegrees()) < 1;}),
             drivetrain.driveTowardsCoralCommand(howToDriveWhenNoCoralDetected).withDeadline(intakeUntilCoralAcquired())
         );
 
@@ -624,7 +647,7 @@ public class RobotContainer {
 
     private Command intakeTowardsCoralInAuto() {
             return drivetrain.run(() -> {
-                drivetrain.enableRotationAroundIntake();
+                // drivetrain.enableRotationAroundIntake();
                 if (drivetrain.getBestCoralLocation().isEmpty()) {
                     // can't see coral
                     FieldElement sourceSide = drivetrain.getClosestSourceSide();
@@ -634,7 +657,8 @@ public class RobotContainer {
                 } else {
                     // can see coral
                     // drivetrain.driveTowardsCoral(new ChassisSpeeds()); // auto is accounted for within this function
-                    drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+                    // drivetrain.driveTowardsCoral(drivetrain.getBestCoralLocation().get());
+                    drivetrain.driveTowardsClosestCoralToIntake(new ChassisSpeeds());
                 }
             })
             .raceWith(intakeUntilCoralAcquired()).withName("intakeTowardsCoralInAuto").withDeadline(new InstantCommand(() -> {drivetrain.resetCenterOfRotation();}));

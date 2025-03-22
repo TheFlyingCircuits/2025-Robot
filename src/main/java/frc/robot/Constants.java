@@ -65,10 +65,21 @@ public final class Constants {
         public final static Translation3d retractionHardStop_elbowFrame = new Translation3d(Units.inchesToMeters(-3.0), 0, 0);
         public final static Translation3d tipOfStationaryStage_elbowFrame = new Translation3d(Units.inchesToMeters(25-3.0), 0, 0);
         public final static Translation3d wristLocation_elbowFrame_retracted = tipOfStationaryStage_elbowFrame.plus(new Translation3d(Units.inchesToMeters((0.93417 + 0.93321)/2.0), 0, 0));
-        public final static double wristWidthMeters = Units.inchesToMeters(10.18); // center to center distance of omni wheel axles
+        public final static double wristOuterWidthMeters = Units.inchesToMeters(10.18); // center to center distance of omni wheel axles
+        public final static double wristWidthMeters = Units.inchesToMeters(7.0); // center to center distance between the two holding positions for coral
         public final static double stationaryStageWidthMeters = Units.inchesToMeters(4.0);
         public final static double stationaryStageHeightMeters = Units.inchesToMeters(4.0);
+
         public final static Translation3d orangeWheels_wristFrame = new Translation3d(Units.inchesToMeters(11.15338), 0, Units.inchesToMeters(-4.27657));
+
+        //                                       wristPivotToTopSurfaceOfBottomPlate
+        public final static double wristToCoralZ = Units.inchesToMeters(-9.5) + FieldConstants.coralOuterRadiusMeters;
+
+        //                                       wristPivotToBumpersInIntakePosition
+        public final static double wristToCoralX = Units.inchesToMeters(-0.95612) + (FieldConstants.coralLengthMeters/2.0);
+        public final static Translation3d intakeToLeftCoral = new Translation3d(wristToCoralX, wristWidthMeters/2.0, wristToCoralZ);
+        public final static Translation3d intakeToRightCoral = new Translation3d(wristToCoralX, -wristWidthMeters/2.0, wristToCoralZ);
+
         
         /** Minimum length of the arm when fully retracted, 0.64 meters*/
         public final static double minExtensionMeters = Units.inchesToMeters(25);

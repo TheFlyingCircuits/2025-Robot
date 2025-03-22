@@ -166,7 +166,7 @@ public class AdvantageScopeDrawingUtils {
         List<Translation3d> vertices = new ArrayList<>();
 
         // right side
-        Translation3d rightOffset = new Translation3d(0, -ArmConstants.wristWidthMeters/2.0, 0);
+        Translation3d rightOffset = new Translation3d(0, -ArmConstants.wristOuterWidthMeters/2.0, 0);
         vertices.add(new Translation3d(0, 0, 0).plus(rightOffset));
         vertices.add(ArmConstants.orangeWheels_wristFrame.plus(rightOffset));
         vertices.add(new Translation3d(0, 0, ArmConstants.orangeWheels_wristFrame.getZ()).plus(rightOffset));
@@ -218,7 +218,7 @@ public class AdvantageScopeDrawingUtils {
         return output;
     }
 
-    public static void logArmWireframe(String name, ArmPosition armPosition, Pose2d robotPose) {
+    public static void logArmWireframe(String name, ArmPosition armPosition, Pose2d robotPose, boolean hasLeftCoral, boolean hasRightCoral) {
         // get poses of components
         double shoulderRads = Units.degreesToRadians(armPosition.shoulderAngleDegrees);
         double extensionMeters = armPosition.extensionMeters;
@@ -277,6 +277,19 @@ public class AdvantageScopeDrawingUtils {
         Logger.recordOutput(name+"/bicep", drawMeBicep.toArray(new Translation3d[0]));
         Logger.recordOutput(name+"/extension", drawMeExtension.toArray(new Translation3d[0]));
         Logger.recordOutput(name+"/wrist", drawMeWrist.toArray(new Translation3d[0]));
+
+        List<Pose3d> coralPoses_fieldFrame = new ArrayList<>();
+        if (hasLeftCoral) {
+            Transform3d leftCoralPose_wristFrame = new Transform3d(ArmConstants.intakeToLeftCoral, new Rotation3d());
+            Transform3d leftCoralPose_fieldFrame = wristPose_fieldFrame.plus(leftCoralPose_wristFrame);
+            coralPoses_fieldFrame.add(new Pose3d(leftCoralPose_fieldFrame.getTranslation(), leftCoralPose_fieldFrame.getRotation()));
+        }
+        if (hasRightCoral) {
+            Transform3d rightCoralPose_wristFrame = new Transform3d(ArmConstants.intakeToRightCoral, new Rotation3d());
+            Transform3d rightCoralPose_fieldFrame = wristPose_fieldFrame.plus(rightCoralPose_wristFrame);
+            coralPoses_fieldFrame.add(new Pose3d(rightCoralPose_fieldFrame.getTranslation(), rightCoralPose_fieldFrame.getRotation()));
+        }
+        Logger.recordOutput(name+"/coral", coralPoses_fieldFrame.toArray(new Pose3d[0]));
     }
     
 }

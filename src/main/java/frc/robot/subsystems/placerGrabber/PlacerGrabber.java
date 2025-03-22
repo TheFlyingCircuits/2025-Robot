@@ -20,8 +20,10 @@ import frc.robot.PlayingField.FieldConstants;
 public class PlacerGrabber extends SubsystemBase {
 
     /** center to center distance between the two holding positions for coral */
-    public static final double innerWidthMeters = 1.0 * Units.inchesToMeters(7);
-    public static final double outerWidthMeters = ArmConstants.wristWidthMeters;
+    public static final double innerWidthMeters = ArmConstants.wristWidthMeters;
+
+    /** center to center distance between the two omni wheel axles */
+    public static final double outerWidthMeters = ArmConstants.wristOuterWidthMeters;
 
     private PlacerGrabberIO io;
     private PlacerGrabberIOInputsAutoLogged inputs;
@@ -88,6 +90,13 @@ public class PlacerGrabber extends SubsystemBase {
             return Direction.left;
         else
              return Direction.right;
+    }
+
+    public boolean leftHasCoral() {
+        return leftHasCoral;
+    }
+    public boolean rightHasCoral() {
+        return rightHasCoral;
     }
     
     public double getFrontRollerAvgCurrent() {
