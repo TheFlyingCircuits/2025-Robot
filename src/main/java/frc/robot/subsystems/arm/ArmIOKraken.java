@@ -81,7 +81,7 @@ public class ArmIOKraken implements ArmIO{
 
         extensionConfig.Feedback.SensorToMechanismRatio = 1./ArmConstants.extensionMetersPerMotorRotation;
 
-        extensionConfig.CurrentLimits.StatorCurrentLimit = 70;
+        extensionConfig.CurrentLimits.StatorCurrentLimit = 100;
 
         extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         extensionConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.maxExtensionMeters;

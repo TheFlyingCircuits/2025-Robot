@@ -53,7 +53,6 @@ import frc.robot.subsystems.placerGrabber.PlacerGrabberSim;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonLib;
 import frc.robot.subsystems.wrist.Wrist;
-import frc.robot.subsystems.wrist.WristIO;
 import frc.robot.subsystems.wrist.WristIONeo;
 import frc.robot.subsystems.wrist.WristIOSim;
 
@@ -661,7 +660,7 @@ public class RobotContainer {
                     drivetrain.driveTowardsClosestCoralToIntake(new ChassisSpeeds());
                 }
             })
-            .raceWith(intakeUntilCoralAcquired()).withName("intakeTowardsCoralInAuto").withDeadline(new InstantCommand(() -> {drivetrain.resetCenterOfRotation();}));
+            .raceWith(intakeUntilCoralAcquired()).withName("intakeTowardsCoralInAuto").andThen(placerGrabber.setPlacerGrabberVoltsCommand(0, 0).withTimeout(.1));
     }
     
 
@@ -690,34 +689,34 @@ public class RobotContainer {
 
     public Command leftSideAuto() {
         return new SequentialCommandGroup(
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_J4, () -> true),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_J4, () -> true).withTimeout(5),
             homeArmWhileGoingToSource(),
             intakeTowardsCoralInAuto(),
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_K4, () -> true),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_K4, () -> true).withTimeout(5),
             homeArmWhileGoingToSource(),
             intakeTowardsCoralInAuto(),
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_L4, () -> true),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_L4, () -> true).withTimeout(5),
             homeArmWhileGoingToSource(),
             intakeTowardsCoralInAuto(),
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_A4, () -> true)
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_A4, () -> true).withTimeout(5)
         );
     }
 
     public Command rightSideAuto() {
         return new SequentialCommandGroup(
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_E4, () -> true),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_E4, () -> true).withTimeout(5),
             homeArmWhileGoingToSource(),
             intakeTowardsCoralInAuto(),
             driveTowardsReef(),
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_D4, () -> true),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_D4, () -> true).withTimeout(5),
             homeArmWhileGoingToSource(),
             intakeTowardsCoralInAuto(),
             driveTowardsReef(),
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_C4, () -> true),
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_C4, () -> true).withTimeout(5),
             homeArmWhileGoingToSource(),
             intakeTowardsCoralInAuto(),
             driveTowardsReef(),
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_B4, () -> true)
+            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> ReefBranch.BRANCH_B4, () -> true).withTimeout(5)
         );
 
     }
