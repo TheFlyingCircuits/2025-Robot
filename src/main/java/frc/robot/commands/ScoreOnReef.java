@@ -194,7 +194,7 @@ public class ScoreOnReef extends Command {
         
         ChassisSpeeds driverControl = translationController.get();
         if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
-            drivetrain.pidToPose(targetPose, 1.5);
+            drivetrain.pidToPose(targetPose, 2.5);
             // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
             // drivetrain.fieldOrientedDriveOnALine(driverControl.div(3.0), targetPose);
         }
