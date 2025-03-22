@@ -86,6 +86,8 @@ public class Drivetrain extends SubsystemBase {
     private double intakeX_robotFrame = (DrivetrainConstants.frameWithBumpersWidthMeters / 2.0);// + Units.inchesToMeters(6); // TODO: placeholder value! needs measurement!
     //private double intakeX_robotFrame = 0; //(DrivetrainConstants.frameWithBumpersWidthMeters / 2.0) + Units.inchesToMeters(6);
     private Transform2d intakePose_robotFrame = new Transform2d(intakeX_robotFrame, 0, Rotation2d.kZero);
+    private Transform2d leftIntakePose_robotFrame = intakePose_robotFrame.plus(new Transform2d(0, PlacerGrabber.outerWidthMeters/2.0, Rotation2d.kZero));
+    private Transform2d rightIntakePose_robotFrame = intakePose_robotFrame.plus(new Transform2d(0, -PlacerGrabber.outerWidthMeters/2.0, Rotation2d.kZero));
 
     public Drivetrain(
         GyroIO gyroIO, 
@@ -634,13 +636,11 @@ public class Drivetrain extends SubsystemBase {
         return closest;
     }
     public Optional<Translation3d> getClosestCoralToIntake(Direction leftOrRight) {
-        double intakeCenterToOmniAxle = PlacerGrabber.outerWidthMeters / 2.0;
+        Translation2d intakeLocation_robotFrame = this.leftIntakePose_robotFrame.getTranslation();
         if (leftOrRight == Direction.right) {
-            intakeCenterToOmniAxle *= -1;
+            intakeLocation_robotFrame = this.rightIntakePose_robotFrame.getTranslation();
         }
-        double robotCenterToFrontBumper = this.intakeX_robotFrame;//DrivetrainConstants.frameWithBumpersWidthMeters / 2.0;
-        Translation2d intake_robotFrame = new Translation2d(robotCenterToFrontBumper, intakeCenterToOmniAxle);
-        Translation2d intake_fieldFrame = intake_robotFrame.rotateBy(getPoseMeters().getRotation()).plus(getPoseMeters().getTranslation());
+        Translation2d intake_fieldFrame = intakeLocation_robotFrame.rotateBy(getPoseMeters().getRotation()).plus(getPoseMeters().getTranslation());
 
         Optional<Translation3d> closest = intakeCam.getClosestGamepieceTo(intake_fieldFrame);
         
@@ -738,12 +738,34 @@ public class Drivetrain extends SubsystemBase {
     }
 
 
-    // public void driveTowardsCoral(ChassisSpeeds rawSpeedRequest) {
+    // public void driveTowardsCoralWithLateralOffset() {
     //     Pose2d effectiveCenter = this.getPoseMeters();
     //     Translation2d targetCoral;
     //     double offsetY = 0;
 
-    //     Optional<Translation3d> bestLeftGamePiece = intakeCam.getBestGamepieceForLeftIntake();
+    //     // do nothing if no gamepieces found
+    //     if (!this.seesAnyCoral()) {
+    //         this.robotOrientedDrive(new ChassisSpeeds(), true);
+    //     }
+
+    //     Translation3d closestToLeft = this.getClosestCoralToIntake(Direction.left).get();
+    //     Translation3d closestToRight = this.getClosestCoralToIntake(Direction.right).get();
+
+    //     Translation2d leftIntakeOnField = getPoseMeters().plus(leftIntakePose_robotFrame).getTranslation();
+    //     Translation2d rightIntakeOnField = getPoseMeters().plus(rightIntakePose_robotFrame).getTranslation();
+
+    //     double distanceToLeft = leftIntakeOnField.getDistance(closestToLeft.toTranslation2d());
+    //     double distanceToRight = rightIntakeOnField.getDistance(closestToRight.toTranslation2d());
+
+    //     double intakeCenterToOmniAxle = PlacerGrabber.outerWidthMeters / 2.0;
+    //     if (leftOrRight == Direction.right) {
+    //         intakeCenterToOmniAxle *= -1;
+    //     }
+    //     double robotCenterToFrontBumper = this.intakeX_robotFrame;//DrivetrainConstants.frameWithBumpersWidthMeters / 2.0;
+    //     Translation2d intake_robotFrame = new Translation2d(robotCenterToFrontBumper, intakeCenterToOmniAxle);
+    //     Translation2d intake_fieldFrame = intake_robotFrame.rotateBy(getPoseMeters().getRotation()).plus(getPoseMeters().getTranslation());
+
+    //     Translation2d intakePositionOnField = 
     //     Optional<Translation3d> bestRightGamePiece = intakeCam.getBestGamepieceForRightIntake();
     //     if (bestLeftGamePiece.isPresent() && bestRightGamePiece.isPresent()) {
     //         double leftDistMeters = Math.abs(ColorCamera.signedDistanceToIntake(Direction.left, bestLeftGamePiece.get(), getPoseMeters()));
@@ -807,16 +829,18 @@ public class Drivetrain extends SubsystemBase {
         Logger.recordOutput("coralTracking/selectedTarget", targetCoral.isPresent() ? (new Translation3d[] {targetCoral.get()}) : (new Translation3d[0]));
 
         // just regular driving if we can't find an intended target
-        if (targetCoral.isEmpty() || true) {
+        if (targetCoral.isEmpty()) {
             this.fieldOrientedDrive(rawSpeedRequest.get(), true);
             return;
         }
 
-        // aim assist if we've found an intended target
-        Translation2d intakeLocationOnField = getPoseMeters().plus(intakePose_robotFrame).getTranslation();
-        Translation2d intakeToCoral = targetCoral.get().toTranslation2d().minus(intakeLocationOnField);
+        this.driveTowardsCoral();
 
-        this.fieldOrientedDriveOnALine(rawSpeedRequest.get(), new Pose2d(intakeLocationOnField, intakeToCoral.getAngle()));
+        // // aim assist if we've found an intended target
+        // Translation2d intakeLocationOnField = getPoseMeters().plus(intakePose_robotFrame).getTranslation();
+        // Translation2d intakeToCoral = targetCoral.get().toTranslation2d().minus(intakeLocationOnField);
+
+        // this.fieldOrientedDriveOnALine(rawSpeedRequest.get(), new Pose2d(intakeLocationOnField, intakeToCoral.getAngle()));
         // this.fieldOrientedDriveWhileAiming(rawSpeedRequest.get(), intakeToCoral.getAngle()); // angle spins out as you get close
 
 

@@ -434,7 +434,10 @@ public class RobotContainer {
     }
 
     private Command intakeTowardsCoral(Supplier<ChassisSpeeds> howToDriveWhenNoCoralDetected) {
-        return drivetrain.driveTowardsCoralCommand(howToDriveWhenNoCoralDetected).withDeadline(intakeUntilCoralAcquired());
+        return new SequentialCommandGroup(
+            intakeUntilCoralAcquired().alongWith(drivetrain.drivetrainDefaultCommand(howToDriveWhenNoCoralDetected)).until(() -> {return Math.abs(wrist.getWristAngleDegrees()) < 1;}),
+            drivetrain.driveTowardsCoralCommand(howToDriveWhenNoCoralDetected).withDeadline(intakeUntilCoralAcquired())
+        );
 
         // return drivetrain.run(() -> {
         //     // have driver stay in control when the intake camera doesn't see a coral
