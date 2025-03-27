@@ -97,6 +97,7 @@ public interface FieldElement {
     FieldElement PROCESSOR             = new StandardFieldElement(16, 3, "PROCESSOR");
     FieldElement BARGE                 = new StandardFieldElement(5, 14, "BARGE");
     FieldElement ENEMY_BARGE           = new StandardFieldElement(4, 15, "ENEMY_BARGE");
+    FieldElement[] ALL_LOADING_STATIONS = {LEFT_LOADING_STATION , RIGHT_LOADING_STATION};
 
     // Reef faces are named from the driver's perspective:
     //

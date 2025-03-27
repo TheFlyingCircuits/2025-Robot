@@ -12,14 +12,18 @@ import frc.robot.Constants.SwerveModuleConstants;
 
 /** Add your docs here. */
 public class SwerveModuleIOSim implements SwerveModuleIO {
-    double momentOfInertia = 0.1;
+    double steerMomentOfInertia = 0.001;
+    double driveMomentOfInertia = 0.2;
     // dummy values needs to be changed!!!!
+
+    DCMotor driveMotorConstants = DCMotor.getKrakenX60Foc(1);
+    DCMotor steerMotorConstants = DCMotor.getKrakenX60Foc(1);
     
-    private FlywheelSim angleSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), 
-    momentOfInertia, 1./SwerveModuleConstants.steerGearReduction), DCMotor.getNEO(1) , 0.025);
+    private FlywheelSim angleSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(steerMotorConstants, 
+    steerMomentOfInertia, 1./SwerveModuleConstants.steerGearReduction), steerMotorConstants, 0.025);
     
-    private FlywheelSim driveSim= new FlywheelSim(LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), momentOfInertia, 
-    1./SwerveModuleConstants.driveGearReduction),  DCMotor.getNEO(1) , 0.004);
+    private FlywheelSim driveSim= new FlywheelSim(LinearSystemId.createFlywheelSystem(driveMotorConstants, driveMomentOfInertia, 
+    1./SwerveModuleConstants.driveGearReduction),  driveMotorConstants , 0.004);
 
     @Override
     public void updateInputs(SwerveModuleIOInputs inputs) {

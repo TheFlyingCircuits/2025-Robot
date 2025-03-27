@@ -62,5 +62,5 @@ public interface ArmIO {
 
     public default void setExtensionEncoderPositionToMin() {};
 
-
+    public default void toggleIdleMode() {};
 }

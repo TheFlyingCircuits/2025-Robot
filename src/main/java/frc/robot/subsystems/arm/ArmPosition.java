@@ -16,25 +16,24 @@ public class ArmPosition {
     //2 coral distance
     public static final ArmPosition frontL1 = new ArmPosition(14, WristConstants.maxAngleDegrees, ArmConstants.minExtensionMeters);
 
+    //1 coral distance
+    public static final ArmPosition frontL2 = new ArmPosition(39.37, 113.20, 0.72);
+
+    //1 coral distance
+    public static final ArmPosition frontL3 = new ArmPosition(58.0, 91.91, 0.97);
+
+    //1 coral distance
+    public static final ArmPosition frontL4 = new ArmPosition(72.59, 33.28, 1.6);
+
+
     //2 coral distance
-    public static final ArmPosition frontL2 = new ArmPosition(35.3, 98, 0.845);
+    public static final ArmPosition frontL2_old = new ArmPosition(35.3, 98, 0.845);
 
     //2 coral distance
-    public static final ArmPosition frontL3 = new ArmPosition(52.2, 80, 1.08);
+    public static final ArmPosition frontL3_old = new ArmPosition(52.2, 80, 1.08);
 
     //1 coral distance
-    public static final ArmPosition frontL4 = new ArmPosition(71, 35, 1.6);
-
-
-
-    //1 coral distance
-    public static final ArmPosition frontL2Refined = new ArmPosition(39.37, 113.20, 0.72);
-
-    //1 coral distance
-    public static final ArmPosition frontL3Refined = new ArmPosition(58.0, 91.91, 0.97);
-
-    //1 coral distance
-    public static final ArmPosition frontL4Refined = new ArmPosition(72.59, 33.28, 1.6);
+    public static final ArmPosition frontL4_old = new ArmPosition(71, 35, 1.6);
 
     
     //1 coral distance
@@ -63,6 +62,23 @@ public class ArmPosition {
 
     public ArmPosition() {
         this(ArmConstants.armMinAngleDegrees, WristConstants.maxAngleDegrees, ArmConstants.minExtensionMeters);
+    }
+
+    public static ArmPosition getPreset(int level, boolean facingReef) {
+        if (facingReef) {
+            if (level == 1) { return frontL1; }
+            if (level == 2) { return frontL2; }
+            if (level == 3) { return frontL3; }
+            if (level == 4) { return frontL4; }
+        }
+        else {
+            if (level == 2) { return backL2; }
+            if (level == 3) { return backL3; }
+            if (level == 4) { return backL4; }
+        }
+
+        // should never get here!
+        return new ArmPosition();
     }
 
 

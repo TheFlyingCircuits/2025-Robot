@@ -4,11 +4,6 @@
       "visible": true
     }
   },
-  "System Joysticks": {
-    "window": {
-      "enabled": false
-    }
-  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
@@ -81,7 +76,7 @@
           "incKey": 264
         }
       ],
-      "axisCount": 2,
+      "axisCount": 6,
       "buttonCount": 6,
       "buttonKeys": [
         260,
@@ -101,7 +96,11 @@
   ],
   "robotJoysticks": [
     {
-      "guid": "Keyboard0"
+      "guid": "78696e70757401000000000000000000",
+      "useGamepad": true
+    },
+    {
+      "guid": "Keyboard2"
     }
   ]
 }

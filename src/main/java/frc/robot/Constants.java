@@ -30,7 +30,7 @@ import frc.robot.PlayingField.FieldConstants;
  */
 public final class Constants {
 
-    public final static boolean atCompetition = true;
+    public final static boolean atCompetition = false;
 
     public final class UniversalConstants {
         public final static double gravityMetersPerSecondSquared = 9.81;

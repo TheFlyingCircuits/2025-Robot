@@ -37,7 +37,7 @@ public class SourceIntake extends Command{
 
     @Override
     public void initialize() {
-        FieldElement sourceSide = drivetrain.getClosestSourceSide();
+        FieldElement sourceSide = drivetrain.getClosestLoadingStation();
         Transform2d pickupLocationRelativeToSource = new Transform2d(Units.inchesToMeters(DrivetrainConstants.frameWidthMeters/2 + 13), 0, Rotation2d.fromDegrees(180));
         targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
     }

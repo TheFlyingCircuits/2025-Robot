@@ -5,19 +5,15 @@
 package frc.robot.subsystems.arm;
 
 
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.ArmConstants;
-import frc.robot.PlayingField.ReefBranch;
 
 public class Arm {
 
@@ -51,6 +47,10 @@ public class Arm {
 
     }
 
+    public void toggleIdleMode() {
+        this.io.toggleIdleMode();
+    }
+
     
     public class Shoulder extends SubsystemBase {
         
@@ -60,40 +60,14 @@ public class Arm {
             });
         }
 
+        public Command waitForRetraction() { return new WaitUntilCommand(() -> {
+            Logger.recordOutput("arm/waitingForRetraction", true);
+            return extension.isSafelyRetracted();
+        }).finallyDo(() -> Logger.recordOutput("arm/waitingForRetraction", false));}
+
         /** Waits until extension is retracted before moving the arm to the desired angle. */
         public Command safeSetTargetAngleCommand(double degrees) {
-            return new WaitUntilCommand(() -> getExtensionMeters() <= ArmConstants.minExtensionMeters+0.5 && getExtensionMetersPerSecond() < 0.1)
-                .andThen(this.setTargetAngleCommand(degrees));
-        }
-
-        public Command shoulderDefaultCommand(BooleanSupplier readyToScore, BooleanSupplier isFacingReef, Supplier<Integer> predictedReefLevel) {
-            return new WaitUntilCommand(() -> getExtensionMeters() <= ArmConstants.minExtensionMeters+0.5 && getExtensionMetersPerSecond() < 0.1)
-                .andThen(this.run(() -> {
-                    if (!readyToScore.getAsBoolean()) {
-                        setShoulderTargetAngle(0);
-                        return;
-                    }
-
-                    if (!isFacingReef.getAsBoolean()) {
-                        setShoulderTargetAngle(60);
-                        return;
-                    }
-
-                    switch (predictedReefLevel.get()) {
-                        case 1:
-                            setShoulderTargetAngle(ArmPosition.frontL1.shoulderAngleDegrees);
-                            return;
-                        case 2:
-                            setShoulderTargetAngle(ArmPosition.frontL2.shoulderAngleDegrees);
-                            return;
-                        case 3:
-                            setShoulderTargetAngle(ArmPosition.frontL3.shoulderAngleDegrees);
-                            return;
-                        case 4:
-                            setShoulderTargetAngle(ArmPosition.frontL4.shoulderAngleDegrees);
-                            return;
-                    }
-            }));
+            return waitForRetraction().andThen(this.setTargetAngleCommand(degrees));
         }
 
         @Override
@@ -136,6 +110,12 @@ public class Arm {
                     io.setExtensionEncoderPositionToMin();
                     Logger.recordOutput("arm/homingExtension", false);
                 }));
+        }
+
+        public boolean isSafelyRetracted() {
+            boolean retracted = getExtensionMeters() <= (ArmConstants.minExtensionMeters+0.1);
+            boolean steady = getExtensionMetersPerSecond() < 0.1;
+            return retracted && steady;
         }
 
     }

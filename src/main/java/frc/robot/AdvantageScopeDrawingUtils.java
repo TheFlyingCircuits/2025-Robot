@@ -1,7 +1,5 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Rotation;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +9,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.ArmConstants;
@@ -46,6 +45,7 @@ public class AdvantageScopeDrawingUtils {
 
         return corners;
     }
+    // maybe better to take as input: frontX,backX,leftY,rightY,bottomZ,topZ, so box is already in the right place?
 
     public static List<Translation3d> getPencilTrajectoryFromBoxCorners(List<Translation3d> boxCorners) {
         List<Translation3d> trajectory = new ArrayList<>();
@@ -290,6 +290,28 @@ public class AdvantageScopeDrawingUtils {
             coralPoses_fieldFrame.add(new Pose3d(rightCoralPose_fieldFrame.getTranslation(), rightCoralPose_fieldFrame.getRotation()));
         }
         Logger.recordOutput(name+"/coral", coralPoses_fieldFrame.toArray(new Pose3d[0]));
+    }
+
+    public static void drawCircle(String name, Translation2d center, double radius) {
+        // https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
+        double acceptableVisualDeviationMeters = 0.01;
+        int numVertices = (int)Math.ceil((2*Math.PI) / Math.acos((2 * Math.pow(1 - (acceptableVisualDeviationMeters/radius), 2)) - 1));
+        if (numVertices < 8) {
+            numVertices = 8;
+        }
+        double radsBetweenVertices = (2.0 * Math.PI) / numVertices;
+
+        List<Translation2d> points = new ArrayList<>();
+        for (int i = 0; i < numVertices; i += 1) {
+            double rads = radsBetweenVertices * i;
+            Translation2d radiusVector = new Translation2d(radius * Math.cos(rads), radius * Math.sin(rads));
+            points.add(center.plus(radiusVector));
+        }
+
+        // close the loop
+        points.add(points.get(0));
+
+        Logger.recordOutput(name, points.toArray(new Translation2d[0]));
     }
     
 }

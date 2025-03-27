@@ -113,8 +113,8 @@ public class FieldConstants {
 
             // 3 corals per loading station
             Transform3d[] coralPoses_loadingStationFrame = { new Transform3d(0.5, 0.25, coralZ_loadingStationFrame, new Rotation3d()),
-                                                            //  new Transform3d(0.5, -0.25, coralZ_loadingStationFrame, new Rotation3d()),
-                                                            //  new Transform3d(-0.5, 0, coralZ_loadingStationFrame, new Rotation3d())
+                                                             new Transform3d(0.5, -0.25, coralZ_loadingStationFrame, new Rotation3d()),
+                                                             new Transform3d(-0.5, 0, coralZ_loadingStationFrame, new Rotation3d())
                                                            };
 
             for (Transform3d coralPose_loadingStationFrame : coralPoses_loadingStationFrame) {

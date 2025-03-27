@@ -7,8 +7,6 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -139,51 +137,20 @@ public class ScoreOnReef extends Command {
         // verticalExtensionMeters += 0.2;
 
         // double targetWristAngleDegrees = WristConstants.maxAngleDegrees-5;
-        
-        if (isFacingReef.get()) {            
-            switch (reefBranch.get().getLevel()) {
-                case 1:
-                    return ArmPosition.frontL1;
-                case 2:
-                    //2 coral distance
-                    return ArmPosition.frontL2Refined;
-                case 3:
-                    //2 coral distance
-                    return ArmPosition.frontL3Refined;
-                case 4:
-                    //1 coral distance
-                    return ArmPosition.frontL4Refined;
-            }
-        }
-        else {
-            switch (reefBranch.get().getLevel()) {
-                case 1:
-                    break;
-                case 2:
-                    return ArmPosition.backL2;
-                case 3:
-                    //1 coral distance
-                    return ArmPosition.backL3;
-                case 4:
-                    //1 coral distance
-                    return ArmPosition.backL4;
-            }
-        }
 
-        return new ArmPosition();
-
+        return ArmPosition.getPreset(reefBranch.get().getLevel(), isFacingReef.get());
     }
     
     @Override
     public void initialize() {
         this.extensionTargetSet = false;
         coralSide = coralSideSupplier.get();
-        Logger.recordOutput("ScoringOnReef", true);
+        Logger.recordOutput("scoreOnReef/running", true);
     }
 
     @Override
     public void end(boolean interrupted) {
-        Logger.recordOutput("ScoringOnReef", false);
+        Logger.recordOutput("scoreOnReef/running", false);
     }
 
     @Override

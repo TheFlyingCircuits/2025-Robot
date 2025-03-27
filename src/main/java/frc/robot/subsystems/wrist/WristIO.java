@@ -28,5 +28,7 @@ public interface WristIO {
     public default void setWristNeoVolts(double volts) {};
 
     public default void setWristPosition(double degrees) {};
+
+    public default void toggleIdleMode() {};
     
 }

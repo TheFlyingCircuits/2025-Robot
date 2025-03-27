@@ -35,6 +35,10 @@ public class Wrist extends SubsystemBase {
 
     }
 
+    public void toggleIdleMode() {
+        io.toggleIdleMode();
+    }
+
     public void setWristNeoVolts(double volts) {
 
         io.setWristNeoVolts(volts);

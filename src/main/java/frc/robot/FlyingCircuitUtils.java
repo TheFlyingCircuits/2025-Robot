@@ -128,6 +128,10 @@ public class FlyingCircuitUtils {
 
         // project onto line normal to get signed distance (same as <directionVectorAlongLine> cross <anchorToPoint>)
         return anchorToPoint.getX() * normalToLineX + anchorToPoint.getY() * normalToLineY;
+
+        // interesting alternative implementation:
+        // Pose2d pointAsPose = new Pose2d(point, Rotation2d.kZero);
+        // return pointAsPose.relativeTo(line).getY();
     }
 
     // public String getBigCommandName(Command command) {

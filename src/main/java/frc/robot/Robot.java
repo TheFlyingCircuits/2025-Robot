@@ -4,32 +4,38 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Seconds;
-
-import java.util.ArrayList;
 
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.PlayingField.FieldElement;
-import frc.robot.PlayingField.ReefBranch;
-import frc.robot.PlayingField.ReefFace;
-import frc.robot.PlayingField.ReefStalk;
 
 public class Robot extends LoggedRobot {
-    private Command m_autonomousCommand;
 
-    Timer gcTimer = new Timer();
+    private Command autoCommand = null;
+    private Timer gcTimer = new Timer();
+    private final RobotContainer m_robotContainer;
+
+
+    public Robot() {
+
+        System.gc();
+
+        initAdvantageKit();
+        m_robotContainer = new RobotContainer();
+        DriverStation.silenceJoystickConnectionWarning(true);
+        SmartDashboard.putData(CommandScheduler.getInstance());
+
+        gcTimer.restart();
+    }
+
 
     private void initAdvantageKit() {
         Logger.recordMetadata("projectName", "2025Robot");
@@ -44,44 +50,29 @@ public class Robot extends LoggedRobot {
     }
 
 
-    private final RobotContainer m_robotContainer;
-
-    public Robot() {
-
-        System.gc();
-
-        initAdvantageKit();
-        m_robotContainer = new RobotContainer();
-        DriverStation.silenceJoystickConnectionWarning(true);
-        
-
-        gcTimer.restart();
-
-        // CommandScheduler.getInstance().onCommandExecute(null);
-        SmartDashboard.putData(CommandScheduler.getInstance());
-    }
-
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
 
         m_robotContainer.periodic();
 
-
-        // System.gc();
-
         if (gcTimer.advanceIfElapsed(5)) {
             System.gc();
-            // System.out.println("Hello world!");
         }
     }
 
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        CommandScheduler.getInstance().cancelAll();
+    }
 
     @Override
     public void disabledPeriodic() {
         m_robotContainer.drivetrain.setPoseToVisionMeasurement();
+
+        if (autoCommand == null) {
+            autoCommand = m_robotContainer.autoChoosingAuto();
+        }
     }
 
     @Override
@@ -89,11 +80,10 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void autonomousInit() {
-        m_autonomousCommand = m_robotContainer.autoChoosingAuto();
-
-        if (m_autonomousCommand != null) {
-        m_autonomousCommand.schedule();
+        if (autoCommand == null) {
+            return;
         }
+        autoCommand.schedule();;
     }
 
     @Override
@@ -104,9 +94,10 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void teleopInit() {
-        if (m_autonomousCommand != null) {
-        m_autonomousCommand.cancel();
+        if (autoCommand == null) {
+            return;
         }
+        autoCommand.cancel();
     }
 
     @Override
