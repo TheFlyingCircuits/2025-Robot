@@ -1,0 +1,221 @@
+{
+  "hubs": [
+    {
+      "x": -4,
+      "y": 7,
+      "width": 1536,
+      "height": 825,
+      "state": {
+        "sidebar": {
+          "width": 293,
+          "expanded": [
+            "/AdvantageKit/RealOutputs/intakeCamera",
+            "/AdvantageKit/RealOutputs/intakeCamera/mostRecentFrame",
+            "/AdvantageKit/RealOutputs/intakeCamera/closestValidGamepiece",
+            "/AdvantageKit/backLeftTagCam/mostRecentPoseEstimate",
+            "/AdvantageKit/frontLeftTagCam/mostRecentPoseEstimate",
+            "/AdvantageKit/frontRightTagCam/mostRecentPoseEstimate",
+            "/AdvantageKit/RealOutputs/drivetrain/closestCoral",
+            "/AdvantageKit/RealOutputs/scoreOnReef/desiredEverything",
+            "/SmartDashboard/Scheduler/Names",
+            "/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame",
+            "/AdvantageKit/RealOutputs/driveOnALine",
+            "/SmartDashboard/RunCommand",
+            "/SmartDashboard/SequentialCommandGroup",
+            "/AdvantageKit",
+            "/AdvantageKit/RealOutputs",
+            "/AdvantageKit/RealOutputs/intakeCam"
+          ]
+        },
+        "tabs": {
+          "selected": 1,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "ww10m8tl3y90nj086e5asj1u9jthtwoo",
+              "renderer": "#/",
+              "controlsHeight": 0
+            },
+            {
+              "type": 3,
+              "title": "Coral Tracking",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/simulatedCorals",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/drivetrain/fusedPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#ff0000"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToRobot",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/validGamepieces",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff8c00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/invalidGamepieces",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToIntake",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff00ff",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/bicep",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/extension",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/wrist",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/coral",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/pickupPose",
+                    "logType": "Pose2d[]",
+                    "visible": false,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/minDetectionDistance",
+                    "logType": "Translation2d[]",
+                    "visible": false,
+                    "options": {
+                      "color": "#ff8c00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/maxDetectionDistance",
+                    "logType": "Translation2d[]",
+                    "visible": false,
+                    "options": {
+                      "color": "#ff8c00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/allGamepiecesWithOrientation",
+                    "logType": "Pose3d[]",
+                    "visible": false,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/projectedBoundingBoxes",
+                    "logType": "Translation3d[]",
+                    "visible": false,
+                    "options": {
+                      "color": "#ffff00",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "game": "2025 Field (Welded)",
+                "origin": "blue"
+              },
+              "controllerUUID": "hfalf8cdydd08ck5mjnzrk89mwdoc1au",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  10.358131061981888,
+                  10.481925825609274,
+                  -0.36118701540240505
+                ],
+                "cameraTarget": [
+                  7.5795013889593434,
+                  0.8181861575258408,
+                  -0.5036811669727559
+                ]
+              },
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "4.1.0"
+}
