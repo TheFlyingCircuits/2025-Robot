@@ -88,8 +88,8 @@ public class AdvantageScopeDrawingUtils {
 
 
     private static List<Translation3d> getBumperBox_robotFrame() {
-        double lengthX = DrivetrainConstants.frameWithBumpersWidthMeters;
-        double lengthY = DrivetrainConstants.frameWithBumpersWidthMeters;
+        double lengthX = DrivetrainConstants.bumperWidthMeters;
+        double lengthY = DrivetrainConstants.bumperWidthMeters;
         double lengthZ = Units.inchesToMeters(5);
         List<Translation3d> boxCorners = getBoxCorners(lengthX, lengthY, lengthZ);
         List<Translation3d> output = new ArrayList<>();

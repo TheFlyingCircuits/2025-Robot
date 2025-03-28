@@ -11,9 +11,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.WristConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.PlayingField.FieldConstants;
+import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
@@ -73,28 +75,12 @@ public class ScoreOnReef extends Command {
     }
 
 
-    // bumper 34 inches
     private Pose2d adjustedReefScoringPose(Pose2d stalkPose, Direction sideCoralIsIn, boolean isFacingForward) {
-        //                          edgeOfReef                      halfBumperLength                coralOuterDiameter
-        double adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5);
+        double adjustedX = FieldConstants.stalkInsetMeters;        // puts center of robot at the outer edge of the reef
+        adjustedX += DrivetrainConstants.bumperWidthMeters / 2.0;  // move back a half bumper length so the bumper is touching the edge of the reef
+        adjustedX += FieldConstants.coralOuterDiameterMeters;      // move back one coral distance so we can still score if coral is in the way
 
-        // // 17 inches of robot space, 4.5 inches is one coral dist
-        // if (reefBranch.get().getLevel() == 4) {
-        //     //                   edgeOfReef                      halfBumperLength                coralOuterDiameter (plus one inch)
-        //     adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1);
-        // }
-        // else {
-        //     //                   edgeOfReef                      halfBumperLength             2x coralOuterDiameter
-        //     adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(9);
-        // }
-
-        // // all pivot side scoring was calibrated at 1 coral distance away
-        // if (!isFacingForward || true) {
-        //     //                   edgeOfReef                      halfBumperLength                coralOuterDiameter
-        //     adjustedX = FieldConstants.stalkInsetMeters + Units.inchesToMeters(17) + Units.inchesToMeters(4.5);
-        // }
-
-
+        
         Rotation2d rotationAdjustment;
         if (isFacingForward) {
             rotationAdjustment = Rotation2d.k180deg;

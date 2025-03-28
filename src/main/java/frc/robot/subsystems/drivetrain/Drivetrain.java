@@ -75,7 +75,7 @@ public class Drivetrain extends SubsystemBase {
 
     /** used to rotate about the intake instead of the center of the robot */
     private Transform2d centerOfRotation_robotFrame = new Transform2d();
-    private double intakeX_robotFrame = (DrivetrainConstants.frameWithBumpersWidthMeters / 2.0);
+    private double intakeX_robotFrame = (DrivetrainConstants.bumperWidthMeters / 2.0);
     private Transform2d frontBumper_robotFrame = new Transform2d(intakeX_robotFrame, 0, Rotation2d.kZero);
     private Transform2d effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, PlacerGrabber.outerWidthMeters/2.0, Rotation2d.kZero));
     private Transform2d effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -PlacerGrabber.outerWidthMeters/2.0, Rotation2d.kZero));

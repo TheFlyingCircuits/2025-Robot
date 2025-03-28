@@ -43,7 +43,7 @@ public class RemoveAlgae extends ParallelRaceGroup {
     private Command driveToReef() { return drivetrain.run(() -> {
         Pose2d reefFacePose = drivetrain.getClosestReefFace().getPose2d();
 
-        double oneCoralAwayFromFace = (DrivetrainConstants.frameWithBumpersWidthMeters / 2.0) + FieldConstants.coralOuterDiameterMeters;
+        double oneCoralAwayFromFace = (DrivetrainConstants.bumperWidthMeters / 2.0) + FieldConstants.coralOuterDiameterMeters;
         Transform2d adjustmentRelativeToFace = new Transform2d(oneCoralAwayFromFace, 0, Rotation2d.k180deg);
 
         drivetrain.pidToPose(reefFacePose.plus(adjustmentRelativeToFace), 2);

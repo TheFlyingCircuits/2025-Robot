@@ -38,6 +38,7 @@ import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
+import frc.robot.commands.ChickenHead;
 import frc.robot.commands.RemoveAlgae;
 import frc.robot.commands.ScoreOnReef;
 import frc.robot.subsystems.HumanDriver;
@@ -279,6 +280,7 @@ public class RobotContainer {
             intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
                 driverFullyControlDrivetrain().until(this::armInPickupPose),
                 driveTowardsCoralTeleop()
+                //new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, null)
             ))
         );
         
@@ -517,15 +519,15 @@ public class RobotContainer {
             return sendToTrough;
         }
 
-        Command sendToReef = placerGrabber.run(() -> {
+        Supplier<Command> sendToReef = () -> {return placerGrabber.run(() -> {
             double volts = 11;
             volts = drivetrain.isFacingReef() ? volts : -volts;
             placerGrabber.setFrontRollerVolts(volts);
-        });
+        });};
 
         return Commands.sequence(
-            sendToReef.until(() -> !placerGrabber.doesHaveCoral()),
-            sendToReef.withTimeout(0.25) // TODO: maybe too long for auto?
+            sendToReef.get().until(() -> !placerGrabber.doesHaveCoral()),
+            sendToReef.get().withTimeout(0.25) // TODO: maybe too long for auto?
         );
     }
 

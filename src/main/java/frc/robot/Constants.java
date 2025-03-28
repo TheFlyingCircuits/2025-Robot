@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import javax.xml.transform.sax.TransformerHandler;
-
 import com.pathplanner.lib.path.PathConstraints;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
@@ -167,7 +165,7 @@ public final class Constants {
 
         public static final double frameWidthMeters = Units.inchesToMeters(27);
 
-        public static final double frameWithBumpersWidthMeters = Units.inchesToMeters(27 + 7);
+        public static final double bumperWidthMeters = Units.inchesToMeters(27 + 7);
 
 
 
