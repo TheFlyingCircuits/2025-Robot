@@ -113,9 +113,9 @@ public class PlacerGrabber extends SubsystemBase {
         
         Logger.processInputs("placerGrabberInputs", inputs);
 
-        Logger.recordOutput("frontRollerRPM", inputs.frontRollerRPM);
-        Logger.recordOutput("sideRollerRPM", inputs.sideRollerRPM);
-        Logger.recordOutput("frontRollerAvgCurrent", frontRollerAvgCurrent);
+        Logger.recordOutput("placerGrabber/frontRollerRPM", inputs.frontRollerRPM);
+        Logger.recordOutput("placerGrabber/sideRollerRPM", inputs.sideRollerRPM);
+        Logger.recordOutput("placerGrabber/frontRollerAvgCurrent", frontRollerAvgCurrent);
     }
 
     public Command setPlacerGrabberVoltsCommand(double frontRollerVolts, double sideRollervolts) {

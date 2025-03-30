@@ -61,9 +61,10 @@ public final class Constants {
         public final static Translation3d shoulderLocation_robotFrame = new Translation3d(Units.inchesToMeters(-10.25), 0, Units.inchesToMeters(17.80750));
         public final static Translation3d elbowLocation_shoulderFrame = new Translation3d(0, 0, Units.inchesToMeters(-8.0));
         public final static Translation3d retractionHardStop_elbowFrame = new Translation3d(Units.inchesToMeters(-3.0), 0, 0);
-        public final static Translation3d tipOfStationaryStage_elbowFrame = new Translation3d(Units.inchesToMeters(25-3.0), 0, 0);
-        public final static Translation3d wristLocation_elbowFrame_retracted = tipOfStationaryStage_elbowFrame.plus(new Translation3d(Units.inchesToMeters((0.93417 + 0.93321)/2.0), 0, 0));
-        public final static double wristOuterWidthMeters = Units.inchesToMeters(10.18); // center to center distance of omni wheel axles
+        public final static Translation3d tipOfStationaryStage_elbowFrame = new Translation3d(Units.inchesToMeters(22.0), 0, 0);
+        public final static Translation3d tipOfFinalStage_elbowFrame_retracted = tipOfStationaryStage_elbowFrame.plus(new Translation3d(Units.inchesToMeters(0.00004),0,0));
+        public final static Translation3d tipOfFinalStageToWrist = new Translation3d(Units.inchesToMeters(0.93417), 0, 0);
+        public final static double wristOuterWidthMeters = Units.inchesToMeters(10.18); // center to center distance of omniwheel axles
         public final static double wristWidthMeters = Units.inchesToMeters(7.0); // center to center distance between the two holding positions for coral
         public final static double stationaryStageWidthMeters = Units.inchesToMeters(4.0);
         public final static double stationaryStageHeightMeters = Units.inchesToMeters(4.0);

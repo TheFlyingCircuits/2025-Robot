@@ -20,13 +20,15 @@ public class SwerveModule {
     private SwerveModuleIO io;
     private SwerveModuleIOInputsAutoLogged inputs;
 
-    private static PIDController drivePID;
-    private static PIDController anglePID;
+    private PIDController drivePID;
+    private PIDController anglePID;
     private SimpleMotorFeedforward driveFeedforward;
+    private String name;
 
-    public SwerveModule(SwerveModuleIO io, int moduleIndex) {
+    public SwerveModule(SwerveModuleIO io, int moduleIndex, String name) {
         this.io = io;
         this.moduleIndex = moduleIndex;
+        this.name = name;
 
         inputs = new SwerveModuleIOInputsAutoLogged();
         
@@ -50,7 +52,7 @@ public class SwerveModule {
     public void periodic() {
         io.updateInputs(inputs);
 
-        Logger.processInputs("module" + Integer.toString(moduleIndex), inputs);
+        Logger.processInputs("swerveModuleInputs/"+name, inputs);
     }
 
 

@@ -123,7 +123,8 @@ public class AdvantageScopeDrawingUtils {
     private static List<Translation3d> getBicepBox_shoulderFrame() {
         // TODO: ASCII art
         double boxLengthX = 2 * Math.abs(ArmConstants.retractionHardStop_elbowFrame.getX());
-        double boxLengthY = ArmConstants.stationaryStageWidthMeters + Units.inchesToMeters(0.5);
+        double orangePlateThickness = Units.inchesToMeters(0.18750);
+        double boxLengthY = ArmConstants.stationaryStageWidthMeters + (2 * orangePlateThickness); // 1 plate on the left, one plate on the right
         double boxLengthZ = Math.abs(ArmConstants.elbowLocation_shoulderFrame.getZ()) + (ArmConstants.stationaryStageHeightMeters / 2.0);
 
         List<Translation3d> box = getBoxCorners(boxLengthX, boxLengthY, boxLengthZ);
@@ -137,8 +138,8 @@ public class AdvantageScopeDrawingUtils {
         return box;
     }
 
-    private static List<Translation3d> getExtensionBox_elbowFrame(double extensionLengthMeters) {
-        double boxLengthX = extensionLengthMeters;
+    private static List<Translation3d> getExtensionBox_elbowFrame(double extensionFromHardStopMeters) {
+        double boxLengthX = extensionFromHardStopMeters;
         double boxLengthY = ArmConstants.stationaryStageWidthMeters;
         double boxLengthZ = ArmConstants.stationaryStageHeightMeters;
 
@@ -234,9 +235,9 @@ public class AdvantageScopeDrawingUtils {
         Transform3d elbowPose_robotFrame = shoulderPose_robotFrame.plus(elbowPose_shoulderFrame);
 
         // get robot->wrist
-        double minExtension = ArmConstants.tipOfStationaryStage_elbowFrame.minus(ArmConstants.retractionHardStop_elbowFrame).getX();
-        double deltaExtentsion = extensionMeters - minExtension;
-        Translation3d wristLocation_elbowFrame = ArmConstants.wristLocation_elbowFrame_retracted.plus(new Translation3d(deltaExtentsion, 0, 0));
+        Translation3d hardStopToExtensionFinalStage = new Translation3d(extensionMeters, 0, 0);
+        Translation3d elbowToExtensionFinalStage = ArmConstants.retractionHardStop_elbowFrame.plus(hardStopToExtensionFinalStage);
+        Translation3d wristLocation_elbowFrame = elbowToExtensionFinalStage.plus(ArmConstants.tipOfFinalStageToWrist);
         Rotation3d wristOrientation_elbowFrame = new Rotation3d(0, -wristRads, 0); // wpilib convention, positive pitch is down.
         Transform3d wristPose_elbowFrame = new Transform3d(wristLocation_elbowFrame, wristOrientation_elbowFrame);
         Transform3d wristPose_robotFrame = elbowPose_robotFrame.plus(wristPose_elbowFrame);
@@ -290,6 +291,23 @@ public class AdvantageScopeDrawingUtils {
             coralPoses_fieldFrame.add(new Pose3d(rightCoralPose_fieldFrame.getTranslation(), rightCoralPose_fieldFrame.getRotation()));
         }
         Logger.recordOutput(name+"/coral", coralPoses_fieldFrame.toArray(new Pose3d[0]));
+    }
+
+    public static void drawWrist(String name, Pose3d wristPose_fieldFrame) {
+        // vertices for wireframe
+        List<Translation3d> wristPrism_wristFrame = getWristVertices_wristFrame();
+
+        List<Translation3d> wristPrism_fieldFrame = new ArrayList<>();
+        for (Translation3d wristVertex_wristFrame : wristPrism_wristFrame) {
+            Translation3d wristVertex_fieldFrame = wristVertex_wristFrame.rotateBy(wristPose_fieldFrame.getRotation()).plus(wristPose_fieldFrame.getTranslation());
+            wristPrism_fieldFrame.add(wristVertex_fieldFrame);
+        }
+        List<Translation3d> drawMeWrist = getPencilTrajectoryFromWristVertices(wristPrism_fieldFrame);
+        Logger.recordOutput(name, drawMeWrist.toArray(new Translation3d[0]));
+    }
+
+    public static void eraseDrawing(String name) {
+        Logger.recordOutput(name, new Translation3d[0]);
     }
 
     public static void drawCircle(String name, Translation2d center, double radius) {

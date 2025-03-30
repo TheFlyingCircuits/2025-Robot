@@ -273,10 +273,10 @@ public class ColorCamera {
             fY = cam.getCameraMatrix().get().get(1, 1);
             cX = cam.getCameraMatrix().get().get(0, 2);
             cY = cam.getCameraMatrix().get().get(1, 2);
-            Logger.recordOutput("hasIntakeCamCalibration", true);
+            Logger.recordOutput("intakeCam/hasCamCalibration", true);
         }
         else {
-            Logger.recordOutput("hasIntakeCamCalibration", false);
+            Logger.recordOutput("intakeCam/hasCamCalibration", false);
             // cam resolution 640x480
             double width = 640;
             double height = 480;

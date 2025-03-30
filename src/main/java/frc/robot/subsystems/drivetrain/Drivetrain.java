@@ -38,6 +38,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.FlyingCircuitUtils;
 import frc.robot.Constants.DrivetrainConstants;
@@ -95,10 +96,10 @@ public class Drivetrain extends SubsystemBase {
         visionInputs = new VisionIOInputsLogged();
 
         swerveModules = new SwerveModule[] {
-            new SwerveModule(flSwerveModuleIO, 0),
-            new SwerveModule(frSwerveModuleIO, 1),
-            new SwerveModule(blSwerveModuleIO, 2),
-            new SwerveModule(brSwerveModuleIO, 3)
+            new SwerveModule(flSwerveModuleIO, 0, "frontLeft"),
+            new SwerveModule(frSwerveModuleIO, 1, "frontRight"),
+            new SwerveModule(blSwerveModuleIO, 2, "backLeft"),
+            new SwerveModule(brSwerveModuleIO, 3, "backRight")
         };
 
         gyroIO.setRobotYaw(0);
@@ -133,6 +134,9 @@ public class Drivetrain extends SubsystemBase {
 
         translationController = new PIDController(3.75, 0, 0.1); // kP has units of metersPerSecond per meter of error.
         translationController.setTolerance(0.01, 1.0); // 1 centimeters
+
+        SmartDashboard.putData("drivetrain/angleController", angleController);
+        SmartDashboard.putData("drivetrain/translationController", translationController);
 
         //configPathPlanner();  
     }
@@ -796,7 +800,7 @@ public class Drivetrain extends SubsystemBase {
         Logger.recordOutput("drivetrain/isTranslationAligned", translationControllerAtSetpoint());
 
         Translation2d centerOfRotationOnField = getPoseMeters().plus(this.centerOfRotation_robotFrame).getTranslation();
-        Logger.recordOutput("centerOfRotationOnField", new Translation3d(centerOfRotationOnField));
+        Logger.recordOutput("drivetrain/centerOfRotationOnField", new Translation3d(centerOfRotationOnField));
 
 
         // Coral tracking visualization

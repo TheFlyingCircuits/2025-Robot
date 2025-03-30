@@ -280,7 +280,6 @@ public class RobotContainer {
             intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
                 driverFullyControlDrivetrain().until(this::armInPickupPose),
                 driveTowardsCoralTeleop()
-                //new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, null)
             ))
         );
         
@@ -305,6 +304,9 @@ public class RobotContainer {
                 Commands.run(drivetrain::setPoseToVisionMeasurement).until(drivetrain::seesTag)
             )
         );
+        // duncanController.rightBumper().whileTrue(
+        //     new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> FieldElement.STALK_A.getBranch(desiredLevel))
+        // );
 
         // eject
         duncanController.leftBumper().whileTrue(Commands.sequence(
