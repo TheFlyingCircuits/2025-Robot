@@ -21,6 +21,7 @@ import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.subsystems.arm.Arm;
+import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.wrist.Wrist;
@@ -56,6 +57,11 @@ public class ChickenHead extends Command {
     @Override
     public void execute() {
         this.aimDriveAtReef();
+
+        ArmPosition desiredArmState = this.getDesiredArmState().constrainedToLimits();
+        this.arm.setShoulderTargetAngle(desiredArmState.shoulderAngleDegrees);
+        this.arm.setExtensionTargetLength(desiredArmState.extensionMeters);
+        this.wrist.setTargetPositionDegrees(desiredArmState.wristAngleDegrees);
     }
 
     @Override
@@ -75,6 +81,62 @@ public class ChickenHead extends Command {
     @Override
     public boolean isFinished() {
         return false;
+    }
+
+    private ArmPosition getDesiredArmState() {
+        // find desired wrist pose relative to robot
+        Pose3d desiredWristPose_fieldFrame = this.getDesiredWristPose_fieldFrame();
+        Pose3d robotPose_fieldFrame = new Pose3d(drivetrain.getPoseMeters());
+        Pose3d desiredWristPose_robotFrame = desiredWristPose_fieldFrame.relativeTo(robotPose_fieldFrame);
+
+        // rotate the desired wrist pose to be directly in front of or directly behind the robot
+        // (depending on scoring direction). We're going to aim based on where we'll be shortly
+        // instead of wherever we happen to be right now.
+        Rotation2d yawToWrist_robotFrame = desiredWristPose_robotFrame.getTranslation().toTranslation2d().getAngle();
+        Rotation2d yawAdjustment = drivetrain.isFacingReef() ?
+                                   yawToWrist_robotFrame.times(-1) :                             // scoring on intake side, put wrist in front
+                                   yawToWrist_robotFrame.times(-1).rotateBy(Rotation2d.k180deg); // scoring on pivot side, put wrist in back
+        
+        desiredWristPose_robotFrame = desiredWristPose_robotFrame.rotateBy(new Rotation3d(yawAdjustment));
+        AdvantageScopeDrawingUtils.drawWrist("chickenHead/wristInFrontWireframe", this.robotFrameToFieldFrame(desiredWristPose_robotFrame));
+        Logger.recordOutput("chickenHead/wristInFrontPose", this.robotFrameToFieldFrame(desiredWristPose_robotFrame));
+
+        // find line of sight from shoulder to desired wrist location
+        Translation3d currentShoulderLocation_robotFrame = this.getShoulderPose_robotFrame().getTranslation();
+        Translation3d shoulderToWrist = desiredWristPose_robotFrame.getTranslation().minus(currentShoulderLocation_robotFrame);
+
+        // lineOfSight from shoulder to wrist, the extension, and the bicep make right triangle.
+        // We use the pythagorean theorem to solve for the extension length
+        // |shoulderToWrist|^2 = |shoulderToElbow|^2 + |elbowToWrist|^2
+        double shoulderToWristSquared = shoulderToWrist.getNorm() * shoulderToWrist.getNorm();
+
+        Translation3d shoulderToElbow = ArmConstants.elbowLocation_shoulderFrame;
+        double shoulerToElbowSquared = shoulderToElbow.getNorm() * shoulderToElbow.getNorm();
+
+        double desiredElbowToWristLength = Math.sqrt(shoulderToWristSquared - shoulerToElbowSquared);
+
+        // use lengths to solve for shoulder angle
+        double radiansFromBicepToSightline = Math.atan2(desiredElbowToWristLength, shoulderToElbow.getNorm());
+        double radiansFromHorizontalToSightline = Math.atan2(shoulderToWrist.getZ(), shoulderToWrist.getX());
+        double radiansFromHorizontalToBicep = radiansFromHorizontalToSightline - radiansFromBicepToSightline;
+        double radiansFromHorizontalToExtensionAxis = radiansFromHorizontalToBicep + Units.degreesToRadians(90);
+
+        // use shoulder angle to find wrist angle
+        Translation3d desiredWristDirection_robotFrame = new Translation3d(1, 0, 0).rotateBy(desiredWristPose_robotFrame.getRotation());
+        double radiansFromHorizontalToWristAngle = Math.atan2(desiredWristDirection_robotFrame.getZ(), desiredWristDirection_robotFrame.getX());
+        Logger.recordOutput("chickenHead/desiredWristFromHorizontal", Units.radiansToDegrees(radiansFromHorizontalToWristAngle));
+        Logger.recordOutput("chickenHead/wristInRobotNoTransform", desiredWristPose_robotFrame);
+        double radiansOfWristRelativeToExtensionAxis = radiansFromHorizontalToWristAngle - radiansFromHorizontalToExtensionAxis;
+
+        // Now just a few basic conversions, and we're done!
+        double targetShoulderDegrees = Units.radiansToDegrees(radiansFromHorizontalToExtensionAxis);
+        double targetWristDegrees = Units.radiansToDegrees(radiansOfWristRelativeToExtensionAxis);
+
+        Translation3d wristLocation_elbowFrame = new Translation3d(desiredElbowToWristLength, 0, 0);
+        Translation3d tipOfFinalStage_elbowFrame = wristLocation_elbowFrame.minus(ArmConstants.tipOfFinalStageToWrist);
+        double targetExtensionMeters = tipOfFinalStage_elbowFrame.minus(ArmConstants.retractionHardStop_elbowFrame).getNorm();
+
+        return new ArmPosition(targetShoulderDegrees, targetWristDegrees, targetExtensionMeters);
     }
 
     private void aimDriveAtReef() {

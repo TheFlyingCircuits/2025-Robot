@@ -306,6 +306,7 @@ public class RobotContainer {
         );
         // duncanController.rightBumper().whileTrue(
         //     new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> FieldElement.STALK_A.getBranch(desiredLevel))
+        //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel))
         // );
 
         // eject

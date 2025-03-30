@@ -81,6 +81,36 @@ public class ArmPosition {
         return new ArmPosition();
     }
 
+    public ArmPosition constrainedToLimits() {
+        ArmPosition output = new ArmPosition();
+
+        output.shoulderAngleDegrees = this.shoulderAngleDegrees;
+        while (output.shoulderAngleDegrees > ArmConstants.armMaxAngleDegrees) {
+            output.shoulderAngleDegrees -= 360.0;
+        }
+        while (output.shoulderAngleDegrees < ArmConstants.armMinAngleDegrees) {
+            output.shoulderAngleDegrees += 360.0;
+        }
+
+        output.extensionMeters = this.extensionMeters;
+        if (output.extensionMeters > ArmConstants.maxExtensionMeters) {
+            output.extensionMeters = ArmConstants.maxExtensionMeters;
+        }
+        if (output.extensionMeters < ArmConstants.minExtensionMeters) {
+            output.extensionMeters = ArmConstants.minExtensionMeters;
+        }
+
+        output.wristAngleDegrees = this.wristAngleDegrees;
+        while (output.wristAngleDegrees > WristConstants.maxAngleDegrees) {
+            output.wristAngleDegrees -= 360.0;
+        }
+        while (output.wristAngleDegrees < WristConstants.minAngleDegrees) {
+            output.wristAngleDegrees += 360.0;
+        }
+
+        return output;
+    }
+
 
     /**
         * Returns a pose2d object representing the position of the end effector. The translation component represents
