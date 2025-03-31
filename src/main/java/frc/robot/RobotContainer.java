@@ -302,11 +302,15 @@ public class RobotContainer {
                 drivetrain::isFacingReef)
             .deadlineFor( // allow command to end if we somehow score before seeing a tag
                 Commands.run(drivetrain::setPoseToVisionMeasurement).until(drivetrain::seesTag)
+                // Note: pressing Y again while Larry was dancing was enought to stop the dance.
+                //       This indicates that trusting the cameras more up close may eliminate some
+                //       of the dancing?
             )
         );
         // duncanController.rightBumper().whileTrue(
-        //     new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> FieldElement.STALK_A.getBranch(desiredLevel))
+        //     new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> FieldElement.STALK_B.getBranch(desiredLevel))
         //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel))
+        //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, this::getDesiredBranch)
         // );
 
         // eject
