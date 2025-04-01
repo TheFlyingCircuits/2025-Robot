@@ -40,9 +40,8 @@ import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
-import frc.robot.commands.ChickenHead;
-import frc.robot.commands.RemoveAlgae;
 import frc.robot.commands.AimAtReef;
+import frc.robot.commands.RemoveAlgae;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
@@ -72,7 +71,7 @@ public class RobotContainer {
     final CommandXboxController amaraController;
     private int desiredLevel = 2;
     private Direction desiredStalk = Direction.left;
-    private boolean visionAssistedIntakeInTeleop = RobotBase.isSimulation() ? true : false;
+    private boolean visionAssistedIntakeInTeleop = true;
 
     public final Drivetrain drivetrain;
     public final Arm arm;
@@ -345,7 +344,7 @@ public class RobotContainer {
         Command armToIntake = new ParallelCommandGroup(
             arm.shoulder.safeSetTargetAngleCommand(ArmConstants.armMinAngleDegrees),
             arm.extension.setTargetLengthCommand(0.77),
-            wrist.setTargetPositionCommand(-3)
+            wrist.setTargetPositionCommand(-1)
         ).withName("armToIntakePositionCommand");
 
         Command spinIntakeWheels = placerGrabber.intakeOrEjectOrStop();
@@ -382,9 +381,22 @@ public class RobotContainer {
             return;
         }
 
-        Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
+        // // Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
+        // Pose2d pickupPose = drivetrain.getCenteredCoralPickupPose(coral.get());
+        // Pose2d coralOnField = new Pose2d(coral.get().toTranslation2d(), Rotation2d.kZero);
+        // double metersLeftOrRight = coralOnField.relativeTo(drivetrain.getPoseMeters()).getY();
+        // boolean isLeft = metersLeftOrRight > 0;
+        // if (isLeft) {
+        //     Transform2d ajustedPose = new Transform2d(0,Units.inchesToMeters(20),Rotation2d.kZero);
+        //     pickupPose = pickupPose.plus(ajustedPose);
+        // } else {
+        //     Transform2d ajustedPose = new Transform2d(0,Units.inchesToMeters(-20),Rotation2d.kZero);
+        //     pickupPose = pickupPose.plus(ajustedPose);
+        // }
+        // ^from testing auto
 
         // TODO: choose level of assistance
+        Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
         drivetrain.fieldOrientedDriveWhileAiming(duncan.getRequestedFieldOrientedVelocity(), pickupPose.getRotation());
         // drivetrain.fieldOrientedDriveOnALine(duncan.getRequestedFieldOrientedVelocity(), pickupPose);
         // drivetrain.pidToPose(pickupPose, 2.0);
@@ -473,11 +485,22 @@ public class RobotContainer {
     /*** AUTO ***/
 
     public Command pivotSideAutoCommand(ReefBranch... targetBranches) {
+        BooleanSupplier clearOfReef = () -> {
+            FieldElement closestFace = drivetrain.getClosestReefFace();
+            double distanceFromReef = drivetrain.getPoseMeters().relativeTo(closestFace.getPose2d()).getX();
+
+            double requiredBumperMetersFromReef = Units.inchesToMeters(12);
+            double requiredRobotMetersFromReef = requiredBumperMetersFromReef + (DrivetrainConstants.bumperWidthMeters/2.0);
+
+            return distanceFromReef > requiredRobotMetersFromReef;
+        };
+
         SequentialCommandGroup output = new SequentialCommandGroup();
         for (ReefBranch targetBranch : targetBranches) { output.addCommands(
             scoreOnReefCommand(() -> new ChassisSpeeds(), () -> targetBranch, () -> false), // requires everything
-            stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3), // requires everything except placer grabber
+            backAwayFromReef(0.75).until(clearOfReef), // requires only drivetrain
             stowArm().until(()->arm.extension.isSafelyRetracted()).andThen(intakeUntilCoralAcquired()).deadlineFor(driveTowardsCoralInAuto()) // intake requires arm,wrist,placerGrabber, drive requires drive
+            // intakeUntilCoralAcquired().deadlineFor(driveTowardsCoralInAuto())
             // ^ a bit tricky because the lower value for safe retraction prevents the
             //   shoulder from ever getting to setpoint in intake() unless the arm started
             //   out retracted. Should prob just tune the safe extension point, push it out
@@ -495,45 +518,28 @@ public class RobotContainer {
     })).until(() -> arm.getShoulderAngleDegrees() < 40);}
 
 
-    private Command driveToLoadingStation() { return drivetrain.run(() -> {
-        double metersFromLoadingStation = 3 * FieldConstants.coralLengthMeters;
-        Transform2d desiredPose_loadingStationFrame = new Transform2d(metersFromLoadingStation, 0, Rotation2d.k180deg);
-        Pose2d desiredPose_fieldFrame = drivetrain.getClosestLoadingStation().getPose2d().plus(desiredPose_loadingStationFrame);
-
-        drivetrain.pidToPose(desiredPose_fieldFrame, 0.5);
-    });}
-
 
     private Command driveTowardsCoralInAuto() { return drivetrain.run(() -> {
         Optional<Translation3d> coral = drivetrain.getClosestCoralToEitherIntake();
         double maxMetersPerSecond = 1.0;
         if (this.armInPickupPose()) {
-            maxMetersPerSecond = 2.0;
+            maxMetersPerSecond = 1.0;
         }
+
         if (coral.isEmpty()) {
             // can't see coral, just drive to source
             FieldElement sourceSide = drivetrain.getClosestLoadingStation();
-            Transform2d pickupLocationRelativeToSource = new Transform2d(Units.feetToMeters(2), 0, Rotation2d.k180deg);
+            double metersFromLoadingStation = (DrivetrainConstants.bumperWidthMeters / 2.0) + 3 * FieldConstants.coralLengthMeters;
+            Transform2d pickupLocationRelativeToSource = new Transform2d(metersFromLoadingStation, 0, Rotation2d.k180deg);
             Pose2d targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
-            drivetrain.pidToPose(targetRobotPose2d, 1);
+            drivetrain.pidToPose(targetRobotPose2d, maxMetersPerSecond);
         } else {
             // can see coral, drive towards it
             Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
-            drivetrain.pidToPose(pickupPose, 1.0);
+            drivetrain.pidToPose(pickupPose, maxMetersPerSecond);
         }
     }).finallyDo(drivetrain::resetCenterOfRotation);}
     
-
-    private Command driveTowardsReef() {
-        return drivetrain.run(() -> {
-                Transform2d poseAdjustment = new Transform2d(2,0, new Rotation2d());
-                drivetrain.pidToPose(drivetrain.getClosestLoadingStation().getPose2d().plus(poseAdjustment), 3.5);
-        }).alongWith(arm.shoulder.setTargetAngleCommand(45))
-            .until(() -> {
-                Translation2d sourceTranslation = drivetrain.getClosestLoadingStation().getPose2d().getTranslation();
-                return drivetrain.getPoseMeters().getTranslation().minus(sourceTranslation).getNorm() > 1.5;
-        });
-    }
 
     public Command autoChoosingAuto() {
         // Command leftSideAuto = firstFifteenSecondsCommand(

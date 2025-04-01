@@ -41,6 +41,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.FlyingCircuitUtils;
+import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
@@ -78,8 +79,9 @@ public class Drivetrain extends SubsystemBase {
     private Transform2d centerOfRotation_robotFrame = new Transform2d();
     private double intakeX_robotFrame = (DrivetrainConstants.bumperWidthMeters / 2.0);
     private Transform2d frontBumper_robotFrame = new Transform2d(intakeX_robotFrame, 0, Rotation2d.kZero);
-    private Transform2d effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, PlacerGrabber.outerWidthMeters/2.0, Rotation2d.kZero));
-    private Transform2d effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -PlacerGrabber.outerWidthMeters/2.0, Rotation2d.kZero));
+    private double effectiveIntakeWidth = PlacerGrabber.outerWidthMeters + FieldConstants.coralOuterDiameterMeters + Units.inchesToMeters(12);
+    private Transform2d effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeWidth/2.0, Rotation2d.kZero));
+    private Transform2d effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeWidth/2.0, Rotation2d.kZero));
 
     public Drivetrain(
         GyroIO gyroIO, 
@@ -671,6 +673,28 @@ public class Drivetrain extends SubsystemBase {
 
         Transform2d robotPose_intakeFrame = getPoseMeters().minus(intakePose_fieldFrame);
         Pose2d robotPoseAtPickup = intakePoseAtPickup.plus(robotPose_intakeFrame);
+
+        // // just spin towards it if we're close to avoid deadzone
+        // double spinDistance = Units.inchesToMeters(4.0) + FieldConstants.coralLengthMeters + ArmConstants.orangeWheels_wristFrame.toTranslation2d().getNorm();
+        // if (intakeToCoral.getNorm() < spinDistance) {
+        //     robotPoseAtPickup = new Pose2d(getPoseMeters().getTranslation(), robotPoseAtPickup.getRotation());
+        // }
+
+        // sideswipe logic
+        Translation2d coralRelativeToRobot = new Pose2d(coralLocation.toTranslation2d(), Rotation2d.kZero).minus(getPoseMeters()).getTranslation();
+        double spinDistanceX = SmartDashboard.getNumber("intakeAimAssist/spinDistanceX", 1.0);
+        SmartDashboard.putNumber("intakeAimAssist/spinDistanceX", spinDistanceX);
+        // double spinDistanceX = Units.inchesToMeters(8.0) + FieldConstants.coralLengthMeters + ArmConstants.orangeWheels_wristFrame.toTranslation2d().getNorm();
+        if (Math.abs(coralRelativeToRobot.getX()) < spinDistanceX) {
+            // intakePoseAtPickup = new Pose2d(coralLocation.toTranslation2d(), getPoseMeters().getRotation());
+            // robotPose_intakeFrame = getPoseMeters().minus(intakePose_fieldFrame);
+            // robotPoseAtPickup = intakePoseAtPickup.plus(robotPose_intakeFrame);
+
+
+            Transform2d lateralOffset = new Transform2d(0, coralRelativeToRobot.getY(), Rotation2d.kZero);
+
+            return getPoseMeters().plus(lateralOffset);
+        }
 
         return robotPoseAtPickup;
     }
