@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldElement;
@@ -477,9 +478,15 @@ public class RobotContainer {
     }
 
     private Command driveTowardsCoralTeleop() { return drivetrain.run(() -> {
-        // driver maintains control when the intake cam doesn't see any coral
+        // driver maintains control when the intake cam doesn't see any coral,
+        // or when using the right stick to change targets.
         Optional<Translation3d> coral = drivetrain.getClosestCoralToEitherIntake();
-        if (coral.isEmpty()) {
+        ChassisSpeeds driverRequest = duncan.getRequestedFieldOrientedVelocity();
+        // TODO: tune override ratio
+        boolean significantRotationRequested = Math.abs(driverRequest.omegaRadiansPerSecond) > (0.1 * DrivetrainConstants.maxDesiredTeleopAngularVelocityRadiansPerSecond);
+        boolean driverOverridingSelectedCoral = coral.isPresent() && significantRotationRequested;
+        Logger.recordOutput("intakeAimAssist/driverOverridingSelectedTarget", driverOverridingSelectedCoral);
+        if (coral.isEmpty() || driverOverridingSelectedCoral) {
             drivetrain.fieldOrientedDrive(duncan.getRequestedFieldOrientedVelocity(), true);
             return;
         }
