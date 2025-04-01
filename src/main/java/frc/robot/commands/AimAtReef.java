@@ -23,7 +23,7 @@ import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.wrist.Wrist;
 
-public class ScoreOnReef extends Command {
+public class AimAtReef extends Command {
 
     private Drivetrain drivetrain;
     private Arm arm;
@@ -41,7 +41,7 @@ public class ScoreOnReef extends Command {
     /**
      *  @param translationController - ChassisSpeeds supplier for driver input while scoring. TO BE IMPLEMENTED. CURRENTLY DOES NOTHING.
      */
-    public ScoreOnReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds, Supplier<Direction> sideCoralIsIn, Supplier<Boolean> isFacingReef) {
+    public AimAtReef(Drivetrain drivetrain, Arm arm, Wrist wrist, Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Leds leds, Supplier<Direction> sideCoralIsIn, Supplier<Boolean> isFacingReef) {
     
         this.drivetrain = drivetrain;
         this.arm = arm;
@@ -52,6 +52,8 @@ public class ScoreOnReef extends Command {
         this.coralSideSupplier=sideCoralIsIn;
         this.isFacingReef = isFacingReef;
         addRequirements(drivetrain, arm.shoulder, arm.extension, wrist);
+
+        super.setName("AimAtReef");
     }
 
     public boolean readyToScore() {
@@ -61,11 +63,11 @@ public class ScoreOnReef extends Command {
         boolean driveAngleGood = drivetrain.isAngleAligned();
         boolean driveTranslationGood = drivetrain.translationControllerAtSetpoint();
 
-        Logger.recordOutput("scoreOnReef/shoulderReady", shoulderReady);
-        Logger.recordOutput("scoreOnReef/extensionReady", extensionReady);
-        Logger.recordOutput("scoreOnReef/wristReady", wristReady);
-        Logger.recordOutput("scoreOnReef/driveAngleGood", driveAngleGood);
-        Logger.recordOutput("scoreOnReef/driveTranslationGood", driveTranslationGood);
+        Logger.recordOutput("aimAtReef/shoulderReady", shoulderReady);
+        Logger.recordOutput("aimAtReef/extensionReady", extensionReady);
+        Logger.recordOutput("aimAtReef/wristReady", wristReady);
+        Logger.recordOutput("aimAtReef/driveAngleGood", driveAngleGood);
+        Logger.recordOutput("aimAtReef/driveTranslationGood", driveTranslationGood);
 
         return shoulderReady && extensionReady && wristReady && driveAngleGood && driveTranslationGood;
     }
@@ -99,7 +101,7 @@ public class ScoreOnReef extends Command {
 
         Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, rotationAdjustment);
         Pose2d scoringPose = stalkPose.plus(targetPoseToRobotRelativeToStalk);
-        Logger.recordOutput("scoreOnReef/targetDrivePose", scoringPose);
+        Logger.recordOutput("aimAtReef/targetDrivePose", scoringPose);
         return scoringPose;
     }
 
@@ -131,12 +133,13 @@ public class ScoreOnReef extends Command {
     public void initialize() {
         this.extensionTargetSet = false;
         coralSide = coralSideSupplier.get();
-        Logger.recordOutput("scoreOnReef/running", true);
+        this.desiredArmPosition = this.calculateArmScoringPosition();
+        Logger.recordOutput("aimAtReef/running", true);
     }
 
     @Override
     public void end(boolean interrupted) {
-        Logger.recordOutput("scoreOnReef/running", false);
+        Logger.recordOutput("aimAtReef/running", false);
     }
 
     @Override
@@ -157,9 +160,9 @@ public class ScoreOnReef extends Command {
 
 
         desiredArmPosition = calculateArmScoringPosition();
-        Logger.recordOutput("scoreOnReef/armDesiredDegrees", desiredArmPosition.shoulderAngleDegrees);
-        Logger.recordOutput("scoreOnReef/wristDesiredDegrees", desiredArmPosition.wristAngleDegrees);
-        Logger.recordOutput("scoreOnReef/extensionDesiredMeters", desiredArmPosition.extensionMeters);
+        Logger.recordOutput("aimAtReef/armDesiredDegrees", desiredArmPosition.shoulderAngleDegrees);
+        Logger.recordOutput("aimAtReef/wristDesiredDegrees", desiredArmPosition.wristAngleDegrees);
+        Logger.recordOutput("aimAtReef/extensionDesiredMeters", desiredArmPosition.extensionMeters);
 
         // immediately start moving shoulder
         arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);

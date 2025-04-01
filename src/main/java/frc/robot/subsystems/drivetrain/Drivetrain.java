@@ -133,7 +133,7 @@ public class Drivetrain extends SubsystemBase {
         angleController.setTolerance(1); // degrees, degreesPerSecond.
 
         translationController = new PIDController(3.75, 0, 0.1); // kP has units of metersPerSecond per meter of error.
-        translationController.setTolerance(0.01, 1.0); // 1 centimeters
+        translationController.setTolerance(0.01, 1.0); // meters, metersPerSecond
 
         SmartDashboard.putData("drivetrain/angleController", angleController);
         SmartDashboard.putData("drivetrain/translationController", translationController);
@@ -739,20 +739,21 @@ public class Drivetrain extends SubsystemBase {
         return distanceToNearestStalk.getTranslation().getNorm() < 1;
     }
     public boolean isFacingReef() {
+        // Find the center of the reef, then get the vector from the robot's
+        // current location on the field to the reef.
+        Translation2d frontFace = FieldElement.FRONT_REEF_FACE.getLocation2d();
+        Translation2d backFace = FieldElement.BACK_REEF_FACE.getLocation2d();
+        Translation2d centerOfReef = frontFace.plus(backFace).div(2.0);
+        Translation2d robotToReef = centerOfReef.minus(getPoseMeters().getTranslation());
+
+        // Get the direction the robot is pointed in
         Rotation2d robotOrientaion = getPoseMeters().getRotation();
-        Rotation2d reefOrientation = getClosestReefFace().getOrientation2d();
 
-        // components of direction vectors
-        double robotX = robotOrientaion.getCos();
-        double robotY = robotOrientaion.getSin();
-        double reefX = reefOrientation.getCos();
-        double reefY = reefOrientation.getSin();
-
-        double dotProduct = (robotX * reefX) + (robotY * reefY);
-
-        // reef faces are pointing radially outward, so the robot is facing the reef
-        // when the dot product is negative
-        return dotProduct <= 0;
+        // The robot is considered to be facing the reef if the projection
+        // of [the robot's orientation] onto [the vector from the robot to the reef]
+        // is positive.
+        double dotProduct = (robotOrientaion.getCos() * robotToReef.getX()) + (robotOrientaion.getSin() * robotToReef.getY());
+        return dotProduct > 0;
     }
 
 

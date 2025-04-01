@@ -125,6 +125,11 @@ public class PlacerGrabber extends SubsystemBase {
         });
     }
 
+    public Command stopInstantCommand() { return this.runOnce(() -> {
+        setFrontRollerVolts(0);
+        setSideRollerVolts(0);
+    });}
+
     public boolean doesHaveCoralBasedOnAmps() {
         return this.frontRollerAvgCurrent > 8.0;
     }

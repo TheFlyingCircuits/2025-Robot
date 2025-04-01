@@ -10,6 +10,7 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -89,7 +90,6 @@ public class Arm {
 
         private Command retractThenHome() {
             return this.run(() -> {
-                // Logger.recordOutput("homingExtentsion", true);
                 io.setExtensionTargetLength(ArmConstants.minExtensionMeters);
             }).until(() -> {
                 return inputs.extensionLengthMeters < (ArmConstants.minExtensionMeters + Units.inchesToMeters(1));
@@ -105,11 +105,11 @@ public class Arm {
                 boolean highCurrent = Math.abs(inputs.extensionStatorCurrent) > 15;
                 boolean standingStill = Math.abs(inputs.extensionLengthMetersPerSecond) < 0.005;
                 return highCurrent && standingStill;
-            }).andThen(
-                new InstantCommand(() -> {
-                    io.setExtensionEncoderPositionToMin();
-                    Logger.recordOutput("arm/homingExtension", false);
-                }));
+            }).andThen(new InstantCommand(() -> {
+                io.setExtensionEncoderPositionToMin();
+            })).finallyDo(() -> {
+                Logger.recordOutput("arm/homingExtension", false);
+            });
         }
 
         public boolean isSafelyRetracted() {
