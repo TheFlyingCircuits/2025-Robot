@@ -819,6 +819,8 @@ public class Drivetrain extends SubsystemBase {
             Logger.recordOutput("coralTracking/pickupPose", new Pose2d[0]);
         }
 
+        // this.compareCamPoses();
+
     }
 
     @Override
@@ -882,5 +884,27 @@ public class Drivetrain extends SubsystemBase {
         }
 
         return false;
+    }
+
+    public void compareCamPoses() {
+        Pose2d reefFace = FieldElement.FRONT_REEF_FACE.getPose2d();
+
+        double metersToReefFacingEdgeOfTape = Units.inchesToMeters(12);
+        double pushOutDistanceMeters = metersToReefFacingEdgeOfTape + (DrivetrainConstants.bumperWidthMeters/2.0);
+
+        Transform2d offset = new Transform2d(pushOutDistanceMeters, 0, Rotation2d.k180deg);
+        this.setPoseMeters(reefFace.plus(offset));
+
+
+        Pose3d robotPose = new Pose3d(this.getPoseMeters());
+
+        for (int i = 0; i < VisionConstants.tagCameraNames.length; i += 1) {
+            String name = VisionConstants.tagCameraNames[i];
+            Transform3d calibrated = VisionConstants.tagCameraTransforms[i];
+            Transform3d uncalibrated = VisionConstants.oldTagCameraTransforms[i];
+
+            Logger.recordOutput("drivetrain/camPoseComparision/"+name+"/calibrated", robotPose.plus(calibrated));
+            Logger.recordOutput("drivetrain/camPoseComparision/"+name+"/uncalibrated", robotPose.plus(uncalibrated));
+        }
     }
 }

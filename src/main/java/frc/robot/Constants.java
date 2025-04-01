@@ -338,11 +338,18 @@ public final class Constants {
             "backRight"
         };
 
-        public final static Transform3d tagCameraTransforms[] = {
+        public final static Transform3d[] tagCameraTransforms = {
             robotToFrontLeft_calibrated,
             robotToFrontRight_calibrated,
             robotToBackLeft_calibrated,
             robotToBackRight_calibrated
+        };
+
+        public final static Transform3d[] oldTagCameraTransforms = {
+            robotToFrontLeft,
+            robotToFrontRight,
+            robotToBackLeft,
+            robotToBackRight
         };
 
     }
