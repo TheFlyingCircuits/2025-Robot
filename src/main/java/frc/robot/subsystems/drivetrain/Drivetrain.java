@@ -79,9 +79,10 @@ public class Drivetrain extends SubsystemBase {
     private Transform2d centerOfRotation_robotFrame = new Transform2d();
     private double intakeX_robotFrame = (DrivetrainConstants.bumperWidthMeters / 2.0);
     private Transform2d frontBumper_robotFrame = new Transform2d(intakeX_robotFrame, 0, Rotation2d.kZero);
-    private double effectiveIntakeWidth = PlacerGrabber.outerWidthMeters + FieldConstants.coralOuterDiameterMeters + Units.inchesToMeters(12);
-    private Transform2d effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeWidth/2.0, Rotation2d.kZero));
-    private Transform2d effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeWidth/2.0, Rotation2d.kZero));
+    private double effectiveIntakeLateralOffset = PlacerGrabber.outerWidthMeters/2.0;//((PlacerGrabber.outerWidthMeters/2.0) + (DrivetrainConstants.bumperWidthMeters/2.0))/2.0;
+    private Rotation2d effectiveIntakeOrientation_robotFrame = Rotation2d.fromDegrees(45);
+    private Transform2d effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame));
+    private Transform2d effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame.times(-1)));
 
     public Drivetrain(
         GyroIO gyroIO, 
@@ -674,27 +675,36 @@ public class Drivetrain extends SubsystemBase {
         Transform2d robotPose_intakeFrame = getPoseMeters().minus(intakePose_fieldFrame);
         Pose2d robotPoseAtPickup = intakePoseAtPickup.plus(robotPose_intakeFrame);
 
-        // // just spin towards it if we're close to avoid deadzone
-        // double spinDistance = Units.inchesToMeters(4.0) + FieldConstants.coralLengthMeters + ArmConstants.orangeWheels_wristFrame.toTranslation2d().getNorm();
-        // if (intakeToCoral.getNorm() < spinDistance) {
-        //     robotPoseAtPickup = new Pose2d(getPoseMeters().getTranslation(), robotPoseAtPickup.getRotation());
-        // }
+        return robotPoseAtPickup;
+    }
+    public Pose2d getStrafingPickupPose(Translation3d coralLocation) {
+        // Find where the coral is relative to the robot
+        Pose2d coralFieldPose = new Pose2d(coralLocation.toTranslation2d(), Rotation2d.kZero);
+        Translation2d coralRelativeToRobot = coralFieldPose.relativeTo(getPoseMeters()).getTranslation();
 
-        // sideswipe logic
-        Translation2d coralRelativeToRobot = new Pose2d(coralLocation.toTranslation2d(), Rotation2d.kZero).minus(getPoseMeters()).getTranslation();
-        double spinDistanceX = SmartDashboard.getNumber("intakeAimAssist/spinDistanceX", 1.0);
-        SmartDashboard.putNumber("intakeAimAssist/spinDistanceX", spinDistanceX);
-        // double spinDistanceX = Units.inchesToMeters(8.0) + FieldConstants.coralLengthMeters + ArmConstants.orangeWheels_wristFrame.toTranslation2d().getNorm();
-        if (Math.abs(coralRelativeToRobot.getX()) < spinDistanceX) {
-            // intakePoseAtPickup = new Pose2d(coralLocation.toTranslation2d(), getPoseMeters().getRotation());
-            // robotPose_intakeFrame = getPoseMeters().minus(intakePose_fieldFrame);
-            // robotPoseAtPickup = intakePoseAtPickup.plus(robotPose_intakeFrame);
-
-
-            Transform2d lateralOffset = new Transform2d(0, coralRelativeToRobot.getY(), Rotation2d.kZero);
-
-            return getPoseMeters().plus(lateralOffset);
+        // Just strafe when the coral gets close to the bumper
+        double sideswipeRange = (DrivetrainConstants.bumperWidthMeters/2.0) + ArmConstants.orangeWheels_wristFrame.getX();
+        boolean shouldStrafe = (0 <= coralRelativeToRobot.getX()) && (coralRelativeToRobot.getX() <= sideswipeRange);
+        if (shouldStrafe) {
+            Transform2d pickupPose_robotFrame = new Transform2d(0, coralRelativeToRobot.getY(), Rotation2d.kZero);
+            return getPoseMeters().plus(pickupPose_robotFrame);
         }
+
+        // otherwise, approach in the normal fashion to line up the coral with the alignment point on the robot
+        return this.getOffsetCoralPickupPose(coralLocation);
+    }
+    public Pose2d getCornerPocketPickupPose(Translation3d coralLocation) {
+        // pickup by aligning the intake's left omniwheels or the right omniwheels
+        // to the coral (whichever is closer).
+        Pose2d intakePose_fieldFrame = this.getClosestIntakeToCoral(coralLocation);
+        Translation2d intakeToCoral = coralLocation.toTranslation2d().minus(intakePose_fieldFrame.getTranslation());
+
+
+
+        Pose2d intakePoseAtPickup = new Pose2d(coralLocation.toTranslation2d(), intakeToCoral.getAngle());
+
+        Transform2d robotPose_intakeFrame = getPoseMeters().minus(intakePose_fieldFrame);
+        Pose2d robotPoseAtPickup = intakePoseAtPickup.plus(robotPose_intakeFrame);
 
         return robotPoseAtPickup;
     }
@@ -835,13 +845,17 @@ public class Drivetrain extends SubsystemBase {
             Translation3d closestIntake = new Translation3d(this.getClosestIntakeToCoral(closestCoralToIntake).getTranslation());
             Logger.recordOutput("coralTracking/closestToRobot", new Translation3d[] {closestCoralToRobot});
             Logger.recordOutput("coralTracking/closestToIntake", new Translation3d[] {closestIntake, closestCoralToIntake});
-            Logger.recordOutput("coralTracking/pickupPose", new Pose2d[] {this.getOffsetCoralPickupPose(closestCoralToIntake)});
+            Logger.recordOutput("coralTracking/centeredPickupPose", new Pose2d[] {this.getCenteredCoralPickupPose(closestCoralToIntake)});
+            Logger.recordOutput("coralTracking/offsetPickupPose", new Pose2d[] {this.getOffsetCoralPickupPose(closestCoralToIntake)});
+            Logger.recordOutput("coralTracking/strafingPickupPose", new Pose2d[] {this.getStrafingPickupPose(closestCoralToIntake)});
         }
         else {
             Translation3d[] empty = new Translation3d[0];
             Logger.recordOutput("coralTracking/closestToRobot", empty);
             Logger.recordOutput("coralTracking/closestToIntake", empty);
-            Logger.recordOutput("coralTracking/pickupPose", new Pose2d[0]);
+            Logger.recordOutput("coralTracking/centeredPickupPose", new Pose2d[0]);
+            Logger.recordOutput("coralTracking/offsetPickupPose", new Pose2d[0]);
+            Logger.recordOutput("coralTracking/strafingPickupPose", new Pose2d[0]);
         }
 
         // this.compareCamPoses();
@@ -891,7 +905,12 @@ public class Drivetrain extends SubsystemBase {
 
     public boolean simulatedIntakeIsNearCoral(Direction intakeSide) {
         // find where the intake is on the field
-        Transform2d intakePose_robotFrame = (intakeSide == Direction.left) ? this.effectiveLeftIntakePose_robotFrame : this.effectiveRightIntakePose_robotFrame;
+        double intakeX_robotFrame = (DrivetrainConstants.bumperWidthMeters/2.0) + (ArmConstants.orangeWheels_wristFrame.getX()/2.0);
+        double intakeY_robotFrame = ArmConstants.wristOuterWidthMeters/2.0;
+        if (intakeSide == Direction.right) {
+            intakeY_robotFrame *= -1;
+        }
+        Transform2d intakePose_robotFrame = new Transform2d(intakeX_robotFrame, intakeY_robotFrame, Rotation2d.kZero);
         Pose2d intakePose_fieldFrame = getPoseMeters().plus(intakePose_robotFrame);
 
         // see if any simulated corals are near it
@@ -900,8 +919,8 @@ public class Drivetrain extends SubsystemBase {
 
             Pose2d coralRelativeToIntake = simulatedCoral.getPose().toPose2d().relativeTo(intakePose_fieldFrame);
 
-            boolean alignedX = (0 < coralRelativeToIntake.getX()) && (coralRelativeToIntake.getX() < Units.inchesToMeters(9));
-            boolean alignedY = Math.abs(coralRelativeToIntake.getY()) < Units.inchesToMeters(2);
+            boolean alignedX = Math.abs(coralRelativeToIntake.getX()) < (FieldConstants.coralLengthMeters/2.0);
+            boolean alignedY = Math.abs(coralRelativeToIntake.getY()) < Units.inchesToMeters(1);
 
             if (alignedX && alignedY) {
                 return true;

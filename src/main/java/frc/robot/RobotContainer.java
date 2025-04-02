@@ -163,7 +163,7 @@ public class RobotContainer {
         duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
             intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
                 driverFullyControlDrivetrain().until(this::armInPickupPose),
-                driveTowardsCoralTeleop()
+                driveTowardsCoralInAuto() //driveTowardsCoralTeleop()
             ))
         );
         
@@ -304,7 +304,7 @@ public class RobotContainer {
     /** Called by Robot.java, convenience function for logging. */
     public void periodic() {
         Logger.recordOutput("robotContainer/coastModeLimitSwitch", coastModeButton.get());
-        Logger.recordOutput("intakeAimAssist/enabled", visionAssistedIntakeInTeleop);
+        Logger.recordOutput("coralTracking/enabledInTeleop", visionAssistedIntakeInTeleop);
 
         ArmPosition desiredArmState = new ArmPosition();
         desiredArmState.shoulderAngleDegrees = arm.getTargetShoulderAngleDegrees();
@@ -375,31 +375,18 @@ public class RobotContainer {
         // TODO: tune override ratio
         boolean significantRotationRequested = Math.abs(driverRequest.omegaRadiansPerSecond) > (0.1 * DrivetrainConstants.maxDesiredTeleopAngularVelocityRadiansPerSecond);
         boolean driverOverridingSelectedCoral = coral.isPresent() && significantRotationRequested;
-        Logger.recordOutput("intakeAimAssist/driverOverridingSelectedTarget", driverOverridingSelectedCoral);
+        Logger.recordOutput("coralTracking/driverOverridingSelectedTarget", driverOverridingSelectedCoral);
         if (coral.isEmpty() || driverOverridingSelectedCoral) {
             drivetrain.fieldOrientedDrive(duncan.getRequestedFieldOrientedVelocity(), true);
             return;
         }
 
-        // // Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
-        // Pose2d pickupPose = drivetrain.getCenteredCoralPickupPose(coral.get());
-        // Pose2d coralOnField = new Pose2d(coral.get().toTranslation2d(), Rotation2d.kZero);
-        // double metersLeftOrRight = coralOnField.relativeTo(drivetrain.getPoseMeters()).getY();
-        // boolean isLeft = metersLeftOrRight > 0;
-        // if (isLeft) {
-        //     Transform2d ajustedPose = new Transform2d(0,Units.inchesToMeters(20),Rotation2d.kZero);
-        //     pickupPose = pickupPose.plus(ajustedPose);
-        // } else {
-        //     Transform2d ajustedPose = new Transform2d(0,Units.inchesToMeters(-20),Rotation2d.kZero);
-        //     pickupPose = pickupPose.plus(ajustedPose);
-        // }
-        // ^from testing auto
 
         // TODO: choose level of assistance
         Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
-        drivetrain.fieldOrientedDriveWhileAiming(duncan.getRequestedFieldOrientedVelocity(), pickupPose.getRotation());
+        // drivetrain.fieldOrientedDriveWhileAiming(duncan.getRequestedFieldOrientedVelocity(), pickupPose.getRotation());
         // drivetrain.fieldOrientedDriveOnALine(duncan.getRequestedFieldOrientedVelocity(), pickupPose);
-        // drivetrain.pidToPose(pickupPose, 2.0);
+        drivetrain.pidToPose(pickupPose, 1.0);
     }).finallyDo(drivetrain::resetCenterOfRotation);}
 
     /**** SCORING ****/
@@ -509,33 +496,26 @@ public class RobotContainer {
         return output;
     }
 
-    private Command homeArmWhileGoingToSource() { return stowArm().alongWith(drivetrain.run(() -> {
-        Transform2d poseAdjustment = new Transform2d(2, 0, new Rotation2d());
-        Translation2d desiredTranslation = drivetrain.getClosestLoadingStation().getPose2d().plus(poseAdjustment).getTranslation();
-
-        Rotation2d desiredRotation = FlyingCircuitUtils.getAllianceDependentValue(Rotation2d.k180deg, Rotation2d.kZero, Rotation2d.kZero);
-        drivetrain.pidToPose(new Pose2d(desiredTranslation, desiredRotation), 3.5);
-    })).until(() -> arm.getShoulderAngleDegrees() < 40);}
-
 
 
     private Command driveTowardsCoralInAuto() { return drivetrain.run(() -> {
         Optional<Translation3d> coral = drivetrain.getClosestCoralToEitherIntake();
-        double maxMetersPerSecond = 1.0;
+        double maxMetersPerSecond = 2.0;
         if (this.armInPickupPose()) {
-            maxMetersPerSecond = 1.0;
+            maxMetersPerSecond = 2.0;
         }
 
-        if (coral.isEmpty()) {
+        if (coral.isEmpty() || !this.armInPickupPose()) {
             // can't see coral, just drive to source
             FieldElement sourceSide = drivetrain.getClosestLoadingStation();
-            double metersFromLoadingStation = (DrivetrainConstants.bumperWidthMeters / 2.0) + 3 * FieldConstants.coralLengthMeters;
+            double metersFromLoadingStation = (DrivetrainConstants.bumperWidthMeters / 2.0) + 4 * FieldConstants.coralLengthMeters;
             Transform2d pickupLocationRelativeToSource = new Transform2d(metersFromLoadingStation, 0, Rotation2d.k180deg);
             Pose2d targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
             drivetrain.pidToPose(targetRobotPose2d, maxMetersPerSecond);
         } else {
             // can see coral, drive towards it
-            Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
+            // Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
+            Pose2d pickupPose = drivetrain.getStrafingPickupPose(coral.get());
             drivetrain.pidToPose(pickupPose, maxMetersPerSecond);
         }
     }).finallyDo(drivetrain::resetCenterOfRotation);}
@@ -584,4 +564,12 @@ public class RobotContainer {
         );}
         return output;
     }
+
+    private Command homeArmWhileGoingToSource() { return stowArm().alongWith(drivetrain.run(() -> {
+        Transform2d poseAdjustment = new Transform2d(2, 0, new Rotation2d());
+        Translation2d desiredTranslation = drivetrain.getClosestLoadingStation().getPose2d().plus(poseAdjustment).getTranslation();
+
+        Rotation2d desiredRotation = FlyingCircuitUtils.getAllianceDependentValue(Rotation2d.k180deg, Rotation2d.kZero, Rotation2d.kZero);
+        drivetrain.pidToPose(new Pose2d(desiredTranslation, desiredRotation), 3.5);
+    })).until(() -> arm.getShoulderAngleDegrees() < 40);}
 }

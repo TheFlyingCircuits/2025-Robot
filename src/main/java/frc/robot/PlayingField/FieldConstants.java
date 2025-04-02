@@ -112,8 +112,8 @@ public class FieldConstants {
             double coralZ_loadingStationFrame = -loadingStationPose.getZ() + FieldConstants.coralOuterRadiusMeters;
 
             // 3 corals per loading station
-            Transform3d[] coralPoses_loadingStationFrame = { new Transform3d(0.5, 0.25, coralZ_loadingStationFrame, new Rotation3d()),
-                                                             new Transform3d(0.5, -0.25, coralZ_loadingStationFrame, new Rotation3d()),
+            Transform3d[] coralPoses_loadingStationFrame = { new Transform3d(0.5, 0.25*0, coralZ_loadingStationFrame, new Rotation3d()),
+                                                             new Transform3d(0.5, -0.25*0, coralZ_loadingStationFrame, new Rotation3d()),
                                                              new Transform3d(-0.5, 0, coralZ_loadingStationFrame, new Rotation3d())
                                                            };
 
