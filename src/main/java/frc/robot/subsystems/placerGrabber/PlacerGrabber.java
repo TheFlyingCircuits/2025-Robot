@@ -6,6 +6,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants;
@@ -30,8 +31,8 @@ public class PlacerGrabber extends SubsystemBase {
     private PIDController frontNeoPID;
     private PIDController sideNeoPID;
 
-    Debouncer leftDebouncer = new Debouncer(0.05);
-    Debouncer rightDebouncer = new Debouncer(0.05);
+    Debouncer leftDebouncer = new Debouncer(0.1, DebounceType.kBoth);
+    Debouncer rightDebouncer = new Debouncer(0.1, DebounceType.kBoth);
 
     boolean leftHasCoral;
     boolean rightHasCoral;

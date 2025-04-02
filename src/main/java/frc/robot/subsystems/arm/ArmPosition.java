@@ -17,10 +17,10 @@ public class ArmPosition {
     public static final ArmPosition frontL1 = new ArmPosition(14, WristConstants.maxAngleDegrees, ArmConstants.minExtensionMeters);
 
     //1 coral distance
-    public static final ArmPosition frontL2 = new ArmPosition(39.37, 113.20, 0.72);
+    public static final ArmPosition frontL2 = new ArmPosition(40.0, 107.0, 0.71);
 
     //1 coral distance
-    public static final ArmPosition frontL3 = new ArmPosition(58.0, 91.91, 0.97);
+    public static final ArmPosition frontL3 = new ArmPosition(60.0, 87.0, 0.96);
 
     //1 coral distance
     public static final ArmPosition frontL4 = new ArmPosition(72.59, 33.28, 1.6);

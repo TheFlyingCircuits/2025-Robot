@@ -41,6 +41,7 @@ import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.AimAtReef;
+import frc.robot.commands.DashboardControlArm;
 import frc.robot.commands.RemoveAlgae;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.Leds;
@@ -196,6 +197,8 @@ public class RobotContainer {
         //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel))
         //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, this::getDesiredBranch)
         // );
+        // duncanController.rightBumper().onTrue(new DashboardControlArm(arm, wrist));
+        // duncanController.b().onTrue(scoreCoral(false));
 
         // eject
         duncanController.leftBumper().whileTrue(Commands.sequence(
@@ -438,7 +441,7 @@ public class RobotContainer {
 
         return Commands.sequence(
             sendToBranch.get().until(() -> !placerGrabber.doesHaveCoral()),
-            sendToBranch.get().withTimeout(0.25), // TODO: maybe too long for auto?
+            // sendToBranch.get().withTimeout(0.25), // TODO: maybe too long for auto?
             placerGrabber.stopInstantCommand()
         );
     }
