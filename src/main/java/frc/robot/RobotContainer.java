@@ -508,8 +508,18 @@ public class RobotContainer {
         if (coral.isEmpty() || !this.armInPickupPose()) {
             // can't see coral, just drive to source
             FieldElement sourceSide = drivetrain.getClosestLoadingStation();
-            double metersFromLoadingStation = (DrivetrainConstants.bumperWidthMeters / 2.0) + 4 * FieldConstants.coralLengthMeters;
-            Transform2d pickupLocationRelativeToSource = new Transform2d(metersFromLoadingStation, 0, Rotation2d.k180deg);
+
+            // go to closest slot to the reef
+            double offsetY_loadingStationFrame = 4*FieldConstants.centerToCenterMetersBetweenLoadingStationSlots;
+            if (sourceSide == FieldElement.RIGHT_LOADING_STATION) {
+                offsetY_loadingStationFrame *= -1;
+            }
+
+            // far enough away from the loading station to see dropped coral in our fov
+            double metersFromLoadingStation = 2.5 * DrivetrainConstants.bumperWidthMeters;
+
+            // generate the target in field coords
+            Transform2d pickupLocationRelativeToSource = new Transform2d(metersFromLoadingStation, offsetY_loadingStationFrame, Rotation2d.k180deg);
             Pose2d targetRobotPose2d = sourceSide.getPose2d().plus(pickupLocationRelativeToSource);
             drivetrain.pidToPose(targetRobotPose2d, maxMetersPerSecond);
         } else {
