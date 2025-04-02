@@ -96,23 +96,25 @@ public class VisionIOPhotonLib implements VisionIO {
         double slopeStdDevMetersPerMeterX;
         double slopeStdDevMetersPerMeterY;
 
+        double slopeStdDevMetersPerMeter = 0.01;
+
 
 
         // previous working vision
         
-        if (useMultitag) {
-            slopeStdDevMetersPerMeterX = 0.004;
-            slopeStdDevMetersPerMeterY = 0.009;
-        }
-        else {
-            slopeStdDevMetersPerMeterX = 0.008;
-            slopeStdDevMetersPerMeterY = 0.02;
-        }
+        // if (useMultitag) {
+        //     slopeStdDevMetersPerMeterX = 0.004;
+        //     slopeStdDevMetersPerMeterY = 0.009;
+        // }
+        // else {
+        //     slopeStdDevMetersPerMeterX = 0.008;
+        //     slopeStdDevMetersPerMeterY = 0.02;
+        // }
 
         // previous linear model
         return VecBuilder.fill(
-            slopeStdDevMetersPerMeterX*distToTargetMeters,
-            slopeStdDevMetersPerMeterY*distToTargetMeters,
+            slopeStdDevMetersPerMeter*distToTargetMeters,
+            slopeStdDevMetersPerMeter*distToTargetMeters,
             99999
         );
     }

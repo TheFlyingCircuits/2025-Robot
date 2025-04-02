@@ -79,8 +79,8 @@ public class Drivetrain extends SubsystemBase {
     private Transform2d centerOfRotation_robotFrame = new Transform2d();
     private double intakeX_robotFrame = (DrivetrainConstants.bumperWidthMeters / 2.0);
     private Transform2d frontBumper_robotFrame = new Transform2d(intakeX_robotFrame, 0, Rotation2d.kZero);
-    private double effectiveIntakeLateralOffset = PlacerGrabber.outerWidthMeters/2.0;//((PlacerGrabber.outerWidthMeters/2.0) + (DrivetrainConstants.bumperWidthMeters/2.0))/2.0;
-    private Rotation2d effectiveIntakeOrientation_robotFrame = Rotation2d.fromDegrees(45);
+    private double effectiveIntakeLateralOffset = /*PlacerGrabber.outerWidthMeters/2.0;*/((PlacerGrabber.outerWidthMeters/2.0) + (DrivetrainConstants.bumperWidthMeters/2.0))/2.0;
+    private Rotation2d effectiveIntakeOrientation_robotFrame = Rotation2d.fromDegrees(0);
     private Transform2d effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame));
     private Transform2d effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame.times(-1)));
 
@@ -219,6 +219,18 @@ public class Drivetrain extends SubsystemBase {
     }
     public void resetCenterOfRotation() {
         this.centerOfRotation_robotFrame = new Transform2d();
+    }
+    public void setIntakeToActualSize() {
+        double effectiveIntakeLateralOffset = PlacerGrabber.outerWidthMeters/2.0;
+        Rotation2d effectiveIntakeOrientation_robotFrame = Rotation2d.fromDegrees(0);
+        this.effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame));
+        this.effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame.times(-1)));
+    }
+    public void setIntakeToWideSize() {
+        double effectiveIntakeLateralOffset = /*PlacerGrabber.outerWidthMeters/2.0;*/((PlacerGrabber.outerWidthMeters/2.0) + (DrivetrainConstants.bumperWidthMeters/2.0))/2.0;
+        Rotation2d effectiveIntakeOrientation_robotFrame = Rotation2d.fromDegrees(0);
+        this.effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame));
+        this.effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame.times(-1)));
     }
 
 
@@ -683,7 +695,7 @@ public class Drivetrain extends SubsystemBase {
         Translation2d coralRelativeToRobot = coralFieldPose.relativeTo(getPoseMeters()).getTranslation();
 
         // Just strafe when the coral gets close to the bumper
-        double sideswipeRange = (DrivetrainConstants.bumperWidthMeters/2.0) + ArmConstants.orangeWheels_wristFrame.getX();
+        double sideswipeRange = (DrivetrainConstants.bumperWidthMeters/2.0) + ArmConstants.orangeWheels_wristFrame.getX() + (FieldConstants.coralLengthMeters/2.0);
         boolean shouldStrafe = (0 <= coralRelativeToRobot.getX()) && (coralRelativeToRobot.getX() <= sideswipeRange);
         if (shouldStrafe) {
             Transform2d pickupPose_robotFrame = new Transform2d(0, coralRelativeToRobot.getY(), Rotation2d.kZero);

@@ -164,7 +164,7 @@ public class RobotContainer {
         duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
             intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
                 driverFullyControlDrivetrain().until(this::armInPickupPose),
-                driveTowardsCoralInAuto() //driveTowardsCoralTeleop()
+                driveTowardsCoralTeleop()
             ))
         );
         
@@ -347,7 +347,7 @@ public class RobotContainer {
         Command armToIntake = new ParallelCommandGroup(
             arm.shoulder.safeSetTargetAngleCommand(ArmConstants.armMinAngleDegrees),
             arm.extension.setTargetLengthCommand(0.77),
-            wrist.setTargetPositionCommand(-1)
+            wrist.setTargetPositionCommand(0)
         ).withName("armToIntakePositionCommand");
 
         Command spinIntakeWheels = placerGrabber.intakeOrEjectOrStop();
@@ -373,6 +373,7 @@ public class RobotContainer {
     private Command driveTowardsCoralTeleop() { return drivetrain.run(() -> {
         // driver maintains control when the intake cam doesn't see any coral,
         // or when using the right stick to change targets.
+        drivetrain.setIntakeToActualSize();
         Optional<Translation3d> coral = drivetrain.getClosestCoralToEitherIntake();
         ChassisSpeeds driverRequest = duncan.getRequestedFieldOrientedVelocity();
         // TODO: tune override ratio
@@ -387,9 +388,9 @@ public class RobotContainer {
 
         // TODO: choose level of assistance
         Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
-        // drivetrain.fieldOrientedDriveWhileAiming(duncan.getRequestedFieldOrientedVelocity(), pickupPose.getRotation());
+        drivetrain.fieldOrientedDriveWhileAiming(duncan.getRequestedFieldOrientedVelocity(), pickupPose.getRotation());
         // drivetrain.fieldOrientedDriveOnALine(duncan.getRequestedFieldOrientedVelocity(), pickupPose);
-        drivetrain.pidToPose(pickupPose, 1.0);
+        // drivetrain.pidToPose(pickupPose, 1.0);
     }).finallyDo(drivetrain::resetCenterOfRotation);}
 
     /**** SCORING ****/
@@ -502,10 +503,11 @@ public class RobotContainer {
 
 
     private Command driveTowardsCoralInAuto() { return drivetrain.run(() -> {
+        drivetrain.setIntakeToWideSize();
         Optional<Translation3d> coral = drivetrain.getClosestCoralToEitherIntake();
-        double maxMetersPerSecond = 2.0;
+        double maxMetersPerSecond = 1;
         if (this.armInPickupPose()) {
-            maxMetersPerSecond = 2.0;
+            maxMetersPerSecond = 2.1;
         }
 
         if (coral.isEmpty() || !this.armInPickupPose()) {
@@ -519,7 +521,7 @@ public class RobotContainer {
             }
 
             // far enough away from the loading station to see dropped coral in our fov
-            double metersFromLoadingStation = 2.5 * DrivetrainConstants.bumperWidthMeters;
+            double metersFromLoadingStation = 2.0 * DrivetrainConstants.bumperWidthMeters;
 
             // generate the target in field coords
             Transform2d pickupLocationRelativeToSource = new Transform2d(metersFromLoadingStation, offsetY_loadingStationFrame, Rotation2d.k180deg);
@@ -529,7 +531,7 @@ public class RobotContainer {
             // can see coral, drive towards it
             // Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
             Pose2d pickupPose = drivetrain.getStrafingPickupPose(coral.get());
-            drivetrain.pidToPose(pickupPose, maxMetersPerSecond);
+            drivetrain.pidToPose(pickupPose, 1.35);
         }
     }).finallyDo(drivetrain::resetCenterOfRotation);}
     
