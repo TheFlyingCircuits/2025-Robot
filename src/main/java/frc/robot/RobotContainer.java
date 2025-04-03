@@ -41,6 +41,7 @@ import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.AimAtReef;
+import frc.robot.commands.ChickenHead;
 import frc.robot.commands.DashboardControlArm;
 import frc.robot.commands.RemoveAlgae;
 import frc.robot.subsystems.HumanDriver;
@@ -193,8 +194,8 @@ public class RobotContainer {
             ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
         );
         // duncanController.rightBumper().whileTrue(
-        //     new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> FieldElement.STALK_B.getBranch(desiredLevel))
-        //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel))
+        //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> FieldElement.STALK_B.getBranch(desiredLevel))
+        //     new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel))
         //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, this::getDesiredBranch)
         // );
         // duncanController.rightBumper().onTrue(new DashboardControlArm(arm, wrist));

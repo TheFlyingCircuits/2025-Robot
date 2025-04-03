@@ -17,8 +17,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.AdvantageScopeDrawingUtils;
 import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.DrivetrainConstants;
+import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.PlayingField.FieldConstants;
-import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmPosition;
@@ -33,15 +34,16 @@ public class ChickenHead extends Command {
     private Arm arm;
     private Wrist wrist;
     private PlacerGrabber placerGrabber;
-    private Supplier<ReefBranch> targetBranch;
+    private Supplier<ReefBranch> targetBranchSupplier;
+    private ReefBranch targetBranch;
 
-    public ChickenHead(Drivetrain drivetrain, Supplier<ChassisSpeeds> translationController, Arm arm, Wrist wrist, PlacerGrabber intakeWheels, Supplier<ReefBranch> targetBranch) {
+    public ChickenHead(Drivetrain drivetrain, Supplier<ChassisSpeeds> translationController, Arm arm, Wrist wrist, PlacerGrabber intakeWheels, Supplier<ReefBranch> targetBranchSupplier) {
         this.drivetrain = drivetrain;
         this.translationController = translationController;
         this.arm = arm;
         this.wrist = wrist;
         this.placerGrabber = intakeWheels;
-        this.targetBranch = targetBranch;
+        this.targetBranchSupplier = targetBranchSupplier;
 
         // intakeWheels aren't added to requirements because we never write to them,
         // we only read from them.
@@ -51,11 +53,12 @@ public class ChickenHead extends Command {
 
     @Override
     public void initialize() {
-
+        targetBranch = targetBranchSupplier.get();
     }
 
     @Override
     public void execute() {
+        // this.setDriveToOneCoralDistancePose(); <- used for generating setpoints
         this.aimDriveAtReef();
 
         ArmPosition desiredArmState = this.getDesiredArmState().constrainedToLimits();
@@ -81,6 +84,37 @@ public class ChickenHead extends Command {
     @Override
     public boolean isFinished() {
         return false;
+    }
+
+    private void setDriveToOneCoralDistancePose() {
+        Pose2d stalkPose = this.targetBranch.getStalk().getPose2d();
+        boolean isFacingForward = drivetrain.isFacingReef();
+        Direction sideCoralIsIn = placerGrabber.sideCoralIsIn();
+
+        double adjustedX = FieldConstants.stalkInsetMeters;        // puts center of robot at the outer edge of the reef
+        adjustedX += DrivetrainConstants.bumperWidthMeters / 2.0;  // move back a half bumper length so the bumper is touching the edge of the reef
+        adjustedX += FieldConstants.coralOuterDiameterMeters;      // move back one coral distance so we can still score if coral is in the way
+
+        
+        Rotation2d rotationAdjustment;
+        if (isFacingForward) {
+            rotationAdjustment = Rotation2d.k180deg;
+        } else {
+            rotationAdjustment = Rotation2d.kZero;
+        }
+
+
+        double adjustedY;
+        if (((sideCoralIsIn == Direction.left) & isFacingForward) || ((sideCoralIsIn == Direction.right) & !isFacingForward)) {
+            adjustedY = Units.inchesToMeters(3.5);
+        } else {
+            adjustedY = Units.inchesToMeters(-3.5);
+        }
+
+
+        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, rotationAdjustment);
+        Pose2d scoringPose = stalkPose.plus(targetPoseToRobotRelativeToStalk);
+        drivetrain.setPoseMeters(scoringPose);
     }
 
     private ArmPosition getDesiredArmState() {
@@ -199,7 +233,7 @@ public class ChickenHead extends Command {
 
     private Pose3d getDesiredCoralPose_fieldFrame() {
         // 1) Start by computing the ideal pose for the coral (i.e along the stalk axis)
-        Pose3d tipOfTargetBranch = targetBranch.get().getPose();
+        Pose3d tipOfTargetBranch = targetBranch.getPose();
 
         // TODO: picture / diagram / ascii art
         // Orange wheels are pointing away from the reef when scoring on intake side,
@@ -208,8 +242,11 @@ public class ChickenHead extends Command {
         Rotation3d idealCoralOrientation_branchFrame = backOfCoralShouldFaceReef ? 
                                                        new Rotation3d(Units.degreesToRadians(180), 0, 0) :
                                                        new Rotation3d(0, Units.degreesToRadians(180), 0);
-
-        Transform3d idealCoralPose_branchFrame = new Transform3d(FieldConstants.coralOuterRadiusMeters + (FieldConstants.coralLengthMeters/2.0), 0, 0, idealCoralOrientation_branchFrame);
+        
+        double idealDistanceFromBranch = FieldConstants.coralLengthMeters/2.0; // coral flush with branch
+        idealDistanceFromBranch += FieldConstants.coralOuterRadiusMeters;      // required room to rotate the coral when off angle
+        idealDistanceFromBranch += Units.inchesToMeters(1);                    // just a bit of a buffer
+        Transform3d idealCoralPose_branchFrame = new Transform3d(idealDistanceFromBranch, 0, 0, idealCoralOrientation_branchFrame);
         Pose3d idealCoralPose_fieldframe = tipOfTargetBranch.plus(idealCoralPose_branchFrame);
 
         // 2) Rotate this ideal pose based on the robot's current position to allow for true
@@ -234,7 +271,7 @@ public class ChickenHead extends Command {
 
         // 2.75) See how off angle the robot is, then rotate the ideal pose by that amount,
         //       so the axis of the desired coral is in line with the held coral
-        Rotation2d radiallyOutwardFromReef = targetBranch.get().getFace().getOrientation2d();
+        Rotation2d radiallyOutwardFromReef = targetBranch.getFace().getOrientation2d();
         Translation2d reefCoralTowardsHeldCoral = pointInLineWithHeldCoral_fieldFrame.minus(pivotPoint_fieldFrame.toTranslation2d());
 
         // 2.9) Compute and apply the yaw adjustment, log, then we're done.
