@@ -34,9 +34,8 @@ public class ColorCamera {
     private Rotation3d camOrientation_robotFrame;
 
     // "Sensor" readings
-    private List<Translation3d> validGamepieces_fieldCoords = new ArrayList<>();
-    private List<Translation3d> invalidGamepieces_fieldCoords = new ArrayList<>();
-    private List<Pose3d> allGamepiecesWithOrientation = new ArrayList<>();
+    private List<Pose3d> validGamepieces_fieldCoords = new ArrayList<>();
+    private List<Pose3d> invalidGamepieces_fieldCoords = new ArrayList<>();
     private List<Translation3d> projectedBoundingBox_advantageScopeViz = new ArrayList<>();
 
 
@@ -69,11 +68,11 @@ public class ColorCamera {
     }
 
 
-    public Optional<Translation3d> getClosestGamepieceTo(Translation2d locationOnField) {
-        Optional<Translation3d> closest = Optional.empty();
+    public Optional<Pose3d> getClosestGamepieceTo(Translation2d locationOnField) {
+        Optional<Pose3d> closest = Optional.empty();
         double minDistance = -1;
-        for (Translation3d gamepieceLocation_fieldCoords : this.validGamepieces_fieldCoords) {
-            double distance = gamepieceLocation_fieldCoords.toTranslation2d().getDistance(locationOnField);
+        for (Pose3d gamepieceLocation_fieldCoords : this.validGamepieces_fieldCoords) {
+            double distance = gamepieceLocation_fieldCoords.getTranslation().toTranslation2d().getDistance(locationOnField);
             if (closest.isEmpty() || (distance < minDistance)) {
                 minDistance = distance;
                 closest = Optional.of(gamepieceLocation_fieldCoords);
@@ -86,7 +85,7 @@ public class ColorCamera {
         return this.validGamepieces_fieldCoords.size() > 0;
     }
 
-    public List<Translation3d> getValidGamepieces_fieldCoords() {
+    public List<Pose3d> getValidGamepieces_fieldCoords() {
         return this.validGamepieces_fieldCoords;
     }
 
@@ -95,7 +94,6 @@ public class ColorCamera {
         // Reset for a new iteration of the main loop
         this.validGamepieces_fieldCoords = new ArrayList<>();
         this.invalidGamepieces_fieldCoords = new ArrayList<>();
-        this.allGamepiecesWithOrientation = new ArrayList<>();
         this.projectedBoundingBox_advantageScopeViz = new ArrayList<>();
         // Logger.processInputs(cam.getName(), cam);
 
@@ -119,13 +117,13 @@ public class ColorCamera {
             // robotCoords -> fieldCoords
             Translation3d gamepieceLocation_fieldCoords = gamepieceLocation_robotCoords.rotateBy(robotPoseWhenPicTaken.getRotation()).plus(robotPoseWhenPicTaken.getTranslation());
             Rotation3d gamepieceOrientation_fieldCoords = getPredictedOrientation(target, robotPoseWhenPicTaken);
-            this.allGamepiecesWithOrientation.add(new Pose3d(gamepieceLocation_fieldCoords, gamepieceOrientation_fieldCoords));
+            Pose3d gamepiecePose_fieldCoords = new Pose3d(gamepieceLocation_fieldCoords, gamepieceOrientation_fieldCoords);
 
             // Don't track gamepieces outside the field perimeter.
             boolean requireInField = DriverStation.isFMSAttached() || RobotBase.isSimulation();
             double inFieldToleranceMeters = 0.1;
             if (requireInField && !FlyingCircuitUtils.isInField(gamepieceLocation_fieldCoords, inFieldToleranceMeters)) {
-                this.invalidGamepieces_fieldCoords.add(gamepieceLocation_fieldCoords);
+                this.invalidGamepieces_fieldCoords.add(gamepiecePose_fieldCoords);
                 continue;
             }
 
@@ -134,22 +132,21 @@ public class ColorCamera {
             double minMetersFromRobot = 0.6;//(DrivetrainConstants.frameWidthMeters / 2.0) + Units.inchesToMeters(8);
             double metersFromRobot = gamepieceLocation_fieldCoords.toTranslation2d().getDistance(robotPoseNow.getTranslation()); // gamepieceLocation_robotCoords.toTranslation2d().getNorm() doesn't take into account any robot travel since the pic was taken.
             if (metersFromRobot > maxMetersFromRobot || metersFromRobot < minMetersFromRobot) {
-                this.invalidGamepieces_fieldCoords.add(gamepieceLocation_fieldCoords);
+                this.invalidGamepieces_fieldCoords.add(gamepiecePose_fieldCoords);
                 continue;
             }
 
                       
             // The gamepiece passes all checks, so its valid.
-            this.validGamepieces_fieldCoords.add(gamepieceLocation_fieldCoords);
+            this.validGamepieces_fieldCoords.add(gamepiecePose_fieldCoords);
         }
 
 
         // Logging, then we're done!
         String logPrefix = cam.getName()+"/mostRecentFrame/";
         Logger.recordOutput(logPrefix+"timestampSeconds", mostRecentFrame.getTimestampSeconds());
-        Logger.recordOutput(logPrefix+"validGamepieces", this.validGamepieces_fieldCoords.toArray(new Translation3d[0]));
-        Logger.recordOutput(logPrefix+"invalidGamepieces", this.invalidGamepieces_fieldCoords.toArray(new Translation3d[0]));
-        Logger.recordOutput(logPrefix+"allGamepiecesWithOrientation", this.allGamepiecesWithOrientation.toArray(new Pose3d[0]));
+        Logger.recordOutput(logPrefix+"validGamepieces", this.validGamepieces_fieldCoords.toArray(new Pose3d[0]));
+        Logger.recordOutput(logPrefix+"invalidGamepieces", this.invalidGamepieces_fieldCoords.toArray(new Pose3d[0]));
         Logger.recordOutput(logPrefix+"projectedBoundingBoxes", this.projectedBoundingBox_advantageScopeViz.toArray(new Translation3d[0]));
 
         AdvantageScopeDrawingUtils.drawCircle("coralTracking/minDetectionDistance", robotPoseNow.getTranslation(), 0.6);

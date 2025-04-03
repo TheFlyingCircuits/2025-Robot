@@ -1,13 +1,13 @@
 {
   "hubs": [
     {
-      "x": -4,
-      "y": 7,
-      "width": 1536,
-      "height": 825,
+      "x": -8,
+      "y": -8,
+      "width": 1552,
+      "height": 840,
       "state": {
         "sidebar": {
-          "width": 293,
+          "width": 383,
           "expanded": [
             "/AdvantageKit/RealOutputs/intakeCamera",
             "/AdvantageKit/RealOutputs/intakeCamera/mostRecentFrame",
@@ -22,8 +22,13 @@
             "/AdvantageKit/RealOutputs/driveOnALine",
             "/SmartDashboard/RunCommand",
             "/SmartDashboard/SequentialCommandGroup",
+            "/AdvantageKit/RealOutputs/chickenHead/drivetrain",
             "/AdvantageKit",
+            "/AdvantageKit/RealOutputs/drivetrain/camPoseComparision",
+            "/AdvantageKit/RealOutputs/drivetrain/camPoseComparision/backRight",
+            "/AdvantageKit/RealOutputs/wrist",
             "/AdvantageKit/RealOutputs",
+            "/AdvantageKit/RealOutputs/coralTracking",
             "/AdvantageKit/RealOutputs/intakeCam"
           ]
         },
@@ -65,7 +70,7 @@
                   {
                     "type": "vision",
                     "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToRobot",
-                    "logType": "Translation3d[]",
+                    "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
                       "color": "#00ff00",
@@ -75,7 +80,7 @@
                   {
                     "type": "vision",
                     "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/validGamepieces",
-                    "logType": "Translation3d[]",
+                    "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
                       "color": "#ff8c00",
@@ -85,7 +90,7 @@
                   {
                     "type": "vision",
                     "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/invalidGamepieces",
-                    "logType": "Translation3d[]",
+                    "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
                       "color": "#ff0000",
@@ -95,7 +100,7 @@
                   {
                     "type": "trajectory",
                     "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToIntake",
-                    "logType": "Translation3d[]",
+                    "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
                       "color": "#ff00ff",
@@ -142,16 +147,6 @@
                     }
                   },
                   {
-                    "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/pickupPose",
-                    "logType": "Pose2d[]",
-                    "visible": false,
-                    "options": {
-                      "model": "KitBot",
-                      "color": "#00ff00"
-                    }
-                  },
-                  {
                     "type": "trajectory",
                     "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/minDetectionDistance",
                     "logType": "Translation2d[]",
@@ -172,15 +167,6 @@
                     }
                   },
                   {
-                    "type": "gamePiece",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/allGamepiecesWithOrientation",
-                    "logType": "Pose3d[]",
-                    "visible": false,
-                    "options": {
-                      "variant": "Coral"
-                    }
-                  },
-                  {
                     "type": "trajectory",
                     "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/projectedBoundingBoxes",
                     "logType": "Translation3d[]",
@@ -188,6 +174,54 @@
                     "options": {
                       "color": "#ffff00",
                       "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/centeredPickupPose",
+                    "logType": "Pose2d[]",
+                    "visible": false,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/offsetPickupPose",
+                    "logType": "Pose2d[]",
+                    "visible": false,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/strafingPickupPose",
+                    "logType": "Pose2d[]",
+                    "visible": false,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/validGamepieces",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/invalidGamepieces",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
                     }
                   }
                 ],
@@ -199,17 +233,17 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  10.358131061981888,
-                  10.481925825609274,
-                  -0.36118701540240505
+                  11.343928456962136,
+                  8.444860347648907,
+                  -0.4694765047592268
                 ],
                 "cameraTarget": [
-                  7.5795013889593434,
-                  0.8181861575258408,
-                  -0.5036811669727559
+                  6.667210967064483,
+                  0.3175084602690854,
+                  -0.5585304000325236
                 ]
               },
-              "controlsHeight": 200
+              "controlsHeight": 196
             }
           ]
         }

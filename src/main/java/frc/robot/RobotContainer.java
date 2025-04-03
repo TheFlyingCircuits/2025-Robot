@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -375,7 +376,7 @@ public class RobotContainer {
         // driver maintains control when the intake cam doesn't see any coral,
         // or when using the right stick to change targets.
         drivetrain.setIntakeToActualSize();
-        Optional<Translation3d> coral = drivetrain.getClosestCoralToEitherIntake();
+        Optional<Pose3d> coral = drivetrain.getClosestCoralToEitherIntake();
         ChassisSpeeds driverRequest = duncan.getRequestedFieldOrientedVelocity();
         // TODO: tune override ratio
         boolean significantRotationRequested = Math.abs(driverRequest.omegaRadiansPerSecond) > (0.1 * DrivetrainConstants.maxDesiredTeleopAngularVelocityRadiansPerSecond);
@@ -505,7 +506,7 @@ public class RobotContainer {
 
     private Command driveTowardsCoralInAuto() { return drivetrain.run(() -> {
         drivetrain.setIntakeToWideSize();
-        Optional<Translation3d> coral = drivetrain.getClosestCoralToEitherIntake();
+        Optional<Pose3d> coral = drivetrain.getClosestCoralToEitherIntake();
         double maxMetersPerSecond = 1;
         if (this.armInPickupPose()) {
             maxMetersPerSecond = 2.1;

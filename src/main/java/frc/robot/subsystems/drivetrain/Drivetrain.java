@@ -613,24 +613,24 @@ public class Drivetrain extends SubsystemBase {
         return intakeCam.seesAnyGamepieces();
     }
 
-    public Optional<Translation3d> getClosestCoralToRobot() {
+    public Optional<Pose3d> getClosestCoralToRobot() {
         return intakeCam.getClosestGamepieceTo(getPoseMeters().getTranslation());
     }
-    public Optional<Translation3d> getClosestCoralToEitherIntake() {
+    public Optional<Pose3d> getClosestCoralToEitherIntake() {
         if (!this.seesAnyCoral()) {
             return Optional.empty();
         }
 
         Pose2d leftIntakeOnField = getPoseMeters().plus(effectiveLeftIntakePose_robotFrame);
         Pose2d rightIntakeOnField = getPoseMeters().plus(effectiveRightIntakePose_robotFrame);
-        Translation3d closestToLeft = intakeCam.getClosestGamepieceTo(leftIntakeOnField.getTranslation()).get();
-        Translation3d closestToRight = intakeCam.getClosestGamepieceTo(rightIntakeOnField.getTranslation()).get();
-        double distanceToLeft = leftIntakeOnField.getTranslation().getDistance(closestToLeft.toTranslation2d());
-        double distanceToRight = rightIntakeOnField.getTranslation().getDistance(closestToRight.toTranslation2d());
+        Pose3d closestToLeft = intakeCam.getClosestGamepieceTo(leftIntakeOnField.getTranslation()).get();
+        Pose3d closestToRight = intakeCam.getClosestGamepieceTo(rightIntakeOnField.getTranslation()).get();
+        double distanceToLeft = leftIntakeOnField.getTranslation().getDistance(closestToLeft.getTranslation().toTranslation2d());
+        double distanceToRight = rightIntakeOnField.getTranslation().getDistance(closestToRight.getTranslation().toTranslation2d());
 
         return (distanceToLeft <= distanceToRight) ? Optional.of(closestToLeft) : Optional.of(closestToRight);
     }
-    private Optional<Translation3d> getIntendedCoral(ChassisSpeeds requestedVelocity) {
+    private Optional<Pose3d> getIntendedCoral(ChassisSpeeds requestedVelocity) {
         double vX = requestedVelocity.vxMetersPerSecond;
         double vY = requestedVelocity.vyMetersPerSecond;
         double requestedMetersPerSecond = Math.hypot(vX, vY);
@@ -645,12 +645,12 @@ public class Drivetrain extends SubsystemBase {
 
         // init bestMatchCoral as the first one seen.
         Translation2d robotLocation = getPoseMeters().getTranslation();
-        Translation3d bestMatchCoral = intakeCam.getValidGamepieces_fieldCoords().get(0);
+        Pose3d bestMatchCoral = intakeCam.getValidGamepieces_fieldCoords().get(0);
 
         // See if there are any other corals that do a better job of matching the driver's intended target.
-        for (Translation3d candidateCoral : intakeCam.getValidGamepieces_fieldCoords()) {
-            Rotation2d robotTowardsCandidate = candidateCoral.toTranslation2d().minus(robotLocation).getAngle();
-            Rotation2d robotTowardsBestMatch = bestMatchCoral.toTranslation2d().minus(robotLocation).getAngle();
+        for (Pose3d candidateCoral : intakeCam.getValidGamepieces_fieldCoords()) {
+            Rotation2d robotTowardsCandidate = candidateCoral.getTranslation().toTranslation2d().minus(robotLocation).getAngle();
+            Rotation2d robotTowardsBestMatch = bestMatchCoral.getTranslation().toTranslation2d().minus(robotLocation).getAngle();
 
             // dot product the driver's requested velocity onto the direction vector towards each coral
             double candidateProjection = vX * robotTowardsCandidate.getCos() + vY * robotTowardsCandidate.getSin();
@@ -661,64 +661,48 @@ public class Drivetrain extends SubsystemBase {
             }
         }
 
-        Logger.recordOutput("coralTracking/bestProjectionOntoRequestedVelocity", new Translation3d[] {bestMatchCoral});
+        Logger.recordOutput("coralTracking/bestProjectionOntoRequestedVelocity", new Pose3d[] {bestMatchCoral});
         return Optional.of(bestMatchCoral);
     }
 
-    public Pose2d getCenteredCoralPickupPose(Translation3d coralLocation) {
+    public Pose2d getCenteredCoralPickupPose(Pose3d coralPose_fieldCoords) {
         // pickup by driving straight at coral
-        Translation2d robotToCoral = coralLocation.toTranslation2d().minus(getPoseMeters().getTranslation());
-        return new Pose2d(coralLocation.toTranslation2d() , robotToCoral.getAngle());
+        Translation2d robotToCoral = coralPose_fieldCoords.getTranslation().toTranslation2d().minus(getPoseMeters().getTranslation());
+        return new Pose2d(coralPose_fieldCoords.getTranslation().toTranslation2d() , robotToCoral.getAngle());
     }
-    public Pose2d getClosestIntakeToCoral(Translation3d coralLocation) {
+    public Pose2d getClosestIntakeToCoral(Pose3d coralPose_fieldCoords) {
         Pose2d leftIntakeOnField = getPoseMeters().plus(effectiveLeftIntakePose_robotFrame);
         Pose2d rightIntakeOnField = getPoseMeters().plus(effectiveRightIntakePose_robotFrame);
-        double distanceToLeft = leftIntakeOnField.getTranslation().getDistance(coralLocation.toTranslation2d());
-        double distanceToRight = rightIntakeOnField.getTranslation().getDistance(coralLocation.toTranslation2d());
+        double distanceToLeft = leftIntakeOnField.getTranslation().getDistance(coralPose_fieldCoords.getTranslation().toTranslation2d());
+        double distanceToRight = rightIntakeOnField.getTranslation().getDistance(coralPose_fieldCoords.getTranslation().toTranslation2d());
         return (distanceToLeft <= distanceToRight) ? leftIntakeOnField : rightIntakeOnField;
     }
-    public Pose2d getOffsetCoralPickupPose(Translation3d coralLocation) {
+    public Pose2d getOffsetCoralPickupPose(Pose3d coralPose_fieldCoords) {
         // pickup by aligning the intake's left omniwheels or the right omniwheels
         // to the coral (whichever is closer).
-        Pose2d intakePose_fieldFrame = this.getClosestIntakeToCoral(coralLocation);
-        Translation2d intakeToCoral = coralLocation.toTranslation2d().minus(intakePose_fieldFrame.getTranslation());
-        Pose2d intakePoseAtPickup = new Pose2d(coralLocation.toTranslation2d(), intakeToCoral.getAngle());
+        Pose2d intakePose_fieldFrame = this.getClosestIntakeToCoral(coralPose_fieldCoords);
+        Translation2d intakeToCoral = coralPose_fieldCoords.getTranslation().toTranslation2d().minus(intakePose_fieldFrame.getTranslation());
+        Pose2d intakePoseAtPickup = new Pose2d(coralPose_fieldCoords.getTranslation().toTranslation2d(), intakeToCoral.getAngle());
 
         Transform2d robotPose_intakeFrame = getPoseMeters().minus(intakePose_fieldFrame);
         Pose2d robotPoseAtPickup = intakePoseAtPickup.plus(robotPose_intakeFrame);
 
         return robotPoseAtPickup;
     }
-    public Pose2d getStrafingPickupPose(Translation3d coralLocation) {
+    public Pose2d getStrafingPickupPose(Pose3d coralPose_fieldCoords) {
         // Find where the coral is relative to the robot
-        Pose2d coralFieldPose = new Pose2d(coralLocation.toTranslation2d(), Rotation2d.kZero);
-        Translation2d coralRelativeToRobot = coralFieldPose.relativeTo(getPoseMeters()).getTranslation();
+        Pose2d coralPose_robotCoords = coralPose_fieldCoords.toPose2d().relativeTo(getPoseMeters());
 
         // Just strafe when the coral gets close to the bumper
         double sideswipeRange = (DrivetrainConstants.bumperWidthMeters/2.0) + ArmConstants.orangeWheels_wristFrame.getX() + (FieldConstants.coralLengthMeters/2.0);
-        boolean shouldStrafe = (0 <= coralRelativeToRobot.getX()) && (coralRelativeToRobot.getX() <= sideswipeRange);
+        boolean shouldStrafe = (0 <= coralPose_robotCoords.getX()) && (coralPose_robotCoords.getX() <= sideswipeRange);
         if (shouldStrafe) {
-            Transform2d pickupPose_robotFrame = new Transform2d(0, coralRelativeToRobot.getY(), Rotation2d.kZero);
+            Transform2d pickupPose_robotFrame = new Transform2d(0, coralPose_robotCoords.getY(), Rotation2d.kZero);
             return getPoseMeters().plus(pickupPose_robotFrame);
         }
 
         // otherwise, approach in the normal fashion to line up the coral with the alignment point on the robot
-        return this.getOffsetCoralPickupPose(coralLocation);
-    }
-    public Pose2d getCornerPocketPickupPose(Translation3d coralLocation) {
-        // pickup by aligning the intake's left omniwheels or the right omniwheels
-        // to the coral (whichever is closer).
-        Pose2d intakePose_fieldFrame = this.getClosestIntakeToCoral(coralLocation);
-        Translation2d intakeToCoral = coralLocation.toTranslation2d().minus(intakePose_fieldFrame.getTranslation());
-
-
-
-        Pose2d intakePoseAtPickup = new Pose2d(coralLocation.toTranslation2d(), intakeToCoral.getAngle());
-
-        Transform2d robotPose_intakeFrame = getPoseMeters().minus(intakePose_fieldFrame);
-        Pose2d robotPoseAtPickup = intakePoseAtPickup.plus(robotPose_intakeFrame);
-
-        return robotPoseAtPickup;
+        return this.getOffsetCoralPickupPose(coralPose_fieldCoords);
     }
 
 
@@ -852,19 +836,18 @@ public class Drivetrain extends SubsystemBase {
 
         // Coral tracking visualization
         if (seesAnyCoral()) {
-            Translation3d closestCoralToRobot = this.getClosestCoralToRobot().get();
-            Translation3d closestCoralToIntake = this.getClosestCoralToEitherIntake().get();
-            Translation3d closestIntake = new Translation3d(this.getClosestIntakeToCoral(closestCoralToIntake).getTranslation());
-            Logger.recordOutput("coralTracking/closestToRobot", new Translation3d[] {closestCoralToRobot});
-            Logger.recordOutput("coralTracking/closestToIntake", new Translation3d[] {closestIntake, closestCoralToIntake});
+            Pose3d closestCoralToRobot = this.getClosestCoralToRobot().get();
+            Pose3d closestCoralToIntake = this.getClosestCoralToEitherIntake().get();
+            Pose3d closestIntake = new Pose3d(this.getClosestIntakeToCoral(closestCoralToIntake));
+            Logger.recordOutput("coralTracking/closestToRobot", new Pose3d[] {closestCoralToRobot});
+            Logger.recordOutput("coralTracking/closestToIntake", new Pose3d[] {closestIntake, closestCoralToIntake});
             Logger.recordOutput("coralTracking/centeredPickupPose", new Pose2d[] {this.getCenteredCoralPickupPose(closestCoralToIntake)});
             Logger.recordOutput("coralTracking/offsetPickupPose", new Pose2d[] {this.getOffsetCoralPickupPose(closestCoralToIntake)});
             Logger.recordOutput("coralTracking/strafingPickupPose", new Pose2d[] {this.getStrafingPickupPose(closestCoralToIntake)});
         }
         else {
-            Translation3d[] empty = new Translation3d[0];
-            Logger.recordOutput("coralTracking/closestToRobot", empty);
-            Logger.recordOutput("coralTracking/closestToIntake", empty);
+            Logger.recordOutput("coralTracking/closestToRobot", new Pose3d[0]);
+            Logger.recordOutput("coralTracking/closestToIntake", new Pose3d[0]);
             Logger.recordOutput("coralTracking/centeredPickupPose", new Pose2d[0]);
             Logger.recordOutput("coralTracking/offsetPickupPose", new Pose2d[0]);
             Logger.recordOutput("coralTracking/strafingPickupPose", new Pose2d[0]);
