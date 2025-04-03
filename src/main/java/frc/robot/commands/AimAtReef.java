@@ -152,7 +152,7 @@ public class AimAtReef extends Command {
         
         ChassisSpeeds driverControl = translationController.get();
         if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
-            double maxSpeed = 2.5;
+            double maxSpeed = 1;
             if (DriverStation.isAutonomous()) {
                 maxSpeed = 2.0;
             }

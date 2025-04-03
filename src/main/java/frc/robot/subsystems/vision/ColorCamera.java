@@ -149,8 +149,8 @@ public class ColorCamera {
         Logger.recordOutput(logPrefix+"invalidGamepieces", this.invalidGamepieces_fieldCoords.toArray(new Pose3d[0]));
         Logger.recordOutput(logPrefix+"projectedBoundingBoxes", this.projectedBoundingBox_advantageScopeViz.toArray(new Translation3d[0]));
 
-        AdvantageScopeDrawingUtils.drawCircle("coralTracking/minDetectionDistance", robotPoseNow.getTranslation(), 0.6);
-        AdvantageScopeDrawingUtils.drawCircle("coralTracking/maxDetectionDistance", robotPoseNow.getTranslation(), 2.0);
+        // AdvantageScopeDrawingUtils.drawCircle("coralTracking/minDetectionDistance", robotPoseNow.getTranslation(), 0.6);
+        // AdvantageScopeDrawingUtils.drawCircle("coralTracking/maxDetectionDistance", robotPoseNow.getTranslation(), 2.0);
 
 
         // // AdvantageKit doesn't support logging optionals, so we log "closestValidGamepiece"

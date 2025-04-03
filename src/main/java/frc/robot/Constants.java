@@ -28,7 +28,7 @@ import frc.robot.PlayingField.FieldConstants;
  */
 public final class Constants {
 
-    public final static boolean atCompetition = false;
+    public final static boolean atCompetition = true;
 
     public final class UniversalConstants {
         public final static double gravityMetersPerSecondSquared = 9.81;
@@ -105,6 +105,9 @@ public final class Constants {
         public final static double kAExtensionVoltsSecondsSquaredPerRadian = 0;
         public final static double kPExtensionVoltsPerMeter = 25.;
         public final static double kDExtensionVoltsPerMeterPerSecond = 1.5;
+
+        public final static double extensionMaxMetersPerSecond = 4;
+        public final static double extensionMaxMetersPerSecondSquared = 8;
 
 
         /**Minimum angle of the arm, in degrees.*/

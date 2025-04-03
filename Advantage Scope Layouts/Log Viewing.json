@@ -1,0 +1,436 @@
+{
+  "hubs": [
+    {
+      "x": -8,
+      "y": -8,
+      "width": 1552,
+      "height": 832,
+      "state": {
+        "sidebar": {
+          "width": 317,
+          "expanded": [
+            "/AdvantageKit/RealOutputs/intakeCamera",
+            "/AdvantageKit/RealOutputs/intakeCamera/mostRecentFrame",
+            "/AdvantageKit/RealOutputs/intakeCamera/closestValidGamepiece",
+            "/AdvantageKit/backLeftTagCam/mostRecentPoseEstimate",
+            "/AdvantageKit/frontLeftTagCam/mostRecentPoseEstimate",
+            "/AdvantageKit/frontRightTagCam/mostRecentPoseEstimate",
+            "/AdvantageKit/RealOutputs/drivetrain/closestCoral",
+            "/AdvantageKit/RealOutputs/scoreOnReef/desiredEverything",
+            "/SmartDashboard/Scheduler/Names",
+            "/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame",
+            "/AdvantageKit/RealOutputs/driveOnALine",
+            "/SmartDashboard/RunCommand",
+            "/SmartDashboard/SequentialCommandGroup",
+            "/AdvantageKit/RealOutputs/chickenHead/drivetrain",
+            "/AdvantageKit",
+            "/AdvantageKit/RealOutputs/drivetrain/camPoseComparision",
+            "/AdvantageKit/RealOutputs/drivetrain/camPoseComparision/backRight",
+            "/AdvantageKit/RealOutputs/wrist",
+            "/AdvantageKit/RealOutputs",
+            "/AdvantageKit/RealOutputs/Vision",
+            "/AdvantageKit/RealOutputs/Vision/backLeft",
+            "/AdvantageKit/RealOutputs/Vision/backRight",
+            "/AdvantageKit/RealOutputs/Vision/frontLeft",
+            "/AdvantageKit/RealOutputs/Vision/frontRight",
+            "/AdvantageKit/RealOutputs/drivetrain",
+            "/AdvantageKit/RealOutputs/coralTracking",
+            "/AdvantageKit/armInputs",
+            "/AdvantageKit/RealOutputs/tagCams/backRight/singleTagPoseObservations",
+            "/AdvantageKit/RealOutputs/tagCams/backRight/singleTagPoseObservations/0",
+            "/AdvantageKit/RealOutputs/tagCams/backLeft",
+            "/AdvantageKit/RealOutputs/tagCams/backLeft/singleTagPoseObservations",
+            "/AdvantageKit/RealOutputs/tagCams/backLeft/singleTagPoseObservations/0",
+            "/AdvantageKit/RealOutputs/tagCams/frontLeft",
+            "/AdvantageKit/RealOutputs/tagCams/frontLeft/singleTagPoseObservations",
+            "/AdvantageKit/RealOutputs/tagCams/frontLeft/singleTagPoseObservations/0",
+            "/AdvantageKit/RealOutputs/tagCams/frontLeft/singleTagPoseObservations/0/robotPose",
+            "/AdvantageKit/RealOutputs/tagCams/frontRight",
+            "/AdvantageKit/RealOutputs/tagCams/frontRight/singleTagPoseObservations",
+            "/AdvantageKit/RealOutputs/aimAtReef",
+            "/RealOutputs",
+            "/RealOutputs/drivetrain",
+            "/RealOutputs/arm",
+            "/RealOutputs/arm/measuredWireframe",
+            "/RealOutputs/drivetrain/poseForVisionReset"
+          ]
+        },
+        "tabs": {
+          "selected": 2,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "ww10m8tl3y90nj086e5asj1u9jthtwoo",
+              "renderer": "#/",
+              "controlsHeight": 0
+            },
+            {
+              "type": 3,
+              "title": "Coral Tracking",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/simulatedCorals",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/drivetrain/fusedPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#ff0000"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToRobot",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/validGamepieces",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff8c00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/invalidGamepieces",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToIntake",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff00ff",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/bicep",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/extension",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/wrist",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/coral",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/minDetectionDistance",
+                    "logType": "Translation2d[]",
+                    "visible": false,
+                    "options": {
+                      "color": "#ff8c00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/maxDetectionDistance",
+                    "logType": "Translation2d[]",
+                    "visible": false,
+                    "options": {
+                      "color": "#ff8c00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/projectedBoundingBoxes",
+                    "logType": "Translation3d[]",
+                    "visible": false,
+                    "options": {
+                      "color": "#ffff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/centeredPickupPose",
+                    "logType": "Pose2d[]",
+                    "visible": false,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/offsetPickupPose",
+                    "logType": "Pose2d[]",
+                    "visible": false,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/strafingPickupPose",
+                    "logType": "Pose2d[]",
+                    "visible": false,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/validGamepieces",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/invalidGamepieces",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  }
+                ],
+                "game": "2025 Field (Welded)",
+                "origin": "blue"
+              },
+              "controllerUUID": "hfalf8cdydd08ck5mjnzrk89mwdoc1au",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  -8.709447276852998,
+                  1.902086885169291,
+                  3.0483749466051924
+                ],
+                "cameraTarget": [
+                  -6.884371816192532,
+                  0.11249023818347784,
+                  -3.549190200335584
+                ]
+              },
+              "controlsHeight": 196
+            },
+            {
+              "type": 3,
+              "title": "Tag Tracking",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/drivetrain/fusedPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#ff0000"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "/RealOutputs/drivetrain/rejectedTags",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "/RealOutputs/drivetrain/acceptedTags",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "/RealOutputs/arm/measuredWireframe/bicep",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "/RealOutputs/arm/measuredWireframe/extension",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "/RealOutputs/arm/measuredWireframe/wrist",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "/RealOutputs/arm/measuredWireframe/coral",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/drivetrain/poseForVisionReset",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  }
+                ],
+                "game": "2025 Field (Welded)",
+                "origin": "blue"
+              },
+              "controllerUUID": "wtcfkxt8s13bptpbtnsl4d05u6t3hgwt",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  -5.86032715869308,
+                  3.0148478471579283,
+                  -6.075927128815039
+                ],
+                "cameraTarget": [
+                  -4.832426822661089,
+                  1.0810998312633957,
+                  -0.9394912123092627
+                ]
+              },
+              "controlsHeight": 200
+            },
+            {
+              "type": 2,
+              "title": "Odometry",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backRight/singleTagPoseObservations/0/robotPose",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backLeft/singleTagPoseObservations/0/robotPose",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "color": "#0000ff"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontLeft/singleTagPoseObservations/0/robotPose",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff8c00"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/wireframeBumpers",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "game": "2025 Field (Welded)",
+                "bumpers": "auto",
+                "origin": "blue",
+                "orientation": 0,
+                "size": 30
+              },
+              "controllerUUID": "5j8qm3q2tm9jrdlr1k05f18xsg9rofgr",
+              "renderer": null,
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "4.1.0"
+}

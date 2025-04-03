@@ -11,7 +11,7 @@ import frc.robot.PlayingField.ReefFace;
 
 public record SingleTagPoseObservation (String camName, Pose3d robotPose, double timestampSeconds, int tagUsed, double tagToCamMeters, double ambiguity) {
     public Matrix<N3, N1> getStandardDeviations() {
-        double slopeStdDevMeters_PerMeter = 0.01;
+        double slopeStdDevMeters_PerMeter = 0.003;
 
         return VecBuilder.fill(
             slopeStdDevMeters_PerMeter*tagToCamMeters,

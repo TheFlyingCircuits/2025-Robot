@@ -94,6 +94,8 @@ public class Drivetrain extends SubsystemBase {
     private Transform2d effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame));
     private Transform2d effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame.times(-1)));
 
+    private boolean trustCamerasDuringScoreOnReef = false;
+    
     public Drivetrain(
         GyroIO gyroIO, 
         SwerveModuleIO flSwerveModuleIO, 
@@ -506,11 +508,15 @@ public class Drivetrain extends SubsystemBase {
         this.setOrientation(FlyingCircuitUtils.getAllianceDependentValue(forwardOnRed, forwardOnBlue, forwardNow));
     }
 
+    public void trustCamerasDuringScoreOnReef() {
+        this.trustCamerasDuringScoreOnReef = true;
+    }
 
     /**
      * Takes the best estimated pose from the vision, and sets our current poseEstimator pose to this one.
      */
-    public void setPoseToVisionMeasurement() {
+    private void setPoseToVisionMeasurement() {
+        // causes issues due to camera latency not being accounted for!
         if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
             if (this.poseForVisionReset.isEmpty()) {
                 return;
@@ -629,13 +635,8 @@ public class Drivetrain extends SubsystemBase {
             } 
         });
 
-        // for when we want to just reset pose to the most recent vision measurement
+        // Make sure vision reset pose is empty before giving it the first valid tag we find
         this.poseForVisionReset = Optional.empty();
-        if (allFreshPoseObservations.size() > 0) {
-            Pose3d mostRecent = allFreshPoseObservations.get(allFreshPoseObservations.size()-1).robotPose();
-            this.poseForVisionReset = Optional.of(mostRecent.toPose2d());
-        }
-
 
         // Log which tags have been used.
         List<Pose3d> acceptedTags = new ArrayList<>();
@@ -659,7 +660,7 @@ public class Drivetrain extends SubsystemBase {
 
             // Dont' allow the robot to teleport (Can cause problems when we get bumped)
             double teleportToleranceMeters = 4.0;
-            if (observedLocation.getDistance(locationNow) > teleportToleranceMeters) {
+            if (observedLocation.getDistance(locationNow) > teleportToleranceMeters && DriverStation.isEnabled()) {
                 rejectedTags.add(poseObservation.getTagPose());
                 continue;
             }
@@ -671,12 +672,19 @@ public class Drivetrain extends SubsystemBase {
 
             // This measurment passes all our checks, so we add it to the fusedPoseEstimator
             acceptedTags.add(poseObservation.getTagPose());
+
+            this.poseForVisionReset = Optional.of(poseObservation.robotPose().toPose2d());
+
+            Matrix<N3, N1> stdDevs = trustCamerasDuringScoreOnReef ? VecBuilder.fill(0, 0, 0) : poseObservation.getStandardDeviations();
+
             fusedPoseEstimator.addVisionMeasurement(
                 poseObservation.robotPose().toPose2d(), 
                 poseObservation.timestampSeconds(), 
-                poseObservation.getStandardDeviations()
+                stdDevs
             );
         }
+        
+        trustCamerasDuringScoreOnReef = false;
 
         // log the accepted and rejected tags
         Logger.recordOutput("drivetrain/acceptedTags", acceptedTags.toArray(new Pose3d[0]));
@@ -932,6 +940,9 @@ public class Drivetrain extends SubsystemBase {
 
         Logger.recordOutput("drivetrain/fusedPose", fusedPoseEstimator.getEstimatedPosition());
         Logger.recordOutput("drivetrain/wheelsOnlyPose", wheelsOnlyPoseEstimator.getEstimatedPosition());
+        if (poseForVisionReset.isPresent()) {
+            Logger.recordOutput("drivetrain/poseForVisionReset", poseForVisionReset.get());
+        }
         Logger.recordOutput("drivetrain/speedMetersPerSecond", getSpeedMetersPerSecond());
 
         Logger.recordOutput("drivetrain/swerveModuleStates", getModuleStates());

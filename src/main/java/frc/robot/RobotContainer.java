@@ -188,7 +188,7 @@ public class RobotContainer {
                 this::getDesiredBranch,
                 drivetrain::isFacingReef)
             .deadlineFor( // allow command to end if we somehow score before seeing a tag
-                Commands.run(drivetrain::setPoseToVisionMeasurement).until(drivetrain::seesTag)
+                Commands.run(drivetrain::trustCamerasDuringScoreOnReef)
                 // Note: pressing Y again while Larry was dancing was enought to stop the dance.
                 //       This indicates that trusting the cameras more up close may eliminate some
                 //       of the dancing?
@@ -230,7 +230,7 @@ public class RobotContainer {
 
 
         //reset gyro
-        duncanController.y().onTrue(new InstantCommand(drivetrain::setPoseToVisionMeasurement).repeatedly().until(drivetrain::seesTag));
+        duncanController.y().onTrue(Commands.run(drivetrain::trustCamerasDuringScoreOnReef).until(drivetrain::seesTag));
         // duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
         
 
@@ -244,7 +244,7 @@ public class RobotContainer {
 
             // climb pull
             duncanController.povDown().whileTrue(new ParallelCommandGroup(
-                arm.shoulder.run(() -> arm.setShoulderVoltage(-3)),
+                arm.shoulder.run(() -> arm.setShoulderVoltage(-7)),
                 wrist.setTargetPositionCommand(13),
                 arm.extension.setTargetLengthCommand(0.75)
             ));

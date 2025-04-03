@@ -13,6 +13,7 @@ import org.littletonrobotics.junction.Logger;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -89,7 +90,7 @@ public class ArmIOKraken implements ArmIO{
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.minExtensionMeters-0.05;
 
         extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 4; //mps of the extension
-        extensionConfig.MotionMagic.MotionMagicAcceleration = 6; //m/s^2 of the extension
+        extensionConfig.MotionMagic.MotionMagicAcceleration = 8; //m/s^2 of the extension
 
         extensionConfig.Slot0.kS = ArmConstants.kSExtensionVolts;
         extensionConfig.Slot0.kV = ArmConstants.kVExtensionVoltsSecondsPerRadian;
@@ -239,8 +240,14 @@ public class ArmIOKraken implements ArmIO{
         this.targetExtensionMeters = meters;
         Logger.recordOutput("arm/extensionFeedforward", calculateExtensionFeedForwardVolts());
 
+        boolean targetCloseToMin = Math.abs(meters - ArmConstants.minExtensionMeters) < 0.10;
         backExtensionMotor.setControl(
-            new MotionMagicVoltage(meters).withFeedForward(calculateExtensionFeedForwardVolts()).withEnableFOC(true));
+            new DynamicMotionMagicVoltage(
+                meters,
+                ArmConstants.extensionMaxMetersPerSecond,
+                targetCloseToMin ? 6 : ArmConstants.extensionMaxMetersPerSecondSquared, //if the target might hit the hard stop, make it go slightly slower
+                0
+            ).withFeedForward(calculateExtensionFeedForwardVolts()).withEnableFOC(true));
         frontExtensionMotor.setControl(new Follower(ArmConstants.backExtensionMotorID, true));
     }
 
