@@ -92,12 +92,15 @@ public class Wrist extends SubsystemBase {
 
     public void setTargetPositionDegrees(double targetAngleDegrees, double maxVolts) {
 
+        this.maxVolts = maxVolts;
+
         if (targetAngleDegrees > WristConstants.maxAngleDegrees || targetAngleDegrees < WristConstants.minAngleDegrees) {
             System.out.println("Invalid wrist angle requested!");
             this.maxVolts = 0;
+            return;
         }
 
-        this.maxVolts = maxVolts;
+        
         desiredWristPositionDegrees = targetAngleDegrees;
     }
 

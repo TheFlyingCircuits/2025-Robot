@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.DrivetrainConstants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
@@ -94,7 +95,7 @@ public class RobotContainer {
                 new SwerveModuleIOKraken(2, 3, 0.397705, 1, "FR"),
                 new SwerveModuleIOKraken(4, 5, 0.238281, 2, "BL"),
                 new SwerveModuleIOKraken(6, 7,  -0.370850, 3, "BR"),
-                new VisionIOPhotonLib(){}
+                VisionConstants.useNewSingleTagCodeFromBuckeye ? new VisionIO() {} : new VisionIOPhotonLib()
             );
 
             arm = new Arm(new ArmIOKraken());
@@ -134,7 +135,6 @@ public class RobotContainer {
         // testBindings();
         realBindings();
         triggers();
-
     }
 
     private void realBindings() {

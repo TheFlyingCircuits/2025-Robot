@@ -3,6 +3,7 @@ package frc.robot.subsystems.drivetrain;
 
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -51,6 +52,8 @@ import frc.robot.PlayingField.ReefFace;
 import frc.robot.PlayingField.ReefStalk;
 import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.vision.ColorCamera;
+import frc.robot.subsystems.vision.SingleTagCam;
+import frc.robot.subsystems.vision.SingleTagPoseObservation;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
 import frc.robot.subsystems.vision.VisionIO.VisionMeasurement;
@@ -63,6 +66,13 @@ public class Drivetrain extends SubsystemBase {
     private VisionIO visionIO;
     private VisionIOInputsLogged visionInputs;
     private ColorCamera intakeCam = new ColorCamera("intakeCam", VisionConstants.robotToCoralCamera);
+    private SingleTagCam[] tagCams = {
+        new SingleTagCam(VisionConstants.tagCameraNames[0], VisionConstants.tagCameraTransforms[0]), // front left
+        new SingleTagCam(VisionConstants.tagCameraNames[1], VisionConstants.tagCameraTransforms[1]), // front right
+        new SingleTagCam(VisionConstants.tagCameraNames[2], VisionConstants.tagCameraTransforms[2]), // back left
+        new SingleTagCam(VisionConstants.tagCameraNames[3], VisionConstants.tagCameraTransforms[3])  // back right
+    };
+    private Optional<Pose2d> poseForVisionReset = Optional.empty();
 
     private SwerveModule[] swerveModules;
 
@@ -501,10 +511,18 @@ public class Drivetrain extends SubsystemBase {
      * Takes the best estimated pose from the vision, and sets our current poseEstimator pose to this one.
      */
     public void setPoseToVisionMeasurement() {
-        if (visionInputs.visionMeasurements.isEmpty()) {
-            return;
+        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
+            if (this.poseForVisionReset.isEmpty()) {
+                return;
+            }
+            setPoseMeters(this.poseForVisionReset.get());
         }
-        setPoseMeters(visionInputs.visionMeasurements.get(0).robotFieldPose);
+        else {
+            if (visionInputs.visionMeasurements.isEmpty()) {
+                return;
+            }
+            setPoseMeters(visionInputs.visionMeasurements.get(0).robotFieldPose);   
+        }
     }
 
     /**
@@ -512,18 +530,40 @@ public class Drivetrain extends SubsystemBase {
      * the same as what is currently being read.
      */
     private void setTranslationToVisionMeasurement() {
-        if (visionInputs.visionMeasurements.isEmpty()) {
-            return;
+        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
+            if (this.poseForVisionReset.isEmpty()) {
+                return;
+            }
+            setLocation(this.poseForVisionReset.get().getTranslation());
         }
-        setLocation(visionInputs.visionMeasurements.get(0).robotFieldPose.getTranslation());
+        else {
+            if (visionInputs.visionMeasurements.isEmpty()) {
+                return;
+            }
+            setLocation(visionInputs.visionMeasurements.get(0).robotFieldPose.getTranslation());   
+        }
     }
 
     public boolean seesTag() {
-        return visionInputs.visionMeasurements.size() > 0;
+        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
+            return this.poseForVisionReset.isPresent();
+        }
+        else {
+            return visionInputs.visionMeasurements.size() > 0;
+        }
+    }
+
+    private void updatePoseEstimator() {
+        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
+            this.updatePoseEstimatorNew();
+        }
+        else {
+            this.updatePoseEstimatorOld();
+        }
     }
 
 
-    private void updatePoseEstimator() {
+    private void updatePoseEstimatorOld() {
         double totalAccelMetersPerSecondSquared = Math.hypot(gyroInputs.robotAccelX, gyroInputs.robotAccelY);
         totalAccelMetersPerSecondSquared = Math.hypot(totalAccelMetersPerSecondSquared, gyroInputs.robotAccelZ);
 
@@ -562,7 +602,6 @@ public class Drivetrain extends SubsystemBase {
                 visionMeasurement.stdDevs
             );
 
-            // Log which tags have been used.
             for (int id : visionMeasurement.tagsUsed) {
                 Pose2d tagPose = VisionConstants.aprilTagFieldLayout.getTagPose(id).get().toPose2d();
                 trackedTags.add(tagPose);
@@ -570,6 +609,78 @@ public class Drivetrain extends SubsystemBase {
         }
 
         Logger.recordOutput("drivetrain/trackedTags", trackedTags.toArray(new Pose2d[0]));
+    }
+
+    private void updatePoseEstimatorNew() {
+        // update with wheel deltas
+        fusedPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
+        wheelsOnlyPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
+
+        // get all pose observations from each camera
+        List<SingleTagPoseObservation> allFreshPoseObservations = new ArrayList<>();
+        for (SingleTagCam tagCam : tagCams) {
+            allFreshPoseObservations.addAll(tagCam.getFreshPoseObservations());
+        }
+
+        // process pose obvervations in chronological order
+        allFreshPoseObservations.sort(new Comparator<SingleTagPoseObservation>() {
+            public int compare(SingleTagPoseObservation a, SingleTagPoseObservation b) {
+                return Double.compare(a.timestampSeconds(), b.timestampSeconds());
+            } 
+        });
+
+        // for when we want to just reset pose to the most recent vision measurement
+        this.poseForVisionReset = Optional.empty();
+        if (allFreshPoseObservations.size() > 0) {
+            Pose3d mostRecent = allFreshPoseObservations.get(allFreshPoseObservations.size()-1).robotPose();
+            this.poseForVisionReset = Optional.of(mostRecent.toPose2d());
+        }
+
+
+        // Log which tags have been used.
+        List<Pose3d> acceptedTags = new ArrayList<>();
+        List<Pose3d> rejectedTags = new ArrayList<>();
+        for (SingleTagPoseObservation poseObservation : allFreshPoseObservations) {
+
+            Translation2d observedLocation = poseObservation.robotPose().getTranslation().toTranslation2d();
+            Translation2d locationNow = getPoseMeters().getTranslation();
+
+            // reject tags that are too far away
+            if (poseObservation.tagToCamMeters() > 5) {
+                rejectedTags.add(poseObservation.getTagPose());
+                continue;
+            }
+
+            // reject tags that are too ambiguous
+            if (poseObservation.ambiguity() > 0.2) {
+                rejectedTags.add(poseObservation.getTagPose());
+                continue;
+            }
+
+            // Dont' allow the robot to teleport (Can cause problems when we get bumped)
+            double teleportToleranceMeters = 4.0;
+            if (observedLocation.getDistance(locationNow) > teleportToleranceMeters) {
+                rejectedTags.add(poseObservation.getTagPose());
+                continue;
+            }
+
+            if (!poseObservation.usesReefTag()) {
+                rejectedTags.add(poseObservation.getTagPose());
+                continue;
+            }
+
+            // This measurment passes all our checks, so we add it to the fusedPoseEstimator
+            acceptedTags.add(poseObservation.getTagPose());
+            fusedPoseEstimator.addVisionMeasurement(
+                poseObservation.robotPose().toPose2d(), 
+                poseObservation.timestampSeconds(), 
+                poseObservation.getStandardDeviations()
+            );
+        }
+
+        // log the accepted and rejected tags
+        Logger.recordOutput("drivetrain/acceptedTags", acceptedTags.toArray(new Pose3d[0]));
+        Logger.recordOutput("drivetrain/rejectedTags", rejectedTags.toArray(new Pose3d[0]));
     }
 
     public Translation3d fieldCoordsFromRobotCoords(Translation3d robotCoords) {
