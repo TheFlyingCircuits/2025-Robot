@@ -279,9 +279,6 @@ public final class Constants {
     }
 
     public final static class VisionConstants {
-
-        public final static boolean useNewSingleTagCodeFromBuckeye = true;
-
         //Camera, IP, hostname
         //fronLeft, 10.17.87.50, Photon-RPi4-FL
         //frontRight, 10.17.87.51, Photon-RPi4-FR

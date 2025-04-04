@@ -509,16 +509,6 @@ public class Drivetrain extends SubsystemBase {
     }
 
 
-    private void updatePoseEstimator() {
-        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
-            this.updatePoseEstimatorNew();
-        }
-        else {
-            this.updatePoseEstimatorOld();
-        }
-    }
-
-
     public void fullyTrustVisionNextPoseUpdate() {
         this.fullyTrustVisionNextPoseUpdate = true;
     }
@@ -526,14 +516,9 @@ public class Drivetrain extends SubsystemBase {
         this.allowTeleportsNextPoseUpdate = true;
     }
     public boolean seesAcceptableTag() {
-        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
-            return this.hasAcceptablePoseObservationsThisLoop;
-        }
-        else {
-            return visionInputs.visionMeasurements.size() > 0;
-        }
+        return this.hasAcceptablePoseObservationsThisLoop;
     }
-    private void updatePoseEstimatorNew() {
+    private void updatePoseEstimator() {
         // log flags that were set in between last pose update and now
         Logger.recordOutput("drivetrain/fullyTrustingVision", this.fullyTrustVisionNextPoseUpdate);
         Logger.recordOutput("drivetrain/allowingPoseTeleports", this.allowTeleportsNextPoseUpdate);
@@ -609,54 +594,6 @@ public class Drivetrain extends SubsystemBase {
         // log the accepted and rejected tags
         Logger.recordOutput("drivetrain/acceptedTags", acceptedTags.toArray(new Pose3d[0]));
         Logger.recordOutput("drivetrain/rejectedTags", rejectedTags.toArray(new Pose3d[0]));
-    }
-
-    private void updatePoseEstimatorOld() {
-        double totalAccelMetersPerSecondSquared = Math.hypot(gyroInputs.robotAccelX, gyroInputs.robotAccelY);
-        totalAccelMetersPerSecondSquared = Math.hypot(totalAccelMetersPerSecondSquared, gyroInputs.robotAccelZ);
-
-        Logger.recordOutput("drivetrain/accelMagnitude", totalAccelMetersPerSecondSquared);
-
-        // if (totalAccelMetersPerSecondSquared > 10) {
-        //     hasBeenBumped = true;
-        // }
-
-        // if (hasBeenBumped && !visionInputs.visionMeasurements.isEmpty()) {
-        //     hasBeenBumped = false;
-        //     setTranslationToVisionMeasurement();
-        // }
-
-        fusedPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
-        wheelsOnlyPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
-
-
-        List<Pose2d> trackedTags = new ArrayList<Pose2d>();
-        for (VisionMeasurement visionMeasurement : visionInputs.visionMeasurements) {
-
-
-            Translation2d visionTranslation = visionMeasurement.robotFieldPose.getTranslation();
-            Translation2d estimatedTranslation = fusedPoseEstimator.getEstimatedPosition().getTranslation();
-
-            // Dont' allow the robot to teleport (Can cause problems when we get bumped)
-            double teleportToleranceMeters = 4.0;
-            if (visionTranslation.getDistance(estimatedTranslation) > teleportToleranceMeters) { 
-                continue;
-            }
-
-            // This measurment passes all our checks, so we add it to the fusedPoseEstimator
-            fusedPoseEstimator.addVisionMeasurement(
-                visionMeasurement.robotFieldPose, 
-                visionMeasurement.timestampSeconds, 
-                visionMeasurement.stdDevs
-            );
-
-            for (int id : visionMeasurement.tagsUsed) {
-                Pose2d tagPose = VisionConstants.aprilTagFieldLayout.getTagPose(id).get().toPose2d();
-                trackedTags.add(tagPose);
-            }
-        }
-
-        Logger.recordOutput("drivetrain/trackedTags", trackedTags.toArray(new Pose2d[0]));
     }
 
     public Translation3d fieldCoordsFromRobotCoords(Translation3d robotCoords) {
@@ -793,34 +730,6 @@ public class Drivetrain extends SubsystemBase {
     }
 
 
-    /**
-     * Drives towards the given location while pointing the intake at that location
-     * @param noteLocation
-     */
-    //TODO: REMOVE ARGUMENT AND DECIDE ON ONE APPROACH
-    private void driveTowardsCoralFingerLakes(Translation2d coralLocation) {
-
-        Translation2d frontOfRobot = fieldCoordsFromRobotCoords(new Translation2d(Units.inchesToMeters(10), 0));
-        Translation2d coralToRobot = coralLocation.minus(frontOfRobot);
-
-        Rotation2d directionToPointIn = coralToRobot.getAngle();
-
-        
-        //if the coral is far, approach with strafe (otherwise rotate back straight)
-        if (coralToRobot.getNorm() > DrivetrainConstants.frameWidthMeters) {
-            //if the coral is left side of the robot, rotate left
-            if (robotCoordsFromFieldCoords(coralLocation).getAngle().getSin() > 0) 
-                directionToPointIn = directionToPointIn.minus(Rotation2d.fromDegrees(10));
-            else
-                directionToPointIn = directionToPointIn.plus(Rotation2d.fromDegrees(10));
-        }
-
-        this.pidToPose(new Pose2d(coralLocation, directionToPointIn), 1.5);
-    }
-
-
-
-
     //**************** REEF TRACKING ****************/
 
     private FieldElement getClosestFieldElement(FieldElement[] fieldElements) {
@@ -904,6 +813,8 @@ public class Drivetrain extends SubsystemBase {
 
         updatePoseEstimator();
         intakeCam.periodic(fusedPoseEstimator);
+        // ^^^ intakeCam.periodic() should come after updatePoseEstimator()
+        //     so the coral tracking has the most up to date pose info.
 
 
         Logger.recordOutput("drivetrain/fusedPose", fusedPoseEstimator.getEstimatedPosition());
@@ -941,7 +852,6 @@ public class Drivetrain extends SubsystemBase {
         }
 
         // this.compareCamPoses();
-
     }
 
     @Override
@@ -1012,7 +922,7 @@ public class Drivetrain extends SubsystemBase {
         return false;
     }
 
-    public void compareCamPoses() {
+    private void compareCamPoses() {
         Pose2d reefFace = FieldElement.FRONT_REEF_FACE.getPose2d();
 
         double metersToReefFacingEdgeOfTape = Units.inchesToMeters(12);
