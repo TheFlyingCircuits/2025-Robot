@@ -200,6 +200,10 @@ public class AimAtReef extends Command {
             wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
         }
 
+        if (closeToReef && DriverStation.isAutonomous()) {
+            drivetrain.fullyTrustVisionNextPoseUpdate();
+        }
+
         // leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
     }
 }

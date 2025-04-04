@@ -100,7 +100,10 @@ public class ColorCamera {
 
         // Get the most recent frame from the camera,
         // and find where the robot was when that frame was captured.
-        PhotonPipelineResult mostRecentFrame = cam.isConnected() ? cam.getLatestResult() : new PhotonPipelineResult();
+        PhotonPipelineResult mostRecentFrame = cam.getLatestResult();
+        if (!cam.isConnected()) {
+            mostRecentFrame = new PhotonPipelineResult();
+        }
         Optional<Pose2d> interpolatedRobotPose = fusedPoseEstimator.sampleAt(mostRecentFrame.getTimestampSeconds());
         Pose3d robotPoseWhenPicTaken = new Pose3d(interpolatedRobotPose.orElse(fusedPoseEstimator.getEstimatedPosition())); // default to most recent pose if there isn't any pose history.
 

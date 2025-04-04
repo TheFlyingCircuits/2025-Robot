@@ -373,6 +373,7 @@ public class RobotContainer {
         // stopping the intake wheels here ensures the intake stops when this command is part
         // of a composition (meaning the default command won't take over after this command is finished).
     }
+
     public boolean armInPickupPose() {
         boolean sholderInPickupPose = Math.abs(arm.getShoulderAngleDegrees()) < 5;
         boolean wristInPickupPose = Math.abs(wrist.getWristAngleDegrees()) < 5;
@@ -413,10 +414,18 @@ public class RobotContainer {
 
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Supplier<Boolean> isFacingReef) {
         AimAtReef aim = new AimAtReef(drivetrain, arm, wrist, translationController, reefBranch, leds, placerGrabber::sideCoralIsIn, isFacingReef);
+        Command succCoral = placerGrabber.startEnd(
+            () -> placerGrabber.setSideRollerVolts(8),
+            () -> placerGrabber.setSideRollerVolts(0)
+        ).withTimeout(0.25);
         Command waitForAlignment = new WaitUntilCommand(aim::readyToScore);
         Command scoreCoral = scoreCoral(false);
         Command manualScoreRequested = new WaitUntilCommand(duncanController.b());
-        return aim.withDeadline(waitForAlignment.raceWith(manualScoreRequested).andThen(scoreCoral));
+
+        //suck the coral while we are waiting for alignment to avoid command errors
+        Command waitPlusSucc = waitForAlignment.raceWith(manualScoreRequested).deadlineFor(succCoral);
+
+        return aim.withDeadline(waitPlusSucc.andThen(scoreCoral));
     }
 
     public Command backAwayFromReef(double speedMetersPerSecond) { return drivetrain.run(() -> {
