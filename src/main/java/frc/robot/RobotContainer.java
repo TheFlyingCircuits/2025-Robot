@@ -259,12 +259,6 @@ public class RobotContainer {
     }).until(drivetrain::seesAcceptableTag).ignoringDisable(true);}
 
     private void triggers() {
-        // seeding pose when put on field
-        Trigger isDisabled = new Trigger(DriverStation::isDisabled);
-        isDisabled.whileTrue(reSeedRobotPose().repeatedly());
-        reSeedRobotPose().repeatedly().until(isDisabled.negate()).schedule();
-        //^^^ need to manually schedule the first time because there's no transition from enabled to disabled on startup.
-
         // Coral acquisition
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.strobeCommand(Color.kWhite, 4, 0.5).ignoringDisable(true));
@@ -392,7 +386,7 @@ public class RobotContainer {
         Optional<Pose3d> coral = drivetrain.getClosestCoralToEitherIntake();
         ChassisSpeeds driverRequest = duncan.getRequestedFieldOrientedVelocity();
         // TODO: tune override ratio
-        boolean significantRotationRequested = Math.abs(driverRequest.omegaRadiansPerSecond) > (0.1 * DrivetrainConstants.maxDesiredTeleopAngularVelocityRadiansPerSecond);
+        boolean significantRotationRequested = Math.abs(driverRequest.omegaRadiansPerSecond) > 0.005;
         boolean driverOverridingSelectedCoral = coral.isPresent() && significantRotationRequested;
         Logger.recordOutput("coralTracking/driverOverridingSelectedTarget", driverOverridingSelectedCoral);
         if (coral.isEmpty() || driverOverridingSelectedCoral) {

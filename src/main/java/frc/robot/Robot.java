@@ -68,6 +68,10 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void disabledPeriodic() {
+
+        m_robotContainer.drivetrain.allowTeleportsNextPoseUpdate();
+        m_robotContainer.drivetrain.fullyTrustVisionNextPoseUpdate();
+
         if (autoCommand == null) {
             autoCommand = m_robotContainer.autoChoosingAuto();
         }

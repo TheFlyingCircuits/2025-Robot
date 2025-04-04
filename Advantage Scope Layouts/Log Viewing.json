@@ -3,8 +3,8 @@
     {
       "x": -8,
       "y": -8,
-      "width": 1552,
-      "height": 832,
+      "width": 1536,
+      "height": 816,
       "state": {
         "sidebar": {
           "width": 317,
@@ -48,15 +48,16 @@
             "/AdvantageKit/RealOutputs/tagCams/frontRight",
             "/AdvantageKit/RealOutputs/tagCams/frontRight/singleTagPoseObservations",
             "/AdvantageKit/RealOutputs/aimAtReef",
-            "/RealOutputs",
-            "/RealOutputs/drivetrain",
-            "/RealOutputs/arm",
             "/RealOutputs/arm/measuredWireframe",
-            "/RealOutputs/drivetrain/poseForVisionReset"
+            "/RealOutputs/drivetrain/poseForVisionReset",
+            "/RealOutputs/intakeCam/mostRecentFrame",
+            "/RealOutputs/tagCams",
+            "/RealOutputs/tagCams/backRight",
+            "/RealOutputs/drivetrain"
           ]
         },
         "tabs": {
-          "selected": 2,
+          "selected": 3,
           "tabs": [
             {
               "type": 0,
@@ -82,7 +83,7 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/drivetrain/fusedPose",
+                    "logKey": "/RealOutputs/drivetrain/fusedPose",
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
@@ -92,7 +93,7 @@
                   },
                   {
                     "type": "vision",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToRobot",
+                    "logKey": "/RealOutputs/coralTracking/closestToRobot",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -102,7 +103,7 @@
                   },
                   {
                     "type": "vision",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/validGamepieces",
+                    "logKey": "/RealOutputs/intakeCam/mostRecentFrame/validGamepieces",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -112,7 +113,7 @@
                   },
                   {
                     "type": "vision",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/invalidGamepieces",
+                    "logKey": "/RealOutputs/intakeCam/mostRecentFrame/invalidGamepieces",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -122,7 +123,7 @@
                   },
                   {
                     "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToIntake",
+                    "logKey": "/RealOutputs/coralTracking/closestToIntake",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -132,7 +133,7 @@
                   },
                   {
                     "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/bicep",
+                    "logKey": "/RealOutputs/arm/measuredWireframe/bicep",
                     "logType": "Translation3d[]",
                     "visible": true,
                     "options": {
@@ -142,7 +143,7 @@
                   },
                   {
                     "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/extension",
+                    "logKey": "/RealOutputs/arm/measuredWireframe/extension",
                     "logType": "Translation3d[]",
                     "visible": true,
                     "options": {
@@ -152,7 +153,7 @@
                   },
                   {
                     "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/wrist",
+                    "logKey": "/RealOutputs/arm/measuredWireframe/wrist",
                     "logType": "Translation3d[]",
                     "visible": true,
                     "options": {
@@ -162,7 +163,7 @@
                   },
                   {
                     "type": "gamePiece",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/arm/measuredWireframe/coral",
+                    "logKey": "/RealOutputs/arm/measuredWireframe/coral",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -170,40 +171,10 @@
                     }
                   },
                   {
-                    "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/minDetectionDistance",
-                    "logType": "Translation2d[]",
-                    "visible": false,
-                    "options": {
-                      "color": "#ff8c00",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/maxDetectionDistance",
-                    "logType": "Translation2d[]",
-                    "visible": false,
-                    "options": {
-                      "color": "#ff8c00",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/projectedBoundingBoxes",
-                    "logType": "Translation3d[]",
-                    "visible": false,
-                    "options": {
-                      "color": "#ffff00",
-                      "size": "normal"
-                    }
-                  },
-                  {
                     "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/centeredPickupPose",
+                    "logKey": "/RealOutputs/coralTracking/centeredPickupPose",
                     "logType": "Pose2d[]",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "model": "KitBot",
                       "color": "#00ff00"
@@ -211,9 +182,9 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/offsetPickupPose",
+                    "logKey": "/RealOutputs/coralTracking/offsetPickupPose",
                     "logType": "Pose2d[]",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "model": "KitBot",
                       "color": "#00ff00"
@@ -221,9 +192,9 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/strafingPickupPose",
+                    "logKey": "/RealOutputs/coralTracking/strafingPickupPose",
                     "logType": "Pose2d[]",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "model": "KitBot",
                       "color": "#00ff00"
@@ -231,7 +202,7 @@
                   },
                   {
                     "type": "gamePiece",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/validGamepieces",
+                    "logKey": "/RealOutputs/intakeCam/mostRecentFrame/validGamepieces",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -240,7 +211,7 @@
                   },
                   {
                     "type": "gamePiece",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/intakeCam/mostRecentFrame/invalidGamepieces",
+                    "logKey": "/RealOutputs/intakeCam/mostRecentFrame/invalidGamepieces",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -266,7 +237,7 @@
                   -3.549190200335584
                 ]
               },
-              "controlsHeight": 196
+              "controlsHeight": 408
             },
             {
               "type": 3,
@@ -344,12 +315,82 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "/RealOutputs/drivetrain/poseForVisionReset",
-                    "logType": "Pose2d",
+                    "logKey": "/RealOutputs/tagCams/frontLeft/mostRecentObservedPoses",
+                    "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
                       "model": "KitBot",
-                      "color": "#00ff00"
+                      "color": "#ffff00"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "/RealOutputs/tagCams/frontLeft/mostRecentSightlines",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ffff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/tagCams/frontRight/mostRecentObservedPoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#ff00ff"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "/RealOutputs/tagCams/frontRight/mostRecentSightlines",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff00ff",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/tagCams/backLeft/mostRecentObservedPoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#ff8c00"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "/RealOutputs/tagCams/backLeft/mostRecentSightlines",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff8c00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/tagCams/backRight/mostRecentObservedPoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ffff"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "/RealOutputs/tagCams/backRight/mostRecentSightlines",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ffff",
+                      "size": "normal"
                     }
                   }
                 ],
@@ -361,9 +402,9 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  -5.86032715869308,
-                  3.0148478471579283,
-                  -6.075927128815039
+                  -5.692695343282947,
+                  3.1739844010838087,
+                  -6.044264142028659
                 ],
                 "cameraTarget": [
                   -4.832426822661089,
@@ -371,7 +412,7 @@
                   -0.9394912123092627
                 ]
               },
-              "controlsHeight": 200
+              "controlsHeight": 383
             },
             {
               "type": 2,
@@ -379,36 +420,16 @@
               "controller": {
                 "sources": [
                   {
-                    "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backRight/singleTagPoseObservations/0/robotPose",
-                    "logType": "Pose3d",
+                    "type": "robot",
+                    "logKey": "/RealOutputs/drivetrain/fusedPose",
+                    "logType": "Pose2d",
                     "visible": true,
-                    "options": {
-                      "color": "#ff0000"
-                    }
+                    "options": {}
                   },
                   {
-                    "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backLeft/singleTagPoseObservations/0/robotPose",
-                    "logType": "Pose3d",
-                    "visible": true,
-                    "options": {
-                      "color": "#0000ff"
-                    }
-                  },
-                  {
-                    "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontLeft/singleTagPoseObservations/0/robotPose",
-                    "logType": "Pose3d",
-                    "visible": true,
-                    "options": {
-                      "color": "#ff8c00"
-                    }
-                  },
-                  {
-                    "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/wireframeBumpers",
-                    "logType": "Translation3d[]",
+                    "type": "vision",
+                    "logKey": "/RealOutputs/drivetrain/acceptedTags",
+                    "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
                       "color": "#00ff00",
@@ -420,11 +441,11 @@
                 "bumpers": "auto",
                 "origin": "blue",
                 "orientation": 0,
-                "size": 30
+                "size": 27
               },
               "controllerUUID": "5j8qm3q2tm9jrdlr1k05f18xsg9rofgr",
               "renderer": null,
-              "controlsHeight": 200
+              "controlsHeight": 249
             }
           ]
         }

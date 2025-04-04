@@ -1,10 +1,10 @@
 {
   "hubs": [
     {
-      "x": -8,
-      "y": -8,
-      "width": 1552,
-      "height": 840,
+      "x": 38,
+      "y": 25,
+      "width": 1540,
+      "height": 817,
       "state": {
         "sidebar": {
           "width": 383,
@@ -31,11 +31,17 @@
             "/AdvantageKit/RealOutputs/tagCams/backRight/singleTagPoseObservations/0",
             "/AdvantageKit/RealOutputs/tagCams/frontRight/singleTagPoseObservations/0",
             "/AdvantageKit/RealOutputs/tagCams/backLeft/singleTagPoseObservations",
-            "/AdvantageKit/RealOutputs"
+            "/AdvantageKit/RealOutputs",
+            "/AdvantageKit/RealOutputs/tagCams",
+            "/AdvantageKit/RealOutputs/tagCams/backRight",
+            "/AdvantageKit/RealOutputs/drivetrain",
+            "/AdvantageKit/RealOutputs/intakeCam",
+            "/AdvantageKit/RealOutputs/coralTracking",
+            "/AdvantageKit/RealOutputs/coralTracking/closestToIntake"
           ]
         },
         "tabs": {
-          "selected": 1,
+          "selected": 3,
           "tabs": [
             {
               "type": 0,
@@ -235,9 +241,9 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  8.240117859647052,
-                  6.949096933117543,
-                  -0.8959414386966839
+                  7.955258356943193,
+                  5.67440575357607,
+                  -0.8957829409061709
                 ],
                 "cameraTarget": [
                   6.723853673575726,
@@ -245,7 +251,7 @@
                   -0.8950977788536884
                 ]
               },
-              "controlsHeight": 196
+              "controlsHeight": 495
             },
             {
               "type": 3,
@@ -323,7 +329,7 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontLeft/observedPoses",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontLeft/mostRecentObservedPoses",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -333,7 +339,7 @@
                   },
                   {
                     "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontLeft/sightlines",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontLeft/mostRecentSightlines",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -343,7 +349,7 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontRight/observedPoses",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontRight/mostRecentObservedPoses",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -353,7 +359,7 @@
                   },
                   {
                     "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontRight/sightlines",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/frontRight/mostRecentSightlines",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -363,7 +369,7 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backLeft/observedPoses",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backLeft/mostRecentObservedPoses",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -373,7 +379,7 @@
                   },
                   {
                     "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backLeft/sightlines",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backLeft/mostRecentSightlines",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -383,7 +389,7 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backRight/observedPoses",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backRight/mostRecentObservedPoses",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -393,7 +399,17 @@
                   },
                   {
                     "type": "trajectory",
-                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backRight/sightlines",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backRight/mostRecentSightlines",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ffff",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/tagCams/backRight/mostRecentSightlines",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {
@@ -410,7 +426,7 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  10.558445466626226,
+                  10.558445466626225,
                   7.436501622887689,
                   -1.0994870770873348
                 ],
@@ -420,7 +436,59 @@
                   -1.0925204184341981
                 ]
               },
-              "controlsHeight": 191
+              "controlsHeight": 536
+            },
+            {
+              "type": 2,
+              "title": "Odometry",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/drivetrain/fusedPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/drivetrain/acceptedTags",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToIntake",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "arrow",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/coralTracking/closestToIntake/1",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "position": "center"
+                    }
+                  }
+                ],
+                "game": "2025 Field (Welded)",
+                "bumpers": "auto",
+                "origin": "blue",
+                "orientation": 0,
+                "size": 30
+              },
+              "controllerUUID": "ywmw43boszdtwmhjvykvxktl0i9ani5i",
+              "renderer": null,
+              "controlsHeight": 268
             }
           ]
         }
