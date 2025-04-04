@@ -440,8 +440,8 @@ public class RobotContainer {
 
     public Command scoreCoral(boolean troughScore) {
         Command sendToTrough = Commands.sequence(
-            placerGrabber.run(() -> placerGrabber.setFrontRollerVolts(8)).withTimeout(0.12),
-            placerGrabber.setPlacerGrabberVoltsCommand(8, -8).withTimeout(0.5),
+            placerGrabber.run(() -> placerGrabber.setFrontRollerVolts(12)).withTimeout(0.5),
+            // placerGrabber.setPlacerGrabberVoltsCommand(8, -8).withTimeout(0.5),
             placerGrabber.stopInstantCommand() // <- allows placerGrabber to actually stop when this command
                                                //    is part of a composition, meaning the placerGrabber won't
                                                //    go back to its default command until the entire composition
@@ -470,13 +470,34 @@ public class RobotContainer {
             Pose2d facePose = drivetrain.getClosestReefFace().getPose2d();
             Translation2d translationToReef = drivetrain.getPoseMeters().getTranslation().minus(facePose.getTranslation());
             Rotation2d angleToReefCenter = translationToReef.getAngle().minus(facePose.getRotation());
-            Transform2d positionShift = new Transform2d(
-                Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1),
-                angleToReefCenter.getSin() * translationToReef.getNorm(),
-                Rotation2d.k180deg
-            );
 
-            drivetrain.pidToPose(facePose.plus(positionShift), 0.5);
+            
+            Transform2d positionShift;
+            if (placerGrabber.leftHasCoral()) {
+                positionShift = new Transform2d(
+                    Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1),
+                    Units.inchesToMeters(3),
+                    Rotation2d.fromDegrees(-30).plus(Rotation2d.k180deg)
+                );
+            }
+            else {
+                positionShift = new Transform2d(
+                    Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1),
+                    Units.inchesToMeters(-3),
+                    Rotation2d.fromDegrees(30).plus(Rotation2d.k180deg)
+                );
+            }
+
+            // Rotation2d angleShift = placerGrabber.leftHasCoral() ? Rotation2d.fromDegrees(-30) : Rotation2d.fromDegrees(30);
+            // angleShift = angleShift.plus(Rotation2d.k180deg);
+
+            // Transform2d positionShift = new Transform2d(
+            //     Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1),
+            //     angleToReefCenter.getSin() * translationToReef.getNorm(),
+            //     angleShift
+            // );
+
+            drivetrain.pidToPose(facePose.plus(positionShift), 1);
         }).alongWith(
                 arm.shoulder.setTargetAngleCommand(ArmPosition.frontL1.shoulderAngleDegrees),
                 arm.extension.setTargetLengthCommand(ArmPosition.frontL1.extensionMeters),
