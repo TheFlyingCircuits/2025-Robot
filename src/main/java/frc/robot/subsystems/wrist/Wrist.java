@@ -49,7 +49,7 @@ public class Wrist extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("wristInputs", inputs);
 
-        if (homingTimer.advanceIfElapsed(2)
+        if (homingTimer.advanceIfElapsed(1)
                 && Math.abs(inputs.wristDegreesPerSecond) < 0.01
                     && inputs.wristAngleDegrees > 135
                         && inputs.absoluteAngleDegrees > 135) {

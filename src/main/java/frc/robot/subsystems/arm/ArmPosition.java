@@ -40,7 +40,7 @@ public class ArmPosition {
     public static final ArmPosition backL2 = new ArmPosition(95.45, 136.58, ArmConstants.minExtensionMeters);
 
     //1 coral distance
-    public static final ArmPosition backL3 = new ArmPosition(96.85, 115.86, 0.85);
+    public static final ArmPosition backL3 = new ArmPosition(96.85, 115.86, 0.82);
     
     //1 coral distance
     public static final ArmPosition backL4 = new ArmPosition(92.81, 134.95, ArmConstants.maxExtensionMeters);

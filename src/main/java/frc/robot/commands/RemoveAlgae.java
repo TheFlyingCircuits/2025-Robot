@@ -63,7 +63,7 @@ public class RemoveAlgae extends ParallelRaceGroup {
 
     private Command punch(boolean isHighAlgae) {
         double targetLength = isHighAlgae ? 1.27 : 0.90;
-        BooleanSupplier punchComplete = () -> {return Math.abs(arm.getExtensionMeters()-targetLength) < 0.01;};
+        BooleanSupplier punchComplete = () -> {return Math.abs(arm.getExtensionMeters()-targetLength) < 0.05;};
         return arm.extension.setTargetLengthCommand(targetLength).until(punchComplete);
     }
 

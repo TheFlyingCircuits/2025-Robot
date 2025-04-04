@@ -23,6 +23,7 @@ import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
+import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.wrist.Wrist;
 
 public class AimAtReef extends Command {
@@ -94,11 +95,18 @@ public class AimAtReef extends Command {
 
 
         double adjustedY;
-        if (((sideCoralIsIn == Direction.left) & isFacingForward) || ((sideCoralIsIn == Direction.right) & !isFacingForward)) {
-            adjustedY = Units.inchesToMeters(3.5);
+        if (sideCoralIsIn == Direction.left) {
+            adjustedY = PlacerGrabber.innerWidthMeters/2.0;
         } else {
-            adjustedY = Units.inchesToMeters(-3.5);
+            adjustedY = -PlacerGrabber.innerWidthMeters/2.0;
         }
+
+        if (!isFacingForward) {
+            //adjust for different when coming out other side
+            adjustedY += Math.signum(adjustedY) * Units.inchesToMeters(1);
+            adjustedY *= -1;
+        }
+
 
 
         Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, rotationAdjustment);

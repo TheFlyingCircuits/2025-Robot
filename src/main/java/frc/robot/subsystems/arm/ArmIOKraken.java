@@ -110,7 +110,7 @@ public class ArmIOKraken implements ArmIO{
 
         /* SHOULDER CONFIG */
         shoulderConfig = new TalonFXConfiguration();
-        shoulderConfig.CurrentLimits.StatorCurrentLimit = 40; //TODO: find a good value
+        shoulderConfig.CurrentLimits.StatorCurrentLimit = 20;
 
         shoulderConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
