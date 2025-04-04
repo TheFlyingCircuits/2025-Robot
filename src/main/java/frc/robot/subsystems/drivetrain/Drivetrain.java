@@ -72,7 +72,9 @@ public class Drivetrain extends SubsystemBase {
         new SingleTagCam(VisionConstants.tagCameraNames[2], VisionConstants.tagCameraTransforms[2]), // back left
         new SingleTagCam(VisionConstants.tagCameraNames[3], VisionConstants.tagCameraTransforms[3])  // back right
     };
-    private Optional<Pose2d> poseForVisionReset = Optional.empty();
+    private boolean fullyTrustVisionNextPoseUpdate = false;
+    private boolean allowTeleportsNextPoseUpdate = false;
+    private boolean hasAcceptablePoseObservationsThisLoop = false;
 
     private SwerveModule[] swerveModules;
 
@@ -93,8 +95,6 @@ public class Drivetrain extends SubsystemBase {
     private Rotation2d effectiveIntakeOrientation_robotFrame = Rotation2d.fromDegrees(0);
     private Transform2d effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame));
     private Transform2d effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame.times(-1)));
-
-    private boolean trustCamerasDuringScoreOnReef = false;
     
     public Drivetrain(
         GyroIO gyroIO, 
@@ -508,56 +508,6 @@ public class Drivetrain extends SubsystemBase {
         this.setOrientation(FlyingCircuitUtils.getAllianceDependentValue(forwardOnRed, forwardOnBlue, forwardNow));
     }
 
-    public void trustCamerasDuringScoreOnReef() {
-        this.trustCamerasDuringScoreOnReef = true;
-    }
-
-    /**
-     * Takes the best estimated pose from the vision, and sets our current poseEstimator pose to this one.
-     */
-    private void setPoseToVisionMeasurement() {
-        // causes issues due to camera latency not being accounted for!
-        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
-            if (this.poseForVisionReset.isEmpty()) {
-                return;
-            }
-            setPoseMeters(this.poseForVisionReset.get());
-        }
-        else {
-            if (visionInputs.visionMeasurements.isEmpty()) {
-                return;
-            }
-            setPoseMeters(visionInputs.visionMeasurements.get(0).robotFieldPose);   
-        }
-    }
-
-    /**
-     * Sets the translation to the best estimated pose from the vision, while rotation remains
-     * the same as what is currently being read.
-     */
-    private void setTranslationToVisionMeasurement() {
-        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
-            if (this.poseForVisionReset.isEmpty()) {
-                return;
-            }
-            setLocation(this.poseForVisionReset.get().getTranslation());
-        }
-        else {
-            if (visionInputs.visionMeasurements.isEmpty()) {
-                return;
-            }
-            setLocation(visionInputs.visionMeasurements.get(0).robotFieldPose.getTranslation());   
-        }
-    }
-
-    public boolean seesTag() {
-        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
-            return this.poseForVisionReset.isPresent();
-        }
-        else {
-            return visionInputs.visionMeasurements.size() > 0;
-        }
-    }
 
     private void updatePoseEstimator() {
         if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
@@ -568,6 +518,98 @@ public class Drivetrain extends SubsystemBase {
         }
     }
 
+
+    public void fullyTrustVisionNextPoseUpdate() {
+        this.fullyTrustVisionNextPoseUpdate = true;
+    }
+    public void allowTeleportsNextPoseUpdate() {
+        this.allowTeleportsNextPoseUpdate = true;
+    }
+    public boolean seesAcceptableTag() {
+        if (VisionConstants.useNewSingleTagCodeFromBuckeye) {
+            return this.hasAcceptablePoseObservationsThisLoop;
+        }
+        else {
+            return visionInputs.visionMeasurements.size() > 0;
+        }
+    }
+    private void updatePoseEstimatorNew() {
+        // log flags that were set in between last pose update and now
+        Logger.recordOutput("drivetrain/fullyTrustingVision", this.fullyTrustVisionNextPoseUpdate);
+        Logger.recordOutput("drivetrain/allowingPoseTeleports", this.allowTeleportsNextPoseUpdate);
+
+        // update with wheel deltas
+        fusedPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
+        wheelsOnlyPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
+
+        // get all pose observations from each camera
+        List<SingleTagPoseObservation> allFreshPoseObservations = new ArrayList<>();
+        for (SingleTagCam tagCam : tagCams) {
+            allFreshPoseObservations.addAll(tagCam.getFreshPoseObservations());
+        }
+
+        // process pose obvervations in chronological order
+        allFreshPoseObservations.sort(new Comparator<SingleTagPoseObservation>() {
+            public int compare(SingleTagPoseObservation a, SingleTagPoseObservation b) {
+                return Double.compare(a.timestampSeconds(), b.timestampSeconds());
+            } 
+        });
+
+        // Filter tags
+        List<Pose3d> acceptedTags = new ArrayList<>();
+        List<Pose3d> rejectedTags = new ArrayList<>();
+        for (SingleTagPoseObservation poseObservation : allFreshPoseObservations) {
+
+            Translation2d observedLocation = poseObservation.robotPose().getTranslation().toTranslation2d();
+            Translation2d locationNow = getPoseMeters().getTranslation();
+
+            // reject tags that are too far away
+            if (poseObservation.tagToCamMeters() > 5) {
+                rejectedTags.add(poseObservation.getTagPose());
+                continue;
+            }
+
+            // reject tags that are too ambiguous
+            if (poseObservation.ambiguity() > 0.2) {
+                rejectedTags.add(poseObservation.getTagPose());
+                continue;
+            }
+
+            // Don't allow the robot to teleport. Disallowing teleports can cause problems when we get bumped
+            // and experience lots of wheel slip, which is why we have the "allowTeleportsNextPoseUpdate" flag
+            // (used at driver's discretion (typically via y-button)).
+            double teleportToleranceMeters = 4.0;
+            if (observedLocation.getDistance(locationNow) > teleportToleranceMeters && (!this.allowTeleportsNextPoseUpdate)) {
+                rejectedTags.add(poseObservation.getTagPose());
+                continue;
+            }
+
+            // Don't use any tag that isn't on the reef
+            if (!poseObservation.usesReefTag()) {
+                rejectedTags.add(poseObservation.getTagPose());
+                continue;
+            }
+
+            // This measurment passes all our checks, so we add it to the fusedPoseEstimator
+            acceptedTags.add(poseObservation.getTagPose());
+            Matrix<N3, N1> stdDevs = this.fullyTrustVisionNextPoseUpdate ? VecBuilder.fill(0, 0, 0) : poseObservation.getStandardDeviations();
+
+            fusedPoseEstimator.addVisionMeasurement(
+                poseObservation.robotPose().toPose2d(), 
+                poseObservation.timestampSeconds(), 
+                stdDevs
+            );
+        }
+
+        // reset flags for next time
+        this.fullyTrustVisionNextPoseUpdate = false;
+        this.allowTeleportsNextPoseUpdate = false;
+        this.hasAcceptablePoseObservationsThisLoop = acceptedTags.size() > 0;
+
+        // log the accepted and rejected tags
+        Logger.recordOutput("drivetrain/acceptedTags", acceptedTags.toArray(new Pose3d[0]));
+        Logger.recordOutput("drivetrain/rejectedTags", rejectedTags.toArray(new Pose3d[0]));
+    }
 
     private void updatePoseEstimatorOld() {
         double totalAccelMetersPerSecondSquared = Math.hypot(gyroInputs.robotAccelX, gyroInputs.robotAccelY);
@@ -615,80 +657,6 @@ public class Drivetrain extends SubsystemBase {
         }
 
         Logger.recordOutput("drivetrain/trackedTags", trackedTags.toArray(new Pose2d[0]));
-    }
-
-    private void updatePoseEstimatorNew() {
-        // update with wheel deltas
-        fusedPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
-        wheelsOnlyPoseEstimator.update(gyroInputs.robotYawRotation2d, getModulePositions());
-
-        // get all pose observations from each camera
-        List<SingleTagPoseObservation> allFreshPoseObservations = new ArrayList<>();
-        for (SingleTagCam tagCam : tagCams) {
-            allFreshPoseObservations.addAll(tagCam.getFreshPoseObservations());
-        }
-
-        // process pose obvervations in chronological order
-        allFreshPoseObservations.sort(new Comparator<SingleTagPoseObservation>() {
-            public int compare(SingleTagPoseObservation a, SingleTagPoseObservation b) {
-                return Double.compare(a.timestampSeconds(), b.timestampSeconds());
-            } 
-        });
-
-        // Make sure vision reset pose is empty before giving it the first valid tag we find
-        this.poseForVisionReset = Optional.empty();
-
-        // Log which tags have been used.
-        List<Pose3d> acceptedTags = new ArrayList<>();
-        List<Pose3d> rejectedTags = new ArrayList<>();
-        for (SingleTagPoseObservation poseObservation : allFreshPoseObservations) {
-
-            Translation2d observedLocation = poseObservation.robotPose().getTranslation().toTranslation2d();
-            Translation2d locationNow = getPoseMeters().getTranslation();
-
-            // reject tags that are too far away
-            if (poseObservation.tagToCamMeters() > 5) {
-                rejectedTags.add(poseObservation.getTagPose());
-                continue;
-            }
-
-            // reject tags that are too ambiguous
-            if (poseObservation.ambiguity() > 0.2) {
-                rejectedTags.add(poseObservation.getTagPose());
-                continue;
-            }
-
-            // Dont' allow the robot to teleport (Can cause problems when we get bumped)
-            double teleportToleranceMeters = 4.0;
-            if (observedLocation.getDistance(locationNow) > teleportToleranceMeters && DriverStation.isEnabled()) {
-                rejectedTags.add(poseObservation.getTagPose());
-                continue;
-            }
-
-            if (!poseObservation.usesReefTag()) {
-                rejectedTags.add(poseObservation.getTagPose());
-                continue;
-            }
-
-            // This measurment passes all our checks, so we add it to the fusedPoseEstimator
-            acceptedTags.add(poseObservation.getTagPose());
-
-            this.poseForVisionReset = Optional.of(poseObservation.robotPose().toPose2d());
-
-            Matrix<N3, N1> stdDevs = trustCamerasDuringScoreOnReef ? VecBuilder.fill(0, 0, 0) : poseObservation.getStandardDeviations();
-
-            fusedPoseEstimator.addVisionMeasurement(
-                poseObservation.robotPose().toPose2d(), 
-                poseObservation.timestampSeconds(), 
-                stdDevs
-            );
-        }
-        
-        trustCamerasDuringScoreOnReef = false;
-
-        // log the accepted and rejected tags
-        Logger.recordOutput("drivetrain/acceptedTags", acceptedTags.toArray(new Pose3d[0]));
-        Logger.recordOutput("drivetrain/rejectedTags", rejectedTags.toArray(new Pose3d[0]));
     }
 
     public Translation3d fieldCoordsFromRobotCoords(Translation3d robotCoords) {
@@ -940,9 +908,6 @@ public class Drivetrain extends SubsystemBase {
 
         Logger.recordOutput("drivetrain/fusedPose", fusedPoseEstimator.getEstimatedPosition());
         Logger.recordOutput("drivetrain/wheelsOnlyPose", wheelsOnlyPoseEstimator.getEstimatedPosition());
-        if (poseForVisionReset.isPresent()) {
-            Logger.recordOutput("drivetrain/poseForVisionReset", poseForVisionReset.get());
-        }
         Logger.recordOutput("drivetrain/speedMetersPerSecond", getSpeedMetersPerSecond());
 
         Logger.recordOutput("drivetrain/swerveModuleStates", getModuleStates());

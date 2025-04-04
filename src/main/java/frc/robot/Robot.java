@@ -68,8 +68,6 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void disabledPeriodic() {
-        m_robotContainer.drivetrain.trustCamerasDuringScoreOnReef();
-
         if (autoCommand == null) {
             autoCommand = m_robotContainer.autoChoosingAuto();
         }

@@ -21,6 +21,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -187,11 +188,12 @@ public class RobotContainer {
                 duncan::getRequestedFieldOrientedVelocity, 
                 this::getDesiredBranch,
                 drivetrain::isFacingReef)
-            .deadlineFor( // allow command to end if we somehow score before seeing a tag
-                Commands.run(drivetrain::trustCamerasDuringScoreOnReef)
+            .deadlineFor( // using "deadlineFor" instead of "alongWith" allows the command to end if we somehow score before seeing a tag
+                Commands.run(drivetrain::fullyTrustVisionNextPoseUpdate)
                 // Note: pressing Y again while Larry was dancing was enought to stop the dance.
                 //       This indicates that trusting the cameras more up close may eliminate some
                 //       of the dancing?
+                // TODO: check practice field log around 5:00pm on April 3rd 2025 for example of dancing
             ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
         );
         // duncanController.rightBumper().whileTrue(
@@ -229,8 +231,8 @@ public class RobotContainer {
         // );
 
 
-        //reset gyro
-        duncanController.y().onTrue(Commands.run(drivetrain::trustCamerasDuringScoreOnReef).until(drivetrain::seesTag));
+        // reset gyro and recover from collisions that cause big wheel slip
+        duncanController.y().onTrue(reSeedRobotPose());
         // duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
         
 
@@ -251,7 +253,18 @@ public class RobotContainer {
         }
     }
 
+    private Command reSeedRobotPose() {return Commands.run(() -> {
+        drivetrain.fullyTrustVisionNextPoseUpdate();
+        drivetrain.allowTeleportsNextPoseUpdate();
+    }).until(drivetrain::seesAcceptableTag).ignoringDisable(true);}
+
     private void triggers() {
+        // seeding pose when put on field
+        Trigger isDisabled = new Trigger(DriverStation::isDisabled);
+        isDisabled.whileTrue(reSeedRobotPose().repeatedly());
+        reSeedRobotPose().repeatedly().until(isDisabled.negate()).schedule();
+        //^^^ need to manually schedule the first time because there's no transition from enabled to disabled on startup.
+
         // Coral acquisition
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
         hasCoral.onTrue(leds.strobeCommand(Color.kWhite, 4, 0.5).ignoringDisable(true));

@@ -1,6 +1,7 @@
 package frc.robot.subsystems.vision;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.littletonrobotics.junction.Logger;
@@ -56,6 +57,10 @@ public class SingleTagCam {
     public List<SingleTagPoseObservation> getFreshPoseObservations() {
         List<SingleTagPoseObservation> output = new ArrayList<>();
 
+        // advantage scope viz hacks
+        List<Pose3d> justRobotPoses = new ArrayList<>();
+        List<Pose3d> sightlines = new ArrayList<>();
+
         // See if we've gotten any new frames since last time
         List<PhotonPipelineResult> freshFrames = cam.getAllUnreadResults();
         if (freshFrames.size() == 0) {
@@ -72,10 +77,20 @@ public class SingleTagCam {
 
                 SingleTagPoseObservation poseObservation = new SingleTagPoseObservation(cam.getName(), robotPose, timestamp, tagID, tagToCamDistance, ambiguity);
                 output.add(poseObservation);
+
+                // advantage scope viz
+                justRobotPoses.add(robotPose);
+                Pose3d camPoseOnfield = robotPose.plus(new Transform3d(camLocation_robotFrame, camOrientation_robotFrame));
+                Pose3d tagPoseOnField = FieldConstants.tagPose(tagID);
+                sightlines.addAll(Arrays.asList(camPoseOnfield, tagPoseOnField, camPoseOnfield));
+
             }
         }
 
+        // viz persists between robot loops with no freshly processed frames
         Logger.recordOutput("tagCams/"+cam.getName()+"/singleTagPoseObservations", output.toArray(new SingleTagPoseObservation[0]));
+        Logger.recordOutput("tagCams/"+cam.getName()+"/mostRecentObservedPoses", justRobotPoses.toArray(new Pose3d[0]));
+        Logger.recordOutput("tagCams/"+cam.getName()+"/mostRecentSightlines", sightlines.toArray(new Pose3d[0]));
         return output;
     }
 
