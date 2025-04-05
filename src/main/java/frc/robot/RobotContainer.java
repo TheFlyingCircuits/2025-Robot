@@ -76,7 +76,7 @@ public class RobotContainer {
     final CommandXboxController amaraController;
     private int desiredLevel = 2;
     private Direction desiredStalk = Direction.left;
-    private boolean visionAssistedIntakeInTeleop = true;
+    private boolean visionAssistedIntakeInTeleop = false;
 
     public final Drivetrain drivetrain;
     public final Arm arm;

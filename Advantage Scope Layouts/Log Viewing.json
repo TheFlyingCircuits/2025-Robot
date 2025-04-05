@@ -51,9 +51,10 @@
             "/RealOutputs/arm/measuredWireframe",
             "/RealOutputs/drivetrain/poseForVisionReset",
             "/RealOutputs/intakeCam/mostRecentFrame",
-            "/RealOutputs/tagCams",
             "/RealOutputs/tagCams/backRight",
-            "/RealOutputs/drivetrain"
+            "/RealOutputs",
+            "/RealOutputs/coralTracking",
+            "/RealOutputs/coralTracking/closestToIntake"
           ]
         },
         "tabs": {
@@ -404,7 +405,7 @@
                 "cameraPosition": [
                   -5.692695343282947,
                   3.1739844010838087,
-                  -6.044264142028659
+                  -6.044264142028658
                 ],
                 "cameraTarget": [
                   -4.832426822661089,
@@ -435,6 +436,16 @@
                       "color": "#00ff00",
                       "size": "normal"
                     }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "/RealOutputs/coralTracking/closestToIntake",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff00ff",
+                      "size": "normal"
+                    }
                   }
                 ],
                 "game": "2025 Field (Welded)",
@@ -446,6 +457,16 @@
               "controllerUUID": "5j8qm3q2tm9jrdlr1k05f18xsg9rofgr",
               "renderer": null,
               "controlsHeight": 249
+            },
+            {
+              "type": 5,
+              "title": "Console",
+              "controller": "/RealOutputs/Console",
+              "controllerUUID": "6aqgis3dtgxtwmvv3ppsimchj5cgqt66",
+              "renderer": {
+                "highlight": false
+              },
+              "controlsHeight": 0
             }
           ]
         }

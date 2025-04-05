@@ -103,6 +103,10 @@ public class ColorCamera {
         PhotonPipelineResult mostRecentFrame = cam.getLatestResult();
         if (!cam.isConnected()) {
             mostRecentFrame = new PhotonPipelineResult();
+            Logger.recordOutput("camConnections/intakeCam", false);
+        }
+        else {
+            Logger.recordOutput("camConnections/intakeCam", true);
         }
         Optional<Pose2d> interpolatedRobotPose = fusedPoseEstimator.sampleAt(mostRecentFrame.getTimestampSeconds());
         Pose3d robotPoseWhenPicTaken = new Pose3d(interpolatedRobotPose.orElse(fusedPoseEstimator.getEstimatedPosition())); // default to most recent pose if there isn't any pose history.

@@ -63,6 +63,12 @@ public class SingleTagCam {
 
         // See if we've gotten any new frames since last time
         List<PhotonPipelineResult> freshFrames = cam.getAllUnreadResults();
+        if (cam.isConnected()) {
+            Logger.recordOutput("camConnections/"+cam.getName(), true);
+        }
+        else {
+            Logger.recordOutput("camConnections/"+cam.getName(), false);
+        }
         if (freshFrames.size() == 0) {
             return output;
         }
