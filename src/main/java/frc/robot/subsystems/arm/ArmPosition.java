@@ -112,6 +112,11 @@ public class ArmPosition {
     }
 
 
+    public boolean obeysRules_G415_and_R105() {
+        return true;
+    }
+
+
     /**
         * Returns a pose2d object representing the position of the end effector. The translation component represents
         * the position of the end effector pivot relative to the robot center, while the angle component represents the angle of the wrist.

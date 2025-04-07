@@ -30,5 +30,7 @@ public interface WristIO {
     public default void setWristPosition(double degrees) {};
 
     public default void toggleIdleMode() {};
+
+    public default void setDutyCycle(double dutyCycle) {};
     
 }

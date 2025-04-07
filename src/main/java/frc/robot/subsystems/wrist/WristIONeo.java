@@ -1,5 +1,7 @@
 package frc.robot.subsystems.wrist;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
@@ -9,6 +11,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants.WristConstants;
 import frc.robot.VendorWrappers.Neo;
 
@@ -69,7 +72,7 @@ public class WristIONeo implements WristIO{
         inputs.wristDegreesPerSecond = wristNeo.getVelocity();
         inputs.wristAngleDegrees = wristNeo.getPosition();
 
-        inputs.motorOutputVoltage = wristNeo.getAppliedOutput()*12;
+        inputs.motorOutputVoltage = wristNeo.getAppliedOutput()*wristNeo.getBusVoltage();
         inputs.motorOutputCurrentAmps = wristNeo.getOutputCurrent();
         inputs.analogInputVolts = wristNeo.getAnalogInputVolts();
         inputs.analogInputVoltsPerSecond = wristNeo.getAnalogInputVoltsPerSecond();
@@ -77,6 +80,11 @@ public class WristIONeo implements WristIO{
         inputs.absoluteAngleDegrees = this.getAbsoluteAngleDegrees(inputs.analogInputVolts);
         inputs.absoluteDegreesPerSecond = this.getAnalogInputDegreesPerVolt() * inputs.analogInputVoltsPerSecond;
         wristNeo.getBusVoltage();
+
+        Logger.recordOutput("wrist/faultFlags", wristNeo.getFaults().rawBits);
+        Logger.recordOutput("wrist/hasActiveFault", wristNeo.hasActiveFault());
+        Logger.recordOutput("wrist/busVoltage", wristNeo.getBusVoltage());
+        Logger.recordOutput("wrist/dutyCycle", wristNeo.getAppliedOutput());
 
 
     }
@@ -89,6 +97,10 @@ public class WristIONeo implements WristIO{
     @Override
     public void setWristNeoVolts(double volts) {
         wristNeo.setVoltage(volts);
+    }
+
+    public void setDutyCycle(double dutyCycle) {
+        wristNeo.set(dutyCycle);
     }
 
     public void toggleIdleMode() {

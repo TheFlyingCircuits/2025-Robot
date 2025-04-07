@@ -232,8 +232,8 @@ public class RobotContainer {
 
 
         // reset gyro and recover from collisions that cause big wheel slip
-        duncanController.y().onTrue(reSeedRobotPose());
-        // duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
+        // duncanController.y().onTrue(reSeedRobotPose());
+        duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
         
 
 
@@ -356,7 +356,7 @@ public class RobotContainer {
         Command armToIntake = new ParallelCommandGroup(
             arm.shoulder.safeSetTargetAngleCommand(ArmConstants.armMinAngleDegrees),
             arm.extension.setTargetLengthCommand(0.77),
-            wrist.setTargetPositionCommand(0)
+            wrist.setTargetPositionCommand(0) //wrist.setDutyCycleCommand()
         ).withName("armToIntakePositionCommand");
 
         Command spinIntakeWheels = placerGrabber.intakeOrEjectOrStop();
