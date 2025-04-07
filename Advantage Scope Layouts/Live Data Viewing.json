@@ -1,13 +1,13 @@
 {
   "hubs": [
     {
-      "x": -8,
-      "y": -8,
-      "width": 1552,
-      "height": 832,
+      "x": 0,
+      "y": 0,
+      "width": 1536,
+      "height": 816,
       "state": {
         "sidebar": {
-          "width": 383,
+          "width": 312,
           "expanded": [
             "/AdvantageKit/RealOutputs/intakeCamera",
             "/AdvantageKit/RealOutputs/intakeCamera/mostRecentFrame",
@@ -32,12 +32,9 @@
             "/AdvantageKit/RealOutputs/tagCams/frontRight/singleTagPoseObservations/0",
             "/AdvantageKit/RealOutputs/tagCams/backLeft/singleTagPoseObservations",
             "/AdvantageKit/RealOutputs",
-            "/AdvantageKit/RealOutputs/tagCams",
             "/AdvantageKit/RealOutputs/tagCams/backRight",
-            "/AdvantageKit/RealOutputs/drivetrain",
-            "/AdvantageKit/RealOutputs/intakeCam",
-            "/AdvantageKit/RealOutputs/coralTracking",
-            "/AdvantageKit/RealOutputs/coralTracking/closestToIntake"
+            "/AdvantageKit/RealOutputs/coralTracking/closestToIntake",
+            "/AdvantageKit/RealOutputs/camConnections"
           ]
         },
         "tabs": {
@@ -241,17 +238,17 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  7.955258356943193,
-                  5.67440575357607,
-                  -0.8957829409061709
+                  -9.501255757510762,
+                  5.36582970022749,
+                  0.44799642130021655
                 ],
                 "cameraTarget": [
-                  6.723853673575726,
-                  0.16410796313718212,
-                  -0.8950977788536884
+                  2.862565062542762,
+                  -5.995746442749883,
+                  -1.2120922486873649
                 ]
               },
-              "controlsHeight": 459
+              "controlsHeight": 296
             },
             {
               "type": 3,
@@ -489,6 +486,16 @@
               "controllerUUID": "ywmw43boszdtwmhjvykvxktl0i9ani5i",
               "renderer": null,
               "controlsHeight": 268
+            },
+            {
+              "type": 5,
+              "title": "Console",
+              "controller": "NT:/AdvantageKit/RealOutputs/Console",
+              "controllerUUID": "kieh0u0aocctdqodvku3ia9re1cexy2k",
+              "renderer": {
+                "highlight": false
+              },
+              "controlsHeight": 0
             }
           ]
         }
