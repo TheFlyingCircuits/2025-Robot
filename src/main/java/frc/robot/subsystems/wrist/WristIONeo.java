@@ -54,8 +54,8 @@ public class WristIONeo implements WristIO{
     }
 
     private double getAbsoluteAngleDegrees(double analogInputVolts) {
-        double magnetDegreesWhenWristAtZero = -204.1; //original placergrabber
-        // double magnetDegreesWhenWristAtZero = -369; //alternate (orange 3d print)
+        // double magnetDegreesWhenWristAtZero = -204.1; //original placergrabber
+        double magnetDegreesWhenWristAtZero = -369; //alternate (orange 3d print)
         return analogInputVolts * this.getAnalogInputDegreesPerVolt() - magnetDegreesWhenWristAtZero;
     }
 

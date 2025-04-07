@@ -246,7 +246,7 @@ public class RobotContainer {
 
             // climb pull
             duncanController.povDown().whileTrue(new ParallelCommandGroup(
-                arm.shoulder.run(() -> arm.setShoulderVoltage(-7)),
+                arm.shoulder.run(() -> arm.setShoulderVoltage(-3)),
                 wrist.setTargetPositionCommand(13),
                 arm.extension.setTargetLengthCommand(0.75)
             ));
@@ -440,7 +440,7 @@ public class RobotContainer {
 
     public Command scoreCoral(boolean troughScore) {
         Command sendToTrough = Commands.sequence(
-            placerGrabber.run(() -> placerGrabber.setFrontRollerVolts(12)).withTimeout(0.5),
+            placerGrabber.run(() -> placerGrabber.setFrontRollerVolts(10)).withTimeout(0.5),
             // placerGrabber.setPlacerGrabberVoltsCommand(8, -8).withTimeout(0.5),
             placerGrabber.stopInstantCommand() // <- allows placerGrabber to actually stop when this command
                                                //    is part of a composition, meaning the placerGrabber won't
@@ -477,14 +477,14 @@ public class RobotContainer {
                 positionShift = new Transform2d(
                     Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1),
                     Units.inchesToMeters(3),
-                    Rotation2d.fromDegrees(-30).plus(Rotation2d.k180deg)
+                    Rotation2d.fromDegrees(-25).plus(Rotation2d.k180deg)
                 );
             }
             else {
                 positionShift = new Transform2d(
                     Units.inchesToMeters(17) + Units.inchesToMeters(4.5+1),
                     Units.inchesToMeters(-3),
-                    Rotation2d.fromDegrees(30).plus(Rotation2d.k180deg)
+                    Rotation2d.fromDegrees(25).plus(Rotation2d.k180deg)
                 );
             }
 
