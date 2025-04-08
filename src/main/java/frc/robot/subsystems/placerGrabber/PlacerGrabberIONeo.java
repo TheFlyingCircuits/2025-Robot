@@ -1,5 +1,7 @@
 package frc.robot.subsystems.placerGrabber;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
@@ -66,6 +68,24 @@ public class PlacerGrabberIONeo implements PlacerGrabberIO {
         
         inputs.leftSensorSeesCoral = sideNeo.getReverseLimitSwitch().isPressed();
         inputs.rightSensorSeesCoral = sideNeo.getForwardLimitSwitch().isPressed();
+
+        Logger.recordOutput("placerGrabber/orangeWheelsNeo/faultFlags", frontNeo.getFaults().rawBits);
+        Logger.recordOutput("placerGrabber/orangeWheelsNeo/hasActiveFault", frontNeo.hasActiveFault());
+        Logger.recordOutput("placerGrabber/orangeWheelsNeo/warningFlags", frontNeo.getWarnings().rawBits);
+        Logger.recordOutput("placerGrabber/orangeWheelsNeo/hasActiveWarning", frontNeo.hasActiveWarning());
+        Logger.recordOutput("placerGrabber/orangeWheelsNeo/overcurrent", frontNeo.getWarnings().overcurrent);
+        Logger.recordOutput("placerGrabber/orangeWheelsNeo/busVoltage", frontNeo.getBusVoltage());
+        Logger.recordOutput("placerGrabber/orangeWheelsNeo/dutyCycle", frontNeo.getAppliedOutput());
+        Logger.recordOutput("placerGrabber/orangeWheelsNeo/supposedAppliedVolts", frontNeo.getAppliedOutput() * frontNeo.getBusVoltage());
+
+        Logger.recordOutput("placerGrabber/omniwheelsNeo/faultFlags", sideNeo.getFaults().rawBits);
+        Logger.recordOutput("placerGrabber/omniwheelsNeo/hasActiveFault", sideNeo.hasActiveFault());
+        Logger.recordOutput("placerGrabber/omniwheelsNeo/warningFlags", sideNeo.getWarnings().rawBits);
+        Logger.recordOutput("placerGrabber/omniwheelsNeo/hasActiveWarning", sideNeo.hasActiveWarning());
+        Logger.recordOutput("placerGrabber/omniwheelsNeo/overcurrent", sideNeo.getWarnings().overcurrent);
+        Logger.recordOutput("placerGrabber/omniwheelsNeo/busVoltage", sideNeo.getBusVoltage());
+        Logger.recordOutput("placerGrabber/omniwheelsNeo/dutyCycle", sideNeo.getAppliedOutput());
+        Logger.recordOutput("placerGrabber/omniwheelsNeo/supposedAppliedVolts", sideNeo.getAppliedOutput() * sideNeo.getBusVoltage());
 
     }
 

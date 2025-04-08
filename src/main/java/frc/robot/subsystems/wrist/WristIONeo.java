@@ -48,23 +48,43 @@ public class WristIONeo implements WristIO{
             .smartCurrentLimit(20)
             .inverted(true);
 
+
         config.softLimit.forwardSoftLimitEnabled(false);
 
         wristNeo.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
 
-        wristNeo.setPosition(this.getAbsoluteAngleDegrees(wristNeo.getAnalogInputVolts()));
+        // wristNeo.setPosition(this.getAbsoluteAngleDegrees(wristNeo.getAnalogInputVolts()));
+        wristNeo.setPosition(WristConstants.maxAngleDegrees);
     }
 
     private double getAbsoluteAngleDegrees(double analogInputVolts) {
-        // double magnetDegreesWhenWristAtZero = -204.1; //original placergrabber
-        double magnetDegreesWhenWristAtZero = -369; //alternate (orange 3d print)
-        return analogInputVolts * this.getAnalogInputDegreesPerVolt() - magnetDegreesWhenWristAtZero;
+        boolean usingWristWithOrange3dPrint = true;
+        double output = 0;
+        if (usingWristWithOrange3dPrint) {
+            double magnetDegreesWhenWristAtZero = 78.446;
+            output = analogInputVolts * this.getAnalogInputDegreesPerVolt() - magnetDegreesWhenWristAtZero;
+        }
+        else {
+            double magnetDegreesWhenWristAtZero = 0; // TODO: this is a placeholder!
+            output = analogInputVolts * this.getAnalogInputDegreesPerVolt() - magnetDegreesWhenWristAtZero;
+        }
+
+        // account for sensor wrap around / disconitinuity
+        while (output > 180) {
+            output -= 360;
+        }
+        while (output < -180) {
+            output += 360;
+        }
+
+        return output;
     }
 
     private double getAnalogInputDegreesPerVolt() {
-        // 5 volt sensor over full range of 1 rotation, negated to match convention for positive wrist angles.
-        return -1 * (360.0 / 5.0);
+        // 3.3 volt sensor over full range of 1 rotation,
+        // negated to match convention for positive wrist angles.
+        return -1 * (360.0 / 3.3);
     }
 
     @Override
@@ -83,10 +103,12 @@ public class WristIONeo implements WristIO{
 
         Logger.recordOutput("wrist/faultFlags", wristNeo.getFaults().rawBits);
         Logger.recordOutput("wrist/hasActiveFault", wristNeo.hasActiveFault());
+        Logger.recordOutput("wrist/warningFlags", wristNeo.getWarnings().rawBits);
+        Logger.recordOutput("wrist/hasActiveWarning", wristNeo.hasActiveWarning());
+        Logger.recordOutput("wrist/overcurrent", wristNeo.getWarnings().overcurrent);
         Logger.recordOutput("wrist/busVoltage", wristNeo.getBusVoltage());
         Logger.recordOutput("wrist/dutyCycle", wristNeo.getAppliedOutput());
-
-
+        Logger.recordOutput("wrist/supposedAppliedVolts", wristNeo.getAppliedOutput() * wristNeo.getBusVoltage());
     }
 
     @Override

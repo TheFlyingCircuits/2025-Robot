@@ -53,14 +53,6 @@ public class Wrist extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("wristInputs", inputs);
 
-        if (homingTimer.advanceIfElapsed(1)
-                && Math.abs(inputs.wristDegreesPerSecond) < 1
-                    && inputs.wristAngleDegrees > 135
-                        && inputs.absoluteAngleDegrees > 135) {
-            io.setWristPosition(inputs.absoluteAngleDegrees);
-            homingTimer.restart();
-        }
-
         if (!this.manualVoltsControl) {
             moveToTargetPosition();
         }
@@ -68,9 +60,19 @@ public class Wrist extends SubsystemBase {
         Logger.recordOutput("wrist/desiredWristPositionDegrees", desiredWristPositionDegrees);
     }
 
+    private void reHomeWrist() {
+        if (homingTimer.advanceIfElapsed(1)
+                && Math.abs(inputs.wristDegreesPerSecond) < 1
+                    && inputs.wristAngleDegrees > 135
+                        && inputs.absoluteAngleDegrees > 135) {
+            io.setWristPosition(inputs.absoluteAngleDegrees);
+            homingTimer.restart();
+        }
+    }
+
 
     public double getWristAngleDegrees() {
-        return inputs.wristAngleDegrees;
+        return inputs.absoluteAngleDegrees;
     }
 
     public double getTargetWristDegrees() {
@@ -81,7 +83,7 @@ public class Wrist extends SubsystemBase {
         // wristNeoPID.setP(SmartDashboard.getNumber("wrist/voltsPerDegreeOfError", wristNeoPID.getP()));
         // SmartDashboard.putNumber("wrist/voltsPerDegreeOfError", wristNeoPID.getP());
         
-        double outputVolts = (wristNeoPID.calculate(inputs.wristAngleDegrees, desiredWristPositionDegrees));
+        double outputVolts = (wristNeoPID.calculate(inputs.absoluteAngleDegrees, desiredWristPositionDegrees));
         // if (wristNeoPID.atSetpoint()) {
         //     outputVolts = 0;
         // }

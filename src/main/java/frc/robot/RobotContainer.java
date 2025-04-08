@@ -232,8 +232,8 @@ public class RobotContainer {
 
 
         // reset gyro and recover from collisions that cause big wheel slip
-        // duncanController.y().onTrue(reSeedRobotPose());
-        duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
+        duncanController.y().onTrue(reSeedRobotPose());
+        // duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
         
 
 
@@ -414,6 +414,7 @@ public class RobotContainer {
 
     public Command scoreOnReefCommand(Supplier<ChassisSpeeds> translationController, Supplier<ReefBranch> reefBranch, Supplier<Boolean> isFacingReef) {
         AimAtReef aim = new AimAtReef(drivetrain, arm, wrist, translationController, reefBranch, leds, placerGrabber::sideCoralIsIn, isFacingReef);
+        // ChickenHead aim = new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel));
         Command succCoral = placerGrabber.startEnd(
             () -> placerGrabber.setSideRollerVolts(8),
             () -> placerGrabber.setSideRollerVolts(0)

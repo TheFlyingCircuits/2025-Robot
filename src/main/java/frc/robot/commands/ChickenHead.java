@@ -19,6 +19,7 @@ import frc.robot.AdvantageScopeDrawingUtils;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
+import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.subsystems.arm.Arm;
@@ -36,6 +37,7 @@ public class ChickenHead extends Command {
     private PlacerGrabber placerGrabber;
     private Supplier<ReefBranch> targetBranchSupplier;
     private ReefBranch targetBranch;
+    private boolean readyToScore = false;
 
     public ChickenHead(Drivetrain drivetrain, Supplier<ChassisSpeeds> translationController, Arm arm, Wrist wrist, PlacerGrabber intakeWheels, Supplier<ReefBranch> targetBranchSupplier) {
         this.drivetrain = drivetrain;
@@ -54,6 +56,7 @@ public class ChickenHead extends Command {
     @Override
     public void initialize() {
         targetBranch = targetBranchSupplier.get();
+        this.readyToScore = false;
     }
 
     @Override
@@ -61,10 +64,57 @@ public class ChickenHead extends Command {
         // this.setDriveToOneCoralDistancePose(); <- used for generating setpoints
         this.aimDriveAtReef();
 
+        double maxDistanceFromCenter = DrivetrainConstants.frameWidthMeters/2.0;
+        maxDistanceFromCenter += Units.inchesToMeters(12 + 6);
+        if (drivetrain.getPoseMeters().getTranslation().getDistance(targetBranch.getLocation2d()) > maxDistanceFromCenter) {
+            return;
+        }
+
         ArmPosition desiredArmState = this.getDesiredArmState().constrainedToLimits();
-        this.arm.setShoulderTargetAngle(desiredArmState.shoulderAngleDegrees);
-        this.arm.setExtensionTargetLength(desiredArmState.extensionMeters);
-        this.wrist.setTargetPositionDegrees(desiredArmState.wristAngleDegrees);
+
+        // immediately start moving shoulder
+        arm.setShoulderTargetAngle(desiredArmState.shoulderAngleDegrees);
+
+        boolean closeToReef = targetBranch.getFace().getPose2d().minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
+        boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 2;
+        boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmState.shoulderAngleDegrees) < 10;
+        if (closeToReef && movingSlow && shoulderNearTarget) {
+            // Only start moving extension & wrist when shoulder is near the setpoint
+            arm.setExtensionTargetLength(desiredArmState.extensionMeters);
+                
+            double maxWristVolts = 9;
+            if (targetBranch.getLevel() == 4) maxWristVolts = 9;
+            wrist.setTargetPositionDegrees(desiredArmState.wristAngleDegrees, maxWristVolts);
+        }
+        else {
+            // Stow extension and wrist when the shoulder isn't ready yet
+            arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
+            wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
+        }
+
+        this.readyToScore = this.readyToScore(desiredArmState);
+
+        // this.arm.setShoulderTargetAngle(desiredArmState.shoulderAngleDegrees);
+        // this.arm.setExtensionTargetLength(desiredArmState.extensionMeters);
+        // this.wrist.setTargetPositionDegrees(desiredArmState.wristAngleDegrees);
+    }
+
+    private boolean readyToScore(ArmPosition desiredArmPosition) {
+        boolean shoulderReady = Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees()) < 1;
+        boolean extensionReady = Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02;
+        boolean wristReady = Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 2;
+        boolean driveAngleGood = drivetrain.isAngleAligned();
+
+        Logger.recordOutput("chickenHead/shoulderReady", shoulderReady);
+        Logger.recordOutput("chickenHead/extensionReady", extensionReady);
+        Logger.recordOutput("chickenHead/wristReady", wristReady);
+        Logger.recordOutput("chickenHead/driveAngleGood", driveAngleGood);
+
+        return shoulderReady && extensionReady && wristReady && driveAngleGood;
+    }
+
+    public boolean readyToScore() {
+        return this.readyToScore;
     }
 
     @Override
