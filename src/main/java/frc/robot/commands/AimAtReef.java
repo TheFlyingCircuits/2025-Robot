@@ -164,7 +164,7 @@ public class AimAtReef extends Command {
             if (DriverStation.isAutonomous()) {
                 maxSpeed = 2.0;
             }
-            drivetrain.pidToPose(targetPose, maxSpeed);
+            // drivetrain.pidToPose(targetPose, maxSpeed);
             // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
             // drivetrain.fieldOrientedDriveOnALine(driverControl.div(3.0), targetPose);
         }
@@ -189,8 +189,8 @@ public class AimAtReef extends Command {
             arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
             this.extensionTargetSet = true;
                 
-            double maxWristVolts = 8;
-            if (reefBranch.get().getLevel() == 4) maxWristVolts = 6;
+            double maxWristVolts = 6;
+            if (reefBranch.get().getLevel() == 4) maxWristVolts = 8;
             wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, maxWristVolts);
         }
         else {

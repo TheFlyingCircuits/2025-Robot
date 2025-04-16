@@ -31,7 +31,8 @@ public class Wrist extends SubsystemBase {
         this.io = io;
         inputs = new WristIOInputsAutoLogged();
 
-        wristNeoPID = new PIDController(0.25,0,0); // kp has units of volts per degree
+        //kp 0.25 on belted wrist
+        wristNeoPID = new PIDController(0.15,0,0); // kp has units of volts per degree
         wristNeoPID.setTolerance(1); // degrees
 
         homingTimer = new Timer();

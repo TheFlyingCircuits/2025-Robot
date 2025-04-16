@@ -15,6 +15,7 @@ import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -90,7 +91,7 @@ public class ArmIOKraken implements ArmIO{
         extensionConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ArmConstants.minExtensionMeters-0.05;
 
         extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 4; //mps of the extension
-        extensionConfig.MotionMagic.MotionMagicAcceleration = 8; //m/s^2 of the extension
+        extensionConfig.MotionMagic.MotionMagicAcceleration = 6; //m/s^2 of the extension
 
         extensionConfig.Slot0.kS = ArmConstants.kSExtensionVolts;
         extensionConfig.Slot0.kV = ArmConstants.kVExtensionVoltsSecondsPerRadian;
@@ -119,8 +120,10 @@ public class ArmIOKraken implements ArmIO{
         shoulderConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         shoulderConfig.Feedback.FeedbackRemoteSensorID = ArmConstants.leftPivotEncoderID;
 
-        shoulderConfig.MotionMagic.MotionMagicCruiseVelocity = 1; //rps of the arm
-        shoulderConfig.MotionMagic.MotionMagicAcceleration = 0.8; //rotations per second squared of the arm
+        shoulderConfig.MotionMagic.MotionMagicCruiseVelocity = 0.387; //rps of the arm
+        shoulderConfig.MotionMagic.MotionMagicAcceleration = 1.4; //rotations per second squared of the arm
+        shoulderConfig.MotionMagic.MotionMagicExpo_kV = 20; //unused
+        shoulderConfig.MotionMagic.MotionMagicExpo_kA = 6; //unused
 
         shoulderConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         shoulderConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ArmConstants.armMaxAngleDegrees / 360;
@@ -136,9 +139,9 @@ public class ArmIOKraken implements ArmIO{
         
         shoulderConfig.Slot0.kS = 0.117;
         shoulderConfig.Slot0.kV = 31;
-        shoulderConfig.Slot0.kA = 0;
+        shoulderConfig.Slot0.kA = 1.2;
         shoulderConfig.Slot0.kG = 0.22;
-        shoulderConfig.Slot0.kP = 125;
+        shoulderConfig.Slot0.kP = 60;
 
         shoulderConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
@@ -225,8 +228,8 @@ public class ArmIOKraken implements ArmIO{
 
         this.targetShoulderAngleDegrees = degrees;
 
-        leftShoulder.setControl(
-            new MotionMagicVoltage(degrees/360.));
+        // leftShoulder.setControl(new MotionMagicExpoVoltage(degrees/360.));
+        leftShoulder.setControl(new MotionMagicVoltage(degrees/360.));
         rightShoulder.setControl(new Follower(ArmConstants.leftShoulderMotorID, true));
     }
 
