@@ -182,15 +182,19 @@ public class AimAtReef extends Command {
 
         boolean closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
         boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 2;
-        boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10;
+        boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 30;
         if (closeToReef && movingSlow && shoulderNearTarget) {
             // Only start moving extension & wrist when shoulder is near the setpoint
             arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
             this.extensionTargetSet = true;
-                
-            double maxWristVolts = 6;
-            if (reefBranch.get().getLevel() == 4) maxWristVolts = 8;
-            wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, maxWristVolts);
+            
+
+            boolean wristReadyToMove = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 20;
+            if (wristReadyToMove) {
+                double maxWristVolts = 6;
+                if (reefBranch.get().getLevel() == 4) maxWristVolts = 8;
+                wrist.setTargetPositionDegrees(desiredArmPosition.wristAngleDegrees, maxWristVolts);
+            }
         }
         else {
             // Stow extension and wrist when the shoulder isn't ready yet

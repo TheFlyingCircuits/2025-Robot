@@ -45,7 +45,7 @@ public class WristIONeo implements WristIO{
             .velocityConversionFactor(360/60/WristConstants.chainGearReduction);
 
         config.idleMode(IdleMode.kBrake)
-            .smartCurrentLimit(20)
+            .smartCurrentLimit(40)
             .inverted(true);
 
 
