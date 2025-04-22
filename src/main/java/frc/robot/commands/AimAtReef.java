@@ -10,14 +10,12 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.DrivetrainConstants;
-import frc.robot.Constants.WristConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
+import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
-import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
@@ -164,6 +162,7 @@ public class AimAtReef extends Command {
             if (DriverStation.isAutonomous()) {
                 maxSpeed = 2.0;
             }
+            // drivetrain.profileToPose(targetPose);
             // drivetrain.pidToPose(targetPose, maxSpeed);
             // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
             // drivetrain.fieldOrientedDriveOnALine(driverControl.div(3.0), targetPose);

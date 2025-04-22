@@ -22,6 +22,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -37,15 +39,16 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.FlyingCircuitUtils;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.DrivetrainConstants;
-import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
+import frc.robot.Constants.VisionConstants;
+import frc.robot.FlyingCircuitUtils;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefFace;
@@ -56,7 +59,6 @@ import frc.robot.subsystems.vision.SingleTagCam;
 import frc.robot.subsystems.vision.SingleTagPoseObservation;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputsLogged;
-import frc.robot.subsystems.vision.VisionIO.VisionMeasurement;
 
 public class Drivetrain extends SubsystemBase {
 
@@ -86,6 +88,10 @@ public class Drivetrain extends SubsystemBase {
 
     /** error measured in meters, output is in meters per second. */
     private PIDController translationController;
+
+    private ProfiledPIDController profiledController;
+
+    private SimpleMotorFeedforward motorFeedForward;
 
     /** used to rotate about the intake instead of the center of the robot */
     private Transform2d centerOfRotation_robotFrame = new Transform2d();
@@ -152,6 +158,11 @@ public class Drivetrain extends SubsystemBase {
 
         SmartDashboard.putData("drivetrain/angleController", angleController);
         SmartDashboard.putData("drivetrain/translationController", translationController);
+
+        profiledController = new ProfiledPIDController(3.75, 0, 0.1, new TrapezoidProfile.Constraints(
+            DrivetrainConstants.maxAchievableVelocityMetersPerSecond, 1));
+        profiledController.setTolerance(0.01, 0.5);
+
 
         //configPathPlanner();  
     }
@@ -400,6 +411,35 @@ public class Drivetrain extends SubsystemBase {
 
         double xMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getCos();
         double yMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getSin();
+        
+        fieldOrientedDriveWhileAiming(
+            new ChassisSpeeds(
+                xMetersPerSecond,
+                yMetersPerSecond,
+                0
+            ),
+            desired.getRotation()
+        );
+    }
+
+    public void profileToPose(Pose2d desired) {
+        Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
+
+        Pose2d current = getPoseMeters();
+
+        Translation2d error = desired.getTranslation().minus(current.getTranslation());
+
+        Logger.recordOutput("drivetrain/pidErrorMeters", error);
+        
+        double profiledOutputMetersPerSecond = -translationController.calculate(error.getNorm(), 0);
+
+
+        if (translationController.atSetpoint()) {
+            profiledOutputMetersPerSecond = 0;
+        }
+
+        double xMetersPerSecond = profiledOutputMetersPerSecond*error.getAngle().getCos();
+        double yMetersPerSecond = profiledOutputMetersPerSecond*error.getAngle().getSin();
         
         fieldOrientedDriveWhileAiming(
             new ChassisSpeeds(
