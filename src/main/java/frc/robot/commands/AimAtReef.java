@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import java.lang.annotation.Target;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -37,6 +38,9 @@ public class AimAtReef extends Command {
     private Direction coralSide;
     private ArmPosition desiredArmPosition;
     private boolean extensionTargetSet = false;
+    private boolean shoulderNearTarget = false;
+    private boolean extensionNearTarget = false;
+    private boolean wristNearTarget = false;
 
 
     /**
@@ -58,9 +62,9 @@ public class AimAtReef extends Command {
     }
 
     public boolean readyToScore() {
-        boolean shoulderReady = Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees()) < 1;
+        boolean shoulderReady = Math.abs(desiredArmPosition.shoulderAngleDegrees - arm.getShoulderAngleDegrees()) < 1.5;
         boolean extensionReady = Math.abs(desiredArmPosition.extensionMeters - arm.getExtensionMeters()) < 0.02;
-        boolean wristReady = Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 2;
+        boolean wristReady = Math.abs(desiredArmPosition.wristAngleDegrees - wrist.getWristAngleDegrees()) < 4;
         boolean driveAngleGood = drivetrain.isAngleAligned();
         boolean driveTranslationGood = drivetrain.translationControllerAtSetpoint();
 
@@ -78,7 +82,7 @@ public class AimAtReef extends Command {
     }
 
 
-    private Pose2d adjustedReefScoringPose(Pose2d stalkPose, Direction sideCoralIsIn, boolean isFacingForward) {
+    private Pose2d adjustedReefScoringPose(Pose2d stalkPose, Direction sideCoralIsIn, boolean isFacingForward, int branchLevel) {
         double adjustedX = FieldConstants.stalkInsetMeters;        // puts center of robot at the outer edge of the reef
         adjustedX += DrivetrainConstants.bumperWidthMeters / 2.0;  // move back a half bumper length so the bumper is touching the edge of the reef
         adjustedX += FieldConstants.coralOuterDiameterMeters;      // move back one coral distance so we can still score if coral is in the way
@@ -103,6 +107,11 @@ public class AimAtReef extends Command {
             //adjust for different when coming out other side
             adjustedY += Math.signum(adjustedY) * Units.inchesToMeters(1);
             adjustedY *= -1;
+        }
+
+        boolean armNotAligned = (!shoulderNearTarget || !extensionNearTarget || !wristNearTarget);
+        if (isFacingForward && branchLevel == 4 && armNotAligned) {
+            adjustedX += 0.2;
         }
 
 
@@ -152,42 +161,35 @@ public class AimAtReef extends Command {
 
     @Override
     public void execute() {
-        Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), coralSide, isFacingReef.get());
 
-        //drivetrain.fieldOrientedDriveOnALine(translationController.get(), new Pose2d(targetPose.getTranslation(), adjustedRotation));
-        
-        ChassisSpeeds driverControl = translationController.get();
-        if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
-            double maxSpeed = 1;
-            if (DriverStation.isAutonomous()) {
-                maxSpeed = 2.0;
-            }
-            // drivetrain.profileToPose(targetPose);
-            // drivetrain.pidToPose(targetPose, maxSpeed);
-            // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
-            // drivetrain.fieldOrientedDriveOnALine(driverControl.div(3.0), targetPose);
-        }
-        else {
-            drivetrain.fieldOrientedDrive(driverControl.div(3), true);
-        }
 
 
         desiredArmPosition = calculateArmScoringPosition();
+        Pose2d targetPose = adjustedReefScoringPose(reefBranch.get().getStalk().getPose2d(), coralSide, isFacingReef.get(), reefBranch.get().getLevel());
+
         Logger.recordOutput("aimAtReef/armDesiredDegrees", desiredArmPosition.shoulderAngleDegrees);
         Logger.recordOutput("aimAtReef/wristDesiredDegrees", desiredArmPosition.wristAngleDegrees);
         Logger.recordOutput("aimAtReef/extensionDesiredMeters", desiredArmPosition.extensionMeters);
 
-        // immediately start moving shoulder
-        arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
+
+
+        /**** ARM ALIGNMENT ****/
+
 
         boolean closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
         boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 2;
-        boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 30;
+        shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 30;
+        extensionNearTarget = Math.abs(arm.getExtensionMeters() - desiredArmPosition.extensionMeters) < 0.3;
+        wristNearTarget = Math.abs(wrist.getWristAngleDegrees() - desiredArmPosition.wristAngleDegrees) < 20;
+
+        // immediately start moving shoulder
+        arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
+
         if (closeToReef && movingSlow && shoulderNearTarget) {
             // Only start moving extension & wrist when shoulder is near the setpoint
+    
             arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
             this.extensionTargetSet = true;
-            
 
             boolean wristReadyToMove = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 20;
             if (wristReadyToMove) {
@@ -206,6 +208,28 @@ public class AimAtReef extends Command {
         if (closeToReef && DriverStation.isAutonomous()) {
             drivetrain.fullyTrustVisionNextPoseUpdate();
         }
+
+
+
+        /**** DRIVETRAIN ALIGNMENT ****/
+
+        ChassisSpeeds driverControl = translationController.get();
+        if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
+            double maxSpeed = 1;
+            if (DriverStation.isAutonomous()) {
+                maxSpeed = 2.0;
+            }
+            
+            // drivetrain.profileToPose(targetPose);
+            drivetrain.pidToPose(targetPose, maxSpeed);
+            // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
+            // drivetrain.fieldOrientedDriveOnALine(driverControl.div(3.0), targetPose);
+        }
+        else {
+            drivetrain.fieldOrientedDrive(driverControl.div(3), true);
+        }
+
+
 
         // leds.progressBar(arm.getExtensionMeters() / desiredArmPosition.extensionMeters);
     }

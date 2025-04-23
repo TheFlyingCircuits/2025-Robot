@@ -141,7 +141,7 @@ public class ArmIOKraken implements ArmIO{
         shoulderConfig.Slot0.kV = 31;
         shoulderConfig.Slot0.kA = 0;
         shoulderConfig.Slot0.kG = 0.22;
-        shoulderConfig.Slot0.kP = 80;
+        shoulderConfig.Slot0.kP = 90;
 
         shoulderConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 

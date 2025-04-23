@@ -160,7 +160,7 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putData("drivetrain/translationController", translationController);
 
         profiledController = new ProfiledPIDController(3.75, 0, 0.1, new TrapezoidProfile.Constraints(
-            DrivetrainConstants.maxAchievableVelocityMetersPerSecond, 1));
+            3, 1));
         profiledController.setTolerance(0.01, 0.5);
 
 
@@ -431,10 +431,10 @@ public class Drivetrain extends SubsystemBase {
 
         Logger.recordOutput("drivetrain/pidErrorMeters", error);
         
-        double profiledOutputMetersPerSecond = -translationController.calculate(error.getNorm(), 0);
+        double profiledOutputMetersPerSecond = -profiledController.calculate(error.getNorm(), 0);
 
 
-        if (translationController.atSetpoint()) {
+        if (profiledController.atSetpoint()) {
             profiledOutputMetersPerSecond = 0;
         }
 

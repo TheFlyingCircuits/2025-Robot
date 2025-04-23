@@ -32,7 +32,7 @@ public class Wrist extends SubsystemBase {
         inputs = new WristIOInputsAutoLogged();
 
         //kp 0.25 on belted wrist
-        wristNeoPID = new PIDController(0.15,0,0); // kp has units of volts per degree
+        wristNeoPID = new PIDController(0.16,0,0); // kp has units of volts per degree
         wristNeoPID.setTolerance(1); // degrees
 
         homingTimer = new Timer();
