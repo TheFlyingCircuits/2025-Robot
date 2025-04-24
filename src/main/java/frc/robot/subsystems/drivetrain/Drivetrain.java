@@ -244,7 +244,7 @@ public class Drivetrain extends SubsystemBase {
         this.centerOfRotation_robotFrame = new Transform2d();
     }
     public void setIntakeToActualSize() {
-        double effectiveIntakeLateralOffset = PlacerGrabber.outerWidthMeters/2.0;
+        double effectiveIntakeLateralOffset = PlacerGrabber.outerWidthMeters/2.0 + Units.inchesToMeters(4);
         Rotation2d effectiveIntakeOrientation_robotFrame = Rotation2d.fromDegrees(0);
         this.effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame));
         this.effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame.times(-1)));
@@ -759,6 +759,7 @@ public class Drivetrain extends SubsystemBase {
 
         // Just strafe when the coral gets close to the bumper
         double sideswipeRange = (DrivetrainConstants.bumperWidthMeters/2.0) + ArmConstants.orangeWheels_wristFrame.getX() + (FieldConstants.coralLengthMeters/2.0);
+        
         boolean shouldStrafe = (0 <= coralPose_robotCoords.getX()) && (coralPose_robotCoords.getX() <= sideswipeRange);
         if (shouldStrafe) {
             Transform2d pickupPose_robotFrame = new Transform2d(0, coralPose_robotCoords.getY(), Rotation2d.kZero);
@@ -768,6 +769,25 @@ public class Drivetrain extends SubsystemBase {
         // otherwise, approach in the normal fashion to line up the coral with the alignment point on the robot
         return this.getOffsetCoralPickupPose(coralPose_fieldCoords);
     }
+    public Pose2d getLollipopPickupPose(Pose3d coralPose_fieldCoords) {
+        // Find where the coral is relative to the robot
+        Pose2d coralPose_robotCoords = coralPose_fieldCoords.toPose2d().relativeTo(getPoseMeters());
+
+        // Just drive forward when the coral gets close to the bumper
+        //sums to ~1.2 meters
+        double pickupRange = (DrivetrainConstants.bumperWidthMeters/2.0) + ArmConstants.orangeWheels_wristFrame.getX() + 0.4;
+        
+        boolean shouldDriveForward = (0 <= coralPose_robotCoords.getX()) && (coralPose_robotCoords.getX() <= pickupRange);
+
+        if (shouldDriveForward) {
+            Transform2d pickupPose_robotFrame = new Transform2d(0.5, 0, Rotation2d.kZero); //drive straight forward
+            return getPoseMeters().plus(pickupPose_robotFrame);
+        }
+
+        // otherwise, approach in the normal fashion to line up the coral with the alignment point on the robot
+        return this.getOffsetCoralPickupPose(coralPose_fieldCoords);
+    }
+
 
 
     //**************** REEF TRACKING ****************/

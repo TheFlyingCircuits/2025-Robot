@@ -119,7 +119,8 @@ public class ColorCamera {
             // Yaw from PhotonVision is positive to the right, but we use the wpilib convention of positive to the left.
             double pitch = Units.degreesToRadians(target.pitch);
             double yaw = -1 * Units.degreesToRadians(target.yaw);
-            Translation3d gamepieceLocation_robotCoords = getGamepieceLocationInRobotCoords(pitch, yaw, FieldConstants.coralOuterRadiusMeters);
+            // Translation3d gamepieceLocation_robotCoords = getGamepieceLocationInRobotCoords(pitch, yaw, FieldConstants.coralOuterRadiusMeters);
+            Translation3d gamepieceLocation_robotCoords = getGamepieceLocationInRobotCoords(pitch, yaw, FieldConstants.coralLengthMeters/2);
 
             // robotCoords -> fieldCoords
             Translation3d gamepieceLocation_fieldCoords = gamepieceLocation_robotCoords.rotateBy(robotPoseWhenPicTaken.getRotation()).plus(robotPoseWhenPicTaken.getTranslation());

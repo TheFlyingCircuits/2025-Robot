@@ -164,12 +164,21 @@ public class RobotContainer {
         duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
             intakeUntilCoralAcquired()
         );
+        // duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
+        //     intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
+        //         driverFullyControlDrivetrain().until(this::armInPickupPose),
+        //         driveTowardsCoralTeleop()
+        //     ))
+        // );
+
+        //FOR TESTING LOLLIPOP PICKUP
         duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
             intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
                 driverFullyControlDrivetrain().until(this::armInPickupPose),
-                driveTowardsCoralTeleop()
+                lollipopPickupInAuto()
             ))
         );
+
         
         // trough score
         duncanController.leftTrigger().whileTrue(troughScore());
@@ -541,6 +550,21 @@ public class RobotContainer {
     }
 
 
+    private Command lollipopPickupInAuto() { return drivetrain.run(() -> {
+        drivetrain.setIntakeToActualSize();
+
+        Optional<Pose3d> coral = drivetrain.getClosestCoralToEitherIntake();
+
+        if (coral.isEmpty()) {
+            return;
+        }
+
+        // can see coral, drive towards it
+        // Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
+        Pose2d pickupPose = drivetrain.getLollipopPickupPose(coral.get());
+        drivetrain.pidToPose(pickupPose, 0.8);
+
+    }).finallyDo(drivetrain::resetCenterOfRotation);}
 
     private Command driveTowardsCoralInAuto() { return drivetrain.run(() -> {
         drivetrain.setIntakeToWideSize();
