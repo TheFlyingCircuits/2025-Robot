@@ -9,8 +9,8 @@ public class StandardFieldElement implements FieldElement {
 
     protected final Pose3d redPose;
     protected final Pose3d bluePose;
-    protected final int redTagID;
-    protected final int blueTagID;
+    protected int redTagID;
+    protected int blueTagID;
     protected final String name;
 
     protected StandardFieldElement(int redTagID, int blueTagID, String name) {
@@ -18,6 +18,12 @@ public class StandardFieldElement implements FieldElement {
         this.bluePose = FieldConstants.tagLayout.getTagPose(blueTagID).get();
         this.redTagID = redTagID;
         this.blueTagID = blueTagID;
+        this.name = name;
+    }
+
+    protected StandardFieldElement(Pose3d redPose, Pose3d bluePose, String name) {
+        this.redPose = redPose;
+        this.bluePose = bluePose;
         this.name = name;
     }
 

@@ -363,7 +363,11 @@ public final class Constants {
         /**rotations of the wrist motor per rotations of the wrist */
         public final static double gearReduction = 9. * (52./12.) * (37./15.);
         /* Modified reduction with chain instead of belt */
-        public final static double chainGearReduction = 7. * (52./12.) * (32./18.);
+        public final static double chainGearReduction = 7. * (52./12.) * (32./18.); //53.9
+
+        public final static double alternateChainGearReduction = 9. * (52./12.) * (32./18.);
+
+
     }
 
 

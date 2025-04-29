@@ -4,11 +4,15 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
+
+import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -172,12 +176,12 @@ public class RobotContainer {
         // );
 
         //FOR TESTING LOLLIPOP PICKUP
-        duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
-            intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
-                driverFullyControlDrivetrain().until(this::armInPickupPose),
-                lollipopPickupInAuto()
-            ))
-        );
+        // duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
+        //     intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
+        //         driverFullyControlDrivetrain().until(this::armInPickupPose),
+        //         lollipopPickupInAuto()
+        //     ))
+        // );
 
         
         // trough score
@@ -215,9 +219,11 @@ public class RobotContainer {
 
         // eject
         duncanController.leftBumper().whileTrue(Commands.sequence(
-            placerGrabber.setPlacerGrabberVoltsCommand(9, -9).until(() -> !placerGrabber.doesHaveCoral()),
-            placerGrabber.setPlacerGrabberVoltsCommand(9, -9).withTimeout(0.5)
+            placerGrabber.setPlacerGrabberVoltsCommand(9, 9).until(() -> !placerGrabber.doesHaveCoral()),
+            placerGrabber.setPlacerGrabberVoltsCommand(9, 9).withTimeout(0.0)
         ));
+
+        //TODO put volts back to normal on side and reset cooldown to 0.5        
 
         // remove algae, then score
         duncanController.a().whileTrue(Commands.sequence(
@@ -549,20 +555,74 @@ public class RobotContainer {
         return output;
     }
 
+    /**
+     * Creates an auto command to score on the given target branches and pickup from the lollipops.
+     * @param targetBranches - ArrayList of ReefBranches of branches to score on in the order they are provided.
+     * @param lollipops - ArrayList of FieldElements of lollipops to pickup from in that order.
+     *  If this is shorter than targetBranches, the robot will default to source pickups.
+     */
+    public Command lollipopAutoCommand(ArrayList<ReefBranch> targetBranches, ArrayList<FieldElement> lollipops) {
+        BooleanSupplier clearOfReef = () -> {
+            FieldElement closestFace = drivetrain.getClosestReefFace();
+            double distanceFromReef = drivetrain.getPoseMeters().relativeTo(closestFace.getPose2d()).getX();
 
-    private Command lollipopPickupInAuto() { return drivetrain.run(() -> {
+            double requiredBumperMetersFromReef = Units.inchesToMeters(12);
+            double requiredRobotMetersFromReef = requiredBumperMetersFromReef + (DrivetrainConstants.bumperWidthMeters/2.0);
+
+            return distanceFromReef > requiredRobotMetersFromReef;
+        };
+
+        SequentialCommandGroup output = new SequentialCommandGroup();
+        for (int i = 0; i < targetBranches.size(); i++) {
+
+            ReefBranch targetBranch = targetBranches.get(i);
+
+            Command intakeDriveCommand;
+            if (i < lollipops.size()) intakeDriveCommand = lollipopPickupInAuto(lollipops.get(i));
+            else intakeDriveCommand = driveTowardsCoralInAuto();
+
+
+
+            output.addCommands(
+                scoreOnReefCommand(() -> new ChassisSpeeds(), () -> targetBranch, () -> false), // requires everything
+                backAwayFromReef(0.75).until(clearOfReef), // requires only drivetrain
+                stowArm().until(() -> arm.extension.isSafelyRetracted())
+                    .andThen(intakeUntilCoralAcquired()).deadlineFor(intakeDriveCommand) // intake requires arm,wrist,placerGrabber, drive requires drive
+                // intakeUntilCoralAcquired().deadlineFor(driveTowardsCoralInAuto())
+                // ^ a bit tricky because the lower value for safe retraction prevents the
+                //   shoulder from ever getting to setpoint in intake() unless the arm started
+                //   out retracted. Should prob just tune the safe extension point, push it out
+                //   a bit further while still staying safe.
+        );}
+        return output;
+    }
+
+    private Command lollipopPickupInAuto(FieldElement lollipop) { return drivetrain.run(() -> {
         drivetrain.setIntakeToActualSize();
 
         Optional<Pose3d> coral = drivetrain.getClosestCoralToEitherIntake();
 
-        if (coral.isEmpty()) {
-            return;
+        double maxMetersPerSecond = 1;
+        if (this.armInPickupPose()) {
+            maxMetersPerSecond = 2.1;
         }
 
-        // can see coral, drive towards it
-        // Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
-        Pose2d pickupPose = drivetrain.getLollipopPickupPose(coral.get());
-        drivetrain.pidToPose(pickupPose, 0.8);
+        if (coral.isEmpty() || !this.armInPickupPose()) {
+            //can't see coral, drive towards the lollipop's theoretical position while pointing at it
+            Translation2d translationToLollipop = lollipop.getPose2d().minus(drivetrain.getPoseMeters()).getTranslation();
+            Rotation2d angleToPointIn = translationToLollipop.getAngle();
+
+            Pose2d desiredPose = new Pose2d(lollipop.getPose2d().getTranslation(), angleToPointIn);
+
+            drivetrain.pidToPose(desiredPose, maxMetersPerSecond);
+        }
+        else {
+            // can see coral, drive towards it
+            // Pose2d pickupPose = drivetrain.getOffsetCoralPickupPose(coral.get());
+            Pose2d pickupPose = drivetrain.getLollipopPickupPose(coral.get());
+            drivetrain.pidToPose(pickupPose, 0.8);
+        }
+            
 
     }).finallyDo(drivetrain::resetCenterOfRotation);}
 
@@ -601,19 +661,6 @@ public class RobotContainer {
     
 
     public Command autoChoosingAuto() {
-        // Command leftSideAuto = firstFifteenSecondsCommand(
-        //     ReefBranch.BRANCH_J4,
-        //     ReefBranch.BRANCH_K4,
-        //     ReefBranch.BRANCH_L4,
-        //     ReefBranch.BRANCH_A4
-        // );
-
-        // Command rightSideAuto = firstFifteenSecondsCommand(
-        //     ReefBranch.BRANCH_E4,
-        //     ReefBranch.BRANCH_D4,
-        //     ReefBranch.BRANCH_C4,
-        //     ReefBranch.BRANCH_B4
-        // );
 
         Command leftSideAuto = pivotSideAutoCommand(
             ReefBranch.BRANCH_J4,
@@ -629,19 +676,23 @@ public class RobotContainer {
             ReefBranch.BRANCH_B4
         );
 
+        Command leftSideLollipopAuto = pivotSideAutoCommand(
+        //     Arrays.asList(ReefBranch.BRANCH_J4,
+        //     ReefBranch.BRANCH_K4,
+        //     ReefBranch.BRANCH_L4,
+        //     ReefBranch.BRANCH_A4),
+        //     Arrays.asList(
+                
+        //     )
+        );
+
+        Command rightSideLollipop = pivotSideAutoCommand(
+            
+        );
+
         BooleanSupplier startingOnLeft = () -> {return drivetrain.getClosestLoadingStation() == FieldElement.LEFT_LOADING_STATION;};
 
         return new ConditionalCommand(leftSideAuto, rightSideAuto, startingOnLeft);
-    }
-
-    public Command firstFifteenSecondsCommand(ReefBranch... targetBranches) {
-        SequentialCommandGroup output = new SequentialCommandGroup();
-        for (ReefBranch targetBranch : targetBranches) { output.addCommands(
-            scoreOnReefCommand(() -> new ChassisSpeeds(), () -> targetBranch, () -> true),
-            homeArmWhileGoingToSource(),
-            intakeUntilCoralAcquired().deadlineFor(driveTowardsCoralInAuto())
-        );}
-        return output;
     }
 
     private Command homeArmWhileGoingToSource() { return stowArm().alongWith(drivetrain.run(() -> {

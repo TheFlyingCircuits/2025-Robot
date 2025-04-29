@@ -41,8 +41,8 @@ public class WristIONeo implements WristIO{
         //     .velocityConversionFactor(360/60) //rpm to deg/s
         //     .inverted(true);
 
-        config.encoder.positionConversionFactor(360/WristConstants.chainGearReduction)
-            .velocityConversionFactor(360/60/WristConstants.chainGearReduction);
+        config.encoder.positionConversionFactor(360/WristConstants.alternateChainGearReduction)
+            .velocityConversionFactor(360/60/WristConstants.alternateChainGearReduction);
 
         config.idleMode(IdleMode.kBrake)
             .smartCurrentLimit(40)
@@ -59,7 +59,7 @@ public class WristIONeo implements WristIO{
     }
 
     private double getAbsoluteAngleDegrees(double analogInputVolts) {
-        boolean usingWristWithOrange3dPrint = false;
+        boolean usingWristWithOrange3dPrint = true;
         double output = 0;
         if (usingWristWithOrange3dPrint) {
             double magnetDegreesWhenWristAtZero = 78.446;

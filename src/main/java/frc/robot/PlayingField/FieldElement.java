@@ -1,5 +1,7 @@
 package frc.robot.PlayingField;
 
+import java.lang.reflect.Field;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -195,6 +197,21 @@ public interface FieldElement {
                                  BRANCH_K2, BRANCH_K3, BRANCH_K4, BRANCH_L2, BRANCH_L3, BRANCH_L4};
 
 
+    StandardFieldElement LEFT_LOLLIPOP = new StandardFieldElement(
+        new Pose3d(16.327, 2.185, FieldConstants.coralLengthMeters/2, new Rotation3d()),
+        new Pose3d(1.223, 5.853, FieldConstants.coralLengthMeters/2, new Rotation3d()),
+        "LEFT_LOLLIPOP"
+    );
+    StandardFieldElement MIDDLE_LOLLIPOP = new StandardFieldElement(
+        new Pose3d(16.327, 4.025, FieldConstants.coralLengthMeters/2, new Rotation3d()),
+        new Pose3d(1.223, 4.025, FieldConstants.coralLengthMeters/2, new Rotation3d()),
+        "MIDDLE_LOLLIPOP"
+    );
+    StandardFieldElement RIGHT_LOLLIPOP = new StandardFieldElement(
+        new Pose3d(16.327, 5.853, FieldConstants.coralLengthMeters/2, new Rotation3d()),
+        new Pose3d(1.223, 2.185, FieldConstants.coralLengthMeters/2, new Rotation3d()),
+        "RIGHT_LOLLIPOP"
+    );
 
     /** A special field element that's used for demos or practice without a full field */
     MoveableFieldElement HANDHELD_TAG = new MoveableFieldElement("HANDHELD_TAG");
