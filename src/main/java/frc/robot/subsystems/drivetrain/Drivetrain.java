@@ -372,6 +372,16 @@ public class Drivetrain extends SubsystemBase {
         // after some algebra -> v_initial = sqrt(-2 * accel * displacement)
         double desiredSpeed = Math.sqrt(-2 * maxAccel * (0 - distanceToTarget));
 
+        // copy and pasted tollerance from pid to pose
+
+        Translation2d error = targetPose.getTranslation().minus(getPoseMeters().getTranslation());
+
+        double fillerValue = -translationController.calculate(error.getNorm(), 0);
+
+        if (translationController.atSetpoint()) {
+            desiredSpeed = 0;
+        }
+
         // direction to drive is towards the target
         Rotation2d directionToDrive = robotToTarget.getAngle();
         Rotation2d directionToPoint = targetPose.getRotation();
