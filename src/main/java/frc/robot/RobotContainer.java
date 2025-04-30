@@ -219,8 +219,8 @@ public class RobotContainer {
 
         // eject
         duncanController.leftBumper().whileTrue(Commands.sequence(
-            placerGrabber.setPlacerGrabberVoltsCommand(9, 9).until(() -> !placerGrabber.doesHaveCoral()),
-            placerGrabber.setPlacerGrabberVoltsCommand(9, 9).withTimeout(0.0)
+            placerGrabber.setPlacerGrabberVoltsCommand(9, -9).until(() -> !placerGrabber.doesHaveCoral()),
+            placerGrabber.setPlacerGrabberVoltsCommand(9, -9).withTimeout(0.5)
         ));
 
         //TODO put volts back to normal on side and reset cooldown to 0.5        
@@ -374,7 +374,7 @@ public class RobotContainer {
             wrist.setTargetPositionCommand(0) //wrist.setDutyCycleCommand()
         ).withName("armToIntakePositionCommand");
 
-        Command spinIntakeWheels = placerGrabber.intakeOrEjectOrStop();
+        Command spinIntakeWheels = placerGrabber.intakeOrEjectOrStop(duncanController.b());
         Command stopIntakeWheels = placerGrabber.runOnce(() -> {
             placerGrabber.setFrontRollerVolts(0);
             placerGrabber.setSideRollerVolts(0);

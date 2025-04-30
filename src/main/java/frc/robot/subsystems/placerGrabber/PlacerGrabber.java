@@ -1,5 +1,7 @@
 package frc.robot.subsystems.placerGrabber;
 
+import java.util.function.BooleanSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -135,7 +137,7 @@ public class PlacerGrabber extends SubsystemBase {
         return this.frontRollerAvgCurrent > 8.0;
     }
 
-    public Command intakeOrEjectOrStop() {
+    public Command intakeOrEjectOrStop( BooleanSupplier buttonPressed) {
         // return this.run(() -> {
         //     if (!this.doesHaveCoral()) {
         //         // intake if no corals
@@ -154,7 +156,17 @@ public class PlacerGrabber extends SubsystemBase {
         //     }
         // });
 
-        return setPlacerGrabberVoltsCommand(9, 11);//.withTimeout(9.0/10.0)
+        //return setPlacerGrabberVoltsCommand(9, 11);//.withTimeout(9.0/10.0)
         //.andThen(setPlacerGrabberVoltsCommand(0, 0).withTimeout(1.0/10.0)).repeatedly();
+
+        return this.run( () -> {
+            setSideRollerVolts(11);
+            if (buttonPressed.getAsBoolean()){
+                setFrontRollerVolts(-3);
+            }
+            else {
+                setFrontRollerVolts(9);
+            }
+        });
     }
 }
