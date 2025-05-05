@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -165,9 +166,9 @@ public class RobotContainer {
         amaraController.rightTrigger().onTrue(new InstantCommand(() -> visionAssistedIntakeInTeleop = true));
 
         // ground intake
-        duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
-            intakeUntilCoralAcquired()
-        );
+        // duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
+        //     intakeUntilCoralAcquired()
+        // );
         // duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
         //     intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
         //         driverFullyControlDrivetrain().until(this::armInPickupPose),
@@ -176,12 +177,12 @@ public class RobotContainer {
         // );
 
         //FOR TESTING LOLLIPOP PICKUP
-        // duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
-        //     intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
-        //         driverFullyControlDrivetrain().until(this::armInPickupPose),
-        //         lollipopPickupInAuto()
-        //     ))
-        // );
+        duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
+            intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
+                driverFullyControlDrivetrain().until(this::armInPickupPose),
+                lollipopPickupInAuto(FieldElement.RIGHT_LOLLIPOP)
+            ))
+        );
 
         
         // trough score
@@ -581,8 +582,6 @@ public class RobotContainer {
             if (i < lollipops.size()) intakeDriveCommand = lollipopPickupInAuto(lollipops.get(i));
             else intakeDriveCommand = driveTowardsCoralInAuto();
 
-
-
             output.addCommands(
                 scoreOnReefCommand(() -> new ChassisSpeeds(), () -> targetBranch, () -> false), // requires everything
                 backAwayFromReef(0.75).until(clearOfReef), // requires only drivetrain
@@ -609,10 +608,17 @@ public class RobotContainer {
 
         if (coral.isEmpty() || !this.armInPickupPose()) {
             //can't see coral, drive towards the lollipop's theoretical position while pointing at it
-            Translation2d translationToLollipop = lollipop.getPose2d().minus(drivetrain.getPoseMeters()).getTranslation();
+
+            //Adjust lollipop pose in order to always pickup with left side
+            Translation2d adjustedLollipopTranslation = lollipop.getPose2d().getTranslation();
+            Translation2d adjustment = new Translation2d(0, ArmConstants.wristOuterWidthMeters*2.);
+            if (DriverStation.getAlliance().get() == Alliance.Red) adjustedLollipopTranslation.plus(adjustment);
+            else adjustedLollipopTranslation.minus(adjustment);
+
+            Translation2d translationToLollipop = adjustedLollipopTranslation.minus(drivetrain.getPoseMeters().getTranslation());
             Rotation2d angleToPointIn = translationToLollipop.getAngle();
 
-            Pose2d desiredPose = new Pose2d(lollipop.getPose2d().getTranslation(), angleToPointIn);
+            Pose2d desiredPose = new Pose2d(adjustedLollipopTranslation, angleToPointIn);
 
             drivetrain.pidToPose(desiredPose, maxMetersPerSecond);
         }
@@ -676,23 +682,36 @@ public class RobotContainer {
             ReefBranch.BRANCH_B4
         );
 
-        Command leftSideLollipopAuto = pivotSideAutoCommand(
-        //     Arrays.asList(ReefBranch.BRANCH_J4,
-        //     ReefBranch.BRANCH_K4,
-        //     ReefBranch.BRANCH_L4,
-        //     ReefBranch.BRANCH_A4),
-        //     Arrays.asList(
-                
-        //     )
+        Command leftSideLollipopAuto = lollipopAutoCommand(
+            new ArrayList<>(Arrays.asList(
+                ReefBranch.BRANCH_J4,
+                ReefBranch.BRANCH_K4,
+                ReefBranch.BRANCH_L4,
+                ReefBranch.BRANCH_A4
+            )),
+            new ArrayList<>(Arrays.asList(
+                FieldElement.LEFT_LOLLIPOP,
+                FieldElement.MIDDLE_LOLLIPOP
+            ))
         );
 
-        Command rightSideLollipop = pivotSideAutoCommand(
-            
+        Command rightSideLollipopAuto = lollipopAutoCommand(
+            new ArrayList<>(Arrays.asList(
+                ReefBranch.BRANCH_E4,
+                ReefBranch.BRANCH_D4,
+                ReefBranch.BRANCH_C4,
+                ReefBranch.BRANCH_B4
+            )),
+            new ArrayList<>(Arrays.asList(
+                FieldElement.RIGHT_LOLLIPOP,
+                FieldElement.MIDDLE_LOLLIPOP
+            ))    
         );
 
         BooleanSupplier startingOnLeft = () -> {return drivetrain.getClosestLoadingStation() == FieldElement.LEFT_LOADING_STATION;};
 
-        return new ConditionalCommand(leftSideAuto, rightSideAuto, startingOnLeft);
+        // return new ConditionalCommand(leftSideAuto, rightSideAuto, startingOnLeft);
+        return new ConditionalCommand(leftSideLollipopAuto, rightSideLollipopAuto, startingOnLeft);
     }
 
     private Command homeArmWhileGoingToSource() { return stowArm().alongWith(drivetrain.run(() -> {

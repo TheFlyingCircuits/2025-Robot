@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import java.lang.annotation.Target;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -8,6 +7,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -17,6 +17,7 @@ import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.UniversalConstants.Direction;
 import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
+import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.subsystems.Leds;
 import frc.robot.subsystems.arm.Arm;
@@ -178,6 +179,17 @@ public class AimAtReef extends Command {
 
         boolean closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
         boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 2;
+
+        Translation2d frontFace = FieldElement.FRONT_REEF_FACE.getLocation2d();
+        Translation2d backFace = FieldElement.BACK_REEF_FACE.getLocation2d();
+        Translation2d centerOfReef = frontFace.plus(backFace).div(2.0);
+        Translation2d robotToReef = centerOfReef.minus(drivetrain.getPoseMeters().getTranslation());
+        robotToReef = robotToReef.div(robotToReef.getNorm());
+        Rotation2d robotOrientation = drivetrain.getPoseMeters().getRotation();
+        double dotProduct = (robotOrientation.getCos() * robotToReef.getX()) + (robotOrientation.getSin() * robotToReef.getY());
+
+        boolean driveAngleClose = Math.abs(dotProduct) > 0.75;
+
         shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 30;
         extensionNearTarget = Math.abs(arm.getExtensionMeters() - desiredArmPosition.extensionMeters) < 0.3;
         wristNearTarget = Math.abs(wrist.getWristAngleDegrees() - desiredArmPosition.wristAngleDegrees) < 20;
@@ -185,7 +197,7 @@ public class AimAtReef extends Command {
         // immediately start moving shoulder
         arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
 
-        if (closeToReef && movingSlow && shoulderNearTarget) {
+        if (closeToReef && movingSlow && shoulderNearTarget && driveAngleClose) {
             // Only start moving extension & wrist when shoulder is near the setpoint
     
             arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
@@ -221,8 +233,8 @@ public class AimAtReef extends Command {
             }
             
             // drivetrain.beeLineToPose(targetPose);
-            // drivetrain.profileToPose(targetPose);
-            drivetrain.pidToPose(targetPose, maxSpeed);
+            drivetrain.profileToPose(targetPose);
+            // drivetrain.pidToPose(targetPose, maxSpeed);
             // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
             // drivetrain.fieldOrientedDriveOnALine(driverControl.div(3.0), targetPose);
         }

@@ -159,9 +159,9 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putData("drivetrain/angleController", angleController);
         SmartDashboard.putData("drivetrain/translationController", translationController);
 
-        profiledController = new ProfiledPIDController(3.75, 0, 0.1, new TrapezoidProfile.Constraints(
-            3, 1));
-        profiledController.setTolerance(0.01, 0.5);
+        profiledController = new ProfiledPIDController(2.75, 0, 0.1, new TrapezoidProfile.Constraints(
+            3, 2));
+        profiledController.setTolerance(0.01, 0.01);
 
 
         //configPathPlanner();  
@@ -244,7 +244,7 @@ public class Drivetrain extends SubsystemBase {
         this.centerOfRotation_robotFrame = new Transform2d();
     }
     public void setIntakeToActualSize() {
-        double effectiveIntakeLateralOffset = PlacerGrabber.outerWidthMeters/2.0 + Units.inchesToMeters(4);
+        double effectiveIntakeLateralOffset = PlacerGrabber.outerWidthMeters/2.0;
         Rotation2d effectiveIntakeOrientation_robotFrame = Rotation2d.fromDegrees(0);
         this.effectiveLeftIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame));
         this.effectiveRightIntakePose_robotFrame = frontBumper_robotFrame.plus(new Transform2d(0, -effectiveIntakeLateralOffset, effectiveIntakeOrientation_robotFrame.times(-1)));
@@ -356,7 +356,7 @@ public class Drivetrain extends SubsystemBase {
      */
     public void beeLineToPose(Pose2d targetPose) {
 
-        double maxAccel = 2.35; // 2.35 [meters per second per second] (emperically determined)
+        double maxAccel = 3; // 2.35 [meters per second per second] (emperically determined)
         // maxAccel = 3.0;
 
         Translation2d targetLocation = targetPose.getTranslation();
@@ -432,6 +432,14 @@ public class Drivetrain extends SubsystemBase {
         );
     }
 
+    public void resetProfile(Pose2d desired) {
+
+        Pose2d current = getPoseMeters();
+
+        Translation2d error = desired.getTranslation().minus(current.getTranslation());
+        profiledController.reset(error.getNorm(), getSpeedMetersPerSecond());
+    }
+
     public void profileToPose(Pose2d desired) {
         Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
 
@@ -441,12 +449,18 @@ public class Drivetrain extends SubsystemBase {
 
         Logger.recordOutput("drivetrain/pidErrorMeters", error);
         
-        double profiledOutputMetersPerSecond = -profiledController.calculate(error.getNorm(), 0);
+        double profiledOutputMetersPerSecond = -profiledController.calculate(error.getNorm(), 0)
+         - profiledController.getSetpoint().velocity;
 
 
-        if (profiledController.atSetpoint()) {
+        // copy and pasted tollerance from pid to pose
+
+        double fillerValue = -translationController.calculate(error.getNorm(), 0);
+
+        if (translationController.atSetpoint()) {
             profiledOutputMetersPerSecond = 0;
         }
+
 
         double xMetersPerSecond = profiledOutputMetersPerSecond*error.getAngle().getCos();
         double yMetersPerSecond = profiledOutputMetersPerSecond*error.getAngle().getSin();
@@ -851,6 +865,8 @@ public class Drivetrain extends SubsystemBase {
         double dotProduct = (robotOrientaion.getCos() * robotToReef.getX()) + (robotOrientaion.getSin() * robotToReef.getY());
         return dotProduct > 0;
     }
+
+
 
 
     public double getAngleError() {

@@ -120,7 +120,7 @@ public class ColorCamera {
             double pitch = Units.degreesToRadians(target.pitch);
             double yaw = -1 * Units.degreesToRadians(target.yaw);
             // Translation3d gamepieceLocation_robotCoords = getGamepieceLocationInRobotCoords(pitch, yaw, FieldConstants.coralOuterRadiusMeters);
-            Translation3d gamepieceLocation_robotCoords = getGamepieceLocationInRobotCoords(pitch, yaw, FieldConstants.coralLengthMeters/2);
+            Translation3d gamepieceLocation_robotCoords = getGamepieceLocationInRobotCoords(pitch, yaw, FieldConstants.coralLengthMeters*2./3.);
 
             // robotCoords -> fieldCoords
             Translation3d gamepieceLocation_fieldCoords = gamepieceLocation_robotCoords.rotateBy(robotPoseWhenPicTaken.getRotation()).plus(robotPoseWhenPicTaken.getTranslation());
