@@ -166,23 +166,23 @@ public class RobotContainer {
         amaraController.rightTrigger().onTrue(new InstantCommand(() -> visionAssistedIntakeInTeleop = true));
 
         // ground intake
-        // duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
-        //     intakeUntilCoralAcquired()
-        // );
-        // duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
-        //     intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
-        //         driverFullyControlDrivetrain().until(this::armInPickupPose),
-        //         driveTowardsCoralTeleop()
-        //     ))
-        // );
-
-        //FOR TESTING LOLLIPOP PICKUP
+        duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
+            intakeUntilCoralAcquired()
+        );
         duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
             intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
                 driverFullyControlDrivetrain().until(this::armInPickupPose),
-                lollipopPickupInAuto(FieldElement.RIGHT_LOLLIPOP)
+                driveTowardsCoralTeleop()
             ))
         );
+
+        //FOR TESTING LOLLIPOP PICKUP
+        // duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
+        //     intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
+        //         driverFullyControlDrivetrain().until(this::armInPickupPose),
+        //         lollipopPickupInAuto(FieldElement.RIGHT_LOLLIPOP)
+        //     ))
+        // );
 
         
         // trough score

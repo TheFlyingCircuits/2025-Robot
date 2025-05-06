@@ -159,8 +159,8 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putData("drivetrain/angleController", angleController);
         SmartDashboard.putData("drivetrain/translationController", translationController);
 
-        profiledController = new ProfiledPIDController(2.75, 0, 0.1, new TrapezoidProfile.Constraints(
-            3, 2));
+        profiledController = new ProfiledPIDController(2.8, 0, 0.125, new TrapezoidProfile.Constraints(
+            4, 4));
         profiledController.setTolerance(0.01, 0.01);
 
 
