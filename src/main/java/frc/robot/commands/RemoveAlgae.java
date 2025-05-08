@@ -32,6 +32,7 @@ public class RemoveAlgae extends ParallelRaceGroup {
             driveToReef(), // never ends
             wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5), // never ends
             new SequentialCommandGroup(
+                aimArmAtAlgae(isHighAlgae),
                 waitForDriveToBeCloseToReef(),
                 aimArmAtAlgae(isHighAlgae),
                 punch(isHighAlgae),

@@ -329,8 +329,13 @@ public final class Constants {
         );
 
         public final static Transform3d robotToCoralCamera = new Transform3d(
-            new Translation3d(Units.inchesToMeters(-9.75), Units.inchesToMeters(6), Units.inchesToMeters(26.)),
+            new Translation3d(Units.inchesToMeters(-9.75), Units.inchesToMeters(5.5), Units.inchesToMeters(26.)),
             new Rotation3d(0, Math.toRadians(19), Math.toRadians(-12))
+        );
+
+        public final static Transform3d robotToCoralCameraCalibrated = new Transform3d(
+            -0.382, 0.161, 0.683,
+            new Rotation3d(Math.toRadians(-0.91), Math.toRadians(21.76), Math.toRadians(-14.15))
         );
 
         public final static String[] tagCameraNames = {

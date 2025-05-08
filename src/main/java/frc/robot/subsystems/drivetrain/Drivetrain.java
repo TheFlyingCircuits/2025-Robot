@@ -67,13 +67,15 @@ public class Drivetrain extends SubsystemBase {
 
     private VisionIO visionIO;
     private VisionIOInputsLogged visionInputs;
-    private ColorCamera intakeCam = new ColorCamera("intakeCam", VisionConstants.robotToCoralCamera);
+    private ColorCamera intakeCam = new ColorCamera("intakeCam", VisionConstants.robotToCoralCameraCalibrated);
     private SingleTagCam[] tagCams = {
         new SingleTagCam(VisionConstants.tagCameraNames[0], VisionConstants.tagCameraTransforms[0]), // front left
         new SingleTagCam(VisionConstants.tagCameraNames[1], VisionConstants.tagCameraTransforms[1]), // front right
         new SingleTagCam(VisionConstants.tagCameraNames[2], VisionConstants.tagCameraTransforms[2]), // back left
         new SingleTagCam(VisionConstants.tagCameraNames[3], VisionConstants.tagCameraTransforms[3])  // back right
     };
+
+
     private boolean fullyTrustVisionNextPoseUpdate = false;
     private boolean allowTeleportsNextPoseUpdate = false;
     private boolean hasAcceptablePoseObservationsThisLoop = false;
@@ -154,7 +156,7 @@ public class Drivetrain extends SubsystemBase {
         angleController.setTolerance(1); // degrees, degreesPerSecond.
 
         translationController = new PIDController(3.75, 0, 0.1); // kP has units of metersPerSecond per meter of error.
-        translationController.setTolerance(0.01, 1.0); // meters, metersPerSecond
+        translationController.setTolerance(0.02, 1.0); // meters, metersPerSecond
 
         SmartDashboard.putData("drivetrain/angleController", angleController);
         SmartDashboard.putData("drivetrain/translationController", translationController);
@@ -799,7 +801,7 @@ public class Drivetrain extends SubsystemBase {
 
         // Just drive forward when the coral gets close to the bumper
         //sums to ~1.2 meters
-        double pickupRange = (DrivetrainConstants.bumperWidthMeters/2.0) + ArmConstants.orangeWheels_wristFrame.getX() + 0.4;
+        double pickupRange = (DrivetrainConstants.bumperWidthMeters/2.0) + ArmConstants.orangeWheels_wristFrame.getX() + 0.2;
         
         boolean shouldDriveForward = (0 <= coralPose_robotCoords.getX()) && (coralPose_robotCoords.getX() <= pickupRange);
 
