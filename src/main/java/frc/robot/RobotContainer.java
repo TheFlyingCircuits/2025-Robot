@@ -70,15 +70,18 @@ public class RobotContainer {
     final CommandXboxController duncanController;
     protected final HumanDriver amara = new HumanDriver(1);
     final CommandXboxController amaraController;
+
     private int desiredLevel = 2;
     private Direction desiredStalk = Direction.left;
     private boolean visionAssistedIntakeInTeleop = false;
+    private boolean hasAlgae = false;
 
     public final Drivetrain drivetrain;
     public final Arm arm;
     public final Wrist wrist;
     public final Leds leds;
     public final PlacerGrabber placerGrabber;
+
     private DigitalInput coastModeButton = new DigitalInput(0);
     
     public RobotContainer() {
@@ -121,9 +124,18 @@ public class RobotContainer {
         leds.setDefaultCommand(leds.heartbeatCommand(1.).ignoringDisable(true).withName("ledsDefaultCommand"));
         
         arm.extension.setDefaultCommand(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters).withName("extensionDefaultCommand"));
-        arm.shoulder.setDefaultCommand(arm.shoulder.safeSetTargetAngleCommand(0).withName("shoulderDefaultCommand"));
+        arm.shoulder.setDefaultCommand(
+            new ConditionalCommand(
+                arm.shoulder.safeSetTargetAngleCommand(90),
+                arm.shoulder.safeSetTargetAngleCommand(0),
+                () -> this.hasAlgae).withName("shoulderDefaultCommand"));
 
-        wrist.setDefaultCommand(wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-10).withName("wristDefaultCommand")); // 10 volts
+        wrist.setDefaultCommand(
+            new ConditionalCommand(
+                wrist.setTargetPositionCommand(0),
+                wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-10),
+                () -> this.hasAlgae).withName("wristDefaultCommand")); // 10 volts
+
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0).withName("placerGrabberDefaultCommmand"));
 
         duncanController = duncan.getXboxController();
@@ -218,27 +230,27 @@ public class RobotContainer {
             placerGrabber.setPlacerGrabberVoltsCommand(9, -9).withTimeout(0.5)
         ));
 
-        //TODO put volts back to normal on side and reset cooldown to 0.5        
-
         // remove algae, then score
         duncanController.a().whileTrue(Commands.sequence(
             removeAlgae(),
             scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, this::getDesiredBranch, drivetrain::isFacingReef)
         ));
 
+        //algae pickup
+        duncanController.b().and(() -> !hasAlgae).whileTrue(
+            pickupAlgae()
+        );
+        
+        duncanController.b().and(() -> hasAlgae).whileTrue(
+            processorScore()
+        );
+
+
         // reset everything
         duncanController.x().onTrue(Commands.runOnce(() -> {
             CommandScheduler.getInstance().cancelAll();
         }));
 
-        //source intake
-        // duncanController.b().whileTrue(placerGrabber.setPlacerGrabberVoltsCommand(6, 6)
-        //     .alongWith(
-        //         arm.shoulder.setTargetAngleCommand(35.23),
-        //         arm.extension.setTargetLengthCommand(0.737),
-        //         wrist.setTargetPositionCommand(53.5)
-        //     ).until(() -> placerGrabber.doesHaveCoral())
-        // );
 
 
         // reset gyro and recover from collisions that cause big wheel slip
@@ -353,9 +365,15 @@ public class RobotContainer {
     }
 
     private Command stowArm() { return Commands.parallel(
-        arm.shoulder.safeSetTargetAngleCommand(0),
+        new ConditionalCommand(
+            arm.shoulder.setTargetAngleCommand(90), 
+            arm.shoulder.setTargetAngleCommand(0),
+            () -> this.hasAlgae),
         arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
-        wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5)
+        new ConditionalCommand(
+            wrist.setTargetPositionCommand(0), 
+            wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5),
+            () -> this.hasAlgae)
     );}
 
 
@@ -412,6 +430,26 @@ public class RobotContainer {
         // drivetrain.fieldOrientedDriveOnALine(duncan.getRequestedFieldOrientedVelocity(), pickupPose);
         // drivetrain.pidToPose(pickupPose, 1.0);
     }).finallyDo(drivetrain::resetCenterOfRotation);}
+
+    private Command pickupAlgae() {
+        return new ParallelCommandGroup(
+            arm.shoulder.setTargetAngleCommand(65.3),
+            new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() > 60)
+                .andThen(
+                    new ParallelCommandGroup(
+                        arm.extension.setTargetLengthCommand(0.92),
+                        wrist.setTargetPositionCommand(-52)
+                    )
+                ),
+            placerGrabber.setPlacerGrabberVoltsCommand(10, 0),
+            drivetrain.run(() -> {
+                drivetrain.fieldOrientedDriveOnALine(
+                    duncan.getRequestedFieldOrientedVelocity(),
+                    drivetrain.getClosestReefFace().getPose2d()
+                        .transformBy(new Transform2d(new Translation2d(), Rotation2d.k180deg)));
+            }
+        ).finallyDo(() -> this.hasAlgae = true));
+    }
 
     /**** SCORING ****/
     
@@ -521,6 +559,16 @@ public class RobotContainer {
         new RemoveAlgae(drivetrain, arm, wrist, false), 
         () -> drivetrain.getClosestReefFace().isHighAlgae()
     );}
+
+    private Command processorScore() {
+        return arm.shoulder.setTargetAngleCommand(0)
+            .alongWith(arm.extension.setTargetLengthCommand(0.77))
+            .alongWith(wrist.setTargetPositionCommand(0))
+            .alongWith(
+                new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() < 10)
+                    .andThen(placerGrabber.setPlacerGrabberVoltsCommand(-9, 0)))
+            .finallyDo(() -> this.hasAlgae = false);
+    }
 
 
     /*** AUTO ***/
