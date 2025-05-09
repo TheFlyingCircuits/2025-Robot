@@ -214,7 +214,7 @@ public class AimAtReef extends Command {
             // Stow extension and wrist when the shoulder isn't ready yet
             this.extensionTargetSet = false;
             arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
-            wrist.setTargetPositionDegrees(WristConstants.maxAngleDegrees - 5);
+            wrist.setTargetPositionDegrees(WristConstants.homeAngleDegrees);
         }
 
         if (closeToReef && DriverStation.isAutonomous()) {

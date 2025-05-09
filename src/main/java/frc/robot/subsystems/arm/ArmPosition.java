@@ -61,7 +61,7 @@ public class ArmPosition {
     }
 
     public ArmPosition() {
-        this(ArmConstants.armMinAngleDegrees, WristConstants.maxAngleDegrees, ArmConstants.minExtensionMeters);
+        this(ArmConstants.armMinAngleDegrees, WristConstants.homeAngleDegrees, ArmConstants.minExtensionMeters);
     }
 
     public static ArmPosition getPreset(int level, boolean facingReef) {

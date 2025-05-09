@@ -133,7 +133,7 @@ public class RobotContainer {
         wrist.setDefaultCommand(
             new ConditionalCommand(
                 wrist.setTargetPositionCommand(0),
-                wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-10),
+                wrist.setTargetPositionCommand(WristConstants.homeAngleDegrees),
                 () -> this.hasAlgae).withName("wristDefaultCommand")); // 10 volts
 
         placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0).withName("placerGrabberDefaultCommmand"));
@@ -372,7 +372,7 @@ public class RobotContainer {
         arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
         new ConditionalCommand(
             wrist.setTargetPositionCommand(0), 
-            wrist.setTargetPositionCommand(WristConstants.maxAngleDegrees-5),
+            wrist.setTargetPositionCommand(WristConstants.homeAngleDegrees),
             () -> this.hasAlgae)
     );}
 
