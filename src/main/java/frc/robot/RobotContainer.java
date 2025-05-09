@@ -267,8 +267,8 @@ public class RobotContainer {
             ));
 
             // climb pull
-            duncanController.povDown().whileTrue(new ParallelCommandGroup(
-                arm.shoulder.run(() -> arm.setShoulderVoltage(-3)),
+            duncanController.povDown().onTrue(new ParallelCommandGroup(
+                arm.shoulder.run(() -> arm.setShoulderVoltage(-5)),
                 wrist.setTargetPositionCommand(13),
                 arm.extension.setTargetLengthCommand(0.75)
             ));
