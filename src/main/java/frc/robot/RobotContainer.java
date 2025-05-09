@@ -135,8 +135,12 @@ public class RobotContainer {
                 wrist.setTargetPositionCommand(0),
                 wrist.setTargetPositionCommand(WristConstants.homeAngleDegrees),
                 () -> this.hasAlgae).withName("wristDefaultCommand")); // 10 volts
-
-        placerGrabber.setDefaultCommand(placerGrabber.setPlacerGrabberVoltsCommand(0, 0).withName("placerGrabberDefaultCommmand"));
+        
+        placerGrabber.setDefaultCommand(
+            new ConditionalCommand(
+                placerGrabber.setPlacerGrabberVoltsCommand(2, 0),
+                placerGrabber.setPlacerGrabberVoltsCommand(0, 0),
+                () -> this.hasAlgae).withName("placerGrabberDefaultCommmand"));
 
         duncanController = duncan.getXboxController();
         amaraController = amara.getXboxController();
