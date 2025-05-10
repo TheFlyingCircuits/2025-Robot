@@ -39,7 +39,7 @@ public class PlacerGrabber extends SubsystemBase {
     boolean leftHasCoral;
     boolean rightHasCoral;
 
-    LinearFilter frontCurrentMovingWindow = LinearFilter.singlePoleIIR(0.4, 0.02);
+    LinearFilter frontCurrentMovingWindow = LinearFilter.singlePoleIIR(0.2, 0.02);
     double frontRollerAvgCurrent = 0;
 
     public PlacerGrabber(PlacerGrabberIO io) {
@@ -99,7 +99,11 @@ public class PlacerGrabber extends SubsystemBase {
         return rightHasCoral;
     }
     
-    public double getFrontRollerAvgCurrent() {
+    public double getFrontRollerAmps() {
+        return inputs.frontMotorAppliedCurrent;
+    }
+
+    public double getFrontRollerAvgAmps() {
         // 6 as cutoff for intaking
         return frontRollerAvgCurrent;
     }

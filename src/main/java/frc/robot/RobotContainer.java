@@ -42,7 +42,9 @@ import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
+import frc.robot.commands.AimAtBarge;
 import frc.robot.commands.AimAtReef;
+import frc.robot.commands.PickupAlgae;
 import frc.robot.commands.RemoveAlgae;
 import frc.robot.subsystems.HumanDriver;
 import frc.robot.subsystems.Leds;
@@ -126,7 +128,7 @@ public class RobotContainer {
         arm.extension.setDefaultCommand(arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters).withName("extensionDefaultCommand"));
         arm.shoulder.setDefaultCommand(
             new ConditionalCommand(
-                arm.shoulder.safeSetTargetAngleCommand(90),
+                arm.shoulder.safeSetTargetAngleCommand(80),
                 arm.shoulder.safeSetTargetAngleCommand(0),
                 () -> this.hasAlgae).withName("shoulderDefaultCommand"));
 
@@ -138,14 +140,13 @@ public class RobotContainer {
         
         placerGrabber.setDefaultCommand(
             new ConditionalCommand(
-                placerGrabber.setPlacerGrabberVoltsCommand(2, 0),
+                placerGrabber.setPlacerGrabberVoltsCommand(1, 0),
                 placerGrabber.setPlacerGrabberVoltsCommand(0, 0),
                 () -> this.hasAlgae).withName("placerGrabberDefaultCommmand"));
 
         duncanController = duncan.getXboxController();
         amaraController = amara.getXboxController();
 
-        // testBindings();E
         realBindings();
         triggers();
     }
@@ -207,7 +208,7 @@ public class RobotContainer {
         );
 
         // reef score
-        duncanController.rightBumper().whileTrue(
+        duncanController.rightBumper().and(() -> !hasAlgae).whileTrue(
             scoreOnReefCommand(
                 duncan::getRequestedFieldOrientedVelocity, 
                 this::getDesiredBranch,
@@ -220,6 +221,17 @@ public class RobotContainer {
                 // TODO: check practice field log around 5:00pm on April 3rd 2025 for example of dancing
             ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
         );
+
+        duncanController.rightBumper().and(() -> hasAlgae).whileTrue(
+            scoreOnBarge()
+        ).onFalse(
+            new InstantCommand(() -> this.hasAlgae = false)
+            .alongWith(
+                arm.shoulder.safeSetTargetAngleCommand(0),
+                wrist.setTargetPositionCommand(WristConstants.homeAngleDegrees)
+            )
+        );
+
         // duncanController.rightBumper().whileTrue(
         //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> FieldElement.STALK_B.getBranch(desiredLevel))
         //     new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel))
@@ -243,10 +255,14 @@ public class RobotContainer {
         //algae pickup
         duncanController.b().and(() -> !hasAlgae).whileTrue(
             pickupAlgae()
+        ).onFalse(
+            new InstantCommand(() -> this.hasAlgae = true)
         );
         
         duncanController.b().and(() -> hasAlgae).whileTrue(
             processorScore()
+        ).onFalse(
+            new InstantCommand(() -> this.hasAlgae = false)
         );
 
 
@@ -343,6 +359,7 @@ public class RobotContainer {
     public void periodic() {
         Logger.recordOutput("robotContainer/coastModeLimitSwitch", coastModeButton.get());
         Logger.recordOutput("coralTracking/enabledInTeleop", visionAssistedIntakeInTeleop);
+        Logger.recordOutput("robotContainer/hasAlgae", hasAlgae);
 
         ArmPosition desiredArmState = new ArmPosition();
         desiredArmState.shoulderAngleDegrees = arm.getTargetShoulderAngleDegrees();
@@ -370,7 +387,7 @@ public class RobotContainer {
 
     private Command stowArm() { return Commands.parallel(
         new ConditionalCommand(
-            arm.shoulder.setTargetAngleCommand(90), 
+            arm.shoulder.setTargetAngleCommand(80), 
             arm.shoulder.setTargetAngleCommand(0),
             () -> this.hasAlgae),
         arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
@@ -436,23 +453,10 @@ public class RobotContainer {
     }).finallyDo(drivetrain::resetCenterOfRotation);}
 
     private Command pickupAlgae() {
-        return new ParallelCommandGroup(
-            arm.shoulder.setTargetAngleCommand(65.3),
-            new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() > 60)
-                .andThen(
-                    new ParallelCommandGroup(
-                        arm.extension.setTargetLengthCommand(0.92),
-                        wrist.setTargetPositionCommand(-52)
-                    )
-                ),
-            placerGrabber.setPlacerGrabberVoltsCommand(10, 0),
-            drivetrain.run(() -> {
-                drivetrain.fieldOrientedDriveOnALine(
-                    duncan.getRequestedFieldOrientedVelocity(),
-                    drivetrain.getClosestReefFace().getPose2d()
-                        .transformBy(new Transform2d(new Translation2d(), Rotation2d.k180deg)));
-            }
-        ).finallyDo(() -> this.hasAlgae = true));
+        return new PickupAlgae(hasAlgae, arm, placerGrabber, drivetrain, wrist, duncan::getRequestedFieldOrientedVelocity)
+            .until(() -> placerGrabber.getFrontRollerAvgAmps() > 8)
+            .andThen(backAwayFromReef(0.75)); //this command should never end so that hasAlgae can switch to false
+            
     }
 
     /**** SCORING ****/
@@ -570,8 +574,14 @@ public class RobotContainer {
             .alongWith(wrist.setTargetPositionCommand(0))
             .alongWith(
                 new WaitUntilCommand(() -> arm.getShoulderAngleDegrees() < 10)
-                    .andThen(placerGrabber.setPlacerGrabberVoltsCommand(-9, 0)))
+                    .andThen(placerGrabber.setPlacerGrabberVoltsCommand(-11, 0)))
             .finallyDo(() -> this.hasAlgae = false);
+    }
+
+    private Command scoreOnBarge() {
+        AimAtBarge aim = new AimAtBarge(drivetrain, arm, wrist, placerGrabber, duncan::getRequestedFieldOrientedVelocity);
+        Command scoreAlgae = placerGrabber.setPlacerGrabberVoltsCommand(-11, 0).withTimeout(0.5);
+        return aim.alongWith(new WaitUntilCommand(aim::readyToScore).andThen(scoreAlgae));
     }
 
 
