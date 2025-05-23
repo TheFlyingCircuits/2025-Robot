@@ -59,7 +59,7 @@ public class WristIONeo implements WristIO{
     }
 
     private double getAbsoluteAngleDegrees(double analogInputVolts) {
-        boolean usingWristWithOrange3dPrint = true;
+        boolean usingWristWithOrange3dPrint = false;
         double output = 0;
         if (usingWristWithOrange3dPrint) {
             double magnetDegreesWhenWristAtZero = 78.446;

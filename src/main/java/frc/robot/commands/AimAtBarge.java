@@ -84,7 +84,7 @@ public class AimAtBarge extends Command {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
-        desiredArmPosition = ArmPosition.backBarge; //CHANGE
+        desiredArmPosition = ArmPosition.backBarge;
         Pose2d targetPose = adjustedReefScoringPose();
 
         Logger.recordOutput("bargeScore/armDesiredDegrees", desiredArmPosition.shoulderAngleDegrees);

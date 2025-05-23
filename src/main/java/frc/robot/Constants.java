@@ -280,7 +280,8 @@ public final class Constants {
 
     public final static class VisionConstants {
         //Camera, IP, hostname
-        //fronLeft, 10.17.87.50, Photon-RPi4-FL
+        //intakeCam, 10.17.87.50, ?
+        //frontLeft, 10.17.87.54, Photon-RPi4-FL
         //frontRight, 10.17.87.51, Photon-RPi4-FR
         //backRight, 10.17.87.52, Photon-RPi4-BR
         //backLeft, 10.17.87.53, Photon-RPi4-BL
@@ -364,7 +365,7 @@ public final class Constants {
     public final static class WristConstants {
         public final static double maxAngleDegrees = 163;
         public final static double minAngleDegrees = -55;
-        public final static double homeAngleDegrees = 126;
+        public final static double homeAngleDegrees = 115;
 
         /**rotations of the wrist motor per rotations of the wrist */
         public final static double gearReduction = 9. * (52./12.) * (37./15.);

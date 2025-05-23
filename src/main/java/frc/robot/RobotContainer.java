@@ -404,7 +404,7 @@ public class RobotContainer {
     private Command intakeUntilCoralAcquired() {
         Command armToIntake = new ParallelCommandGroup(
             arm.shoulder.safeSetTargetAngleCommand(ArmConstants.armMinAngleDegrees),
-            arm.extension.setTargetLengthCommand(0.80), //0.77 originally
+            arm.extension.setTargetLengthCommand(0.77),
             wrist.setTargetPositionCommand(0) //wrist.setDutyCycleCommand()
         ).withName("armToIntakePositionCommand");
 
@@ -453,8 +453,12 @@ public class RobotContainer {
     }).finallyDo(drivetrain::resetCenterOfRotation);}
 
     private Command pickupAlgae() {
-        return new PickupAlgae(hasAlgae, arm, placerGrabber, drivetrain, wrist, duncan::getRequestedFieldOrientedVelocity)
-            .until(() -> placerGrabber.getFrontRollerAvgAmps() > 8)
+
+        return new ConditionalCommand(
+            new PickupAlgae(true, arm, placerGrabber, drivetrain, wrist, duncan::getRequestedFieldOrientedVelocity),
+            new PickupAlgae(false, arm, placerGrabber, drivetrain, wrist, duncan::getRequestedFieldOrientedVelocity),
+            () -> drivetrain.getClosestReefFace().isHighAlgae()
+        ).until(() -> placerGrabber.getFrontRollerAvgAmps() > 12)
             .andThen(backAwayFromReef(0.75)); //this command should never end so that hasAlgae can switch to false
             
     }

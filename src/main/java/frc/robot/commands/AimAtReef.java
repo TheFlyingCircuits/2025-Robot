@@ -197,13 +197,14 @@ public class AimAtReef extends Command {
         // immediately start moving shoulder
         arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
 
-        if (closeToReef && movingSlow && shoulderNearTarget && driveAngleClose) {
+        if (movingSlow && shoulderNearTarget && driveAngleClose) {
             // Only start moving extension & wrist when shoulder is near the setpoint
     
             arm.setExtensionTargetLength(desiredArmPosition.extensionMeters);
             this.extensionTargetSet = true;
 
             boolean wristReadyToMove = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 20;
+                // && arm.getExtensionMeters() > ArmConstants.minExtensionMeters + 0.2;
             if (wristReadyToMove) {
                 double maxWristVolts = 6;
                 if (reefBranch.get().getLevel() == 4) maxWristVolts = 8;
@@ -229,16 +230,16 @@ public class AimAtReef extends Command {
         if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
             double maxSpeed = 1;
             if (DriverStation.isAutonomous()) {
-                maxSpeed = 2.0;
+                maxSpeed = 1.0;
             }
             
             // drivetrain.beeLineToPose(targetPose);
-            closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
-            if (!closeToReef) {
-                drivetrain.profileToPose(targetPose);
-            } else {
-                drivetrain.pidToPose(targetPose, maxSpeed);
-            }
+            // closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
+            // if (!closeToReef) {
+            //     drivetrain.profileToPose(targetPose);
+            // } else {
+            //     drivetrain.pidToPose(targetPose, maxSpeed);
+            // }
             // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
             // drivetrain.fieldOrientedDriveOnALine(driverControl.div(3.0), targetPose);
         }
