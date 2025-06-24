@@ -12,6 +12,8 @@ import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -750,6 +752,11 @@ public class RobotContainer {
 
     public Command autoChoosingAuto() {
 
+        Command leftSidePathplanner = new SequentialCommandGroup(
+            AutoBuilder.followPath(drivetrain.createPathOnTheFly(
+                drivetrain.adjustReefPose(ReefBranch.BRANCH_J4.getPose2d(), placerGrabber.sideCoralIsIn(), drivetrain.isFacingReef(), 4)))
+        );
+
         Command leftSideAuto = pivotSideAutoCommand(
             ReefBranch.BRANCH_J4,
             ReefBranch.BRANCH_K4,
@@ -794,7 +801,7 @@ public class RobotContainer {
 
         BooleanSupplier startingOnLeft = () -> {return drivetrain.getClosestLoadingStation() == FieldElement.LEFT_LOADING_STATION;};
 
-        return new ConditionalCommand(leftSideAuto, rightSideAuto, startingOnLeft);
+        return new ConditionalCommand(leftSidePathplanner, rightSideAuto, startingOnLeft);
         // return new ConditionalCommand(leftSideLollipopAuto, rightSideLollipopAuto, startingOnLeft);
     }
 

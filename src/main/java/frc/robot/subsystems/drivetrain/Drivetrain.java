@@ -15,6 +15,11 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
+import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
@@ -39,6 +44,9 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -173,7 +181,7 @@ public class Drivetrain extends SubsystemBase {
         profiledController.setTolerance(0.01, 0.01);
 
 
-        //configPathPlanner();  
+        configPathPlanner();  
     }
 
     private void configPathPlanner() {
@@ -357,6 +365,87 @@ public class Drivetrain extends SubsystemBase {
 
         // 7) Now rotate the robot so it's facing in the same direction as the line
         this.fieldOrientedDriveWhileAiming(desiredVelocity, lineToDriveOn.getRotation());
+    }
+
+    public Pose2d adjustReefPose(Pose2d stalkPose, Direction sideCoralIsIn, boolean isFacingForward, int branchLevel) {
+        double adjustedX = FieldConstants.stalkInsetMeters;        // puts center of robot at the outer edge of the reef
+        adjustedX += DrivetrainConstants.bumperWidthMeters / 2.0;  // move back a half bumper length so the bumper is touching the edge of the reef
+        adjustedX += FieldConstants.coralOuterDiameterMeters;      // move back one coral distance so we can still score if coral is in the way
+
+        
+        Rotation2d rotationAdjustment;
+        if (isFacingForward) {
+            rotationAdjustment = Rotation2d.k180deg;
+        } else {
+            rotationAdjustment = Rotation2d.kZero;
+        }
+
+
+        double adjustedY;
+        if (sideCoralIsIn == Direction.left) {
+            adjustedY = PlacerGrabber.innerWidthMeters/2.0;
+        } else {
+            adjustedY = -PlacerGrabber.innerWidthMeters/2.0;
+        }
+
+        if (!isFacingForward) {
+            //adjust for different when coming out other side
+            adjustedY += Math.signum(adjustedY) * Units.inchesToMeters(1);
+            adjustedY *= -1;
+        }
+
+
+        Transform2d targetPoseToRobotRelativeToStalk = new Transform2d(adjustedX, adjustedY, rotationAdjustment);
+        Pose2d scoringPose = stalkPose.plus(targetPoseToRobotRelativeToStalk);
+        Logger.recordOutput("aimAtReef/targetDrivePose", scoringPose);
+        return scoringPose;
+    };
+    
+
+    public PathPlannerPath createPathOnTheFly(Pose2d desired) {
+        // Create a list of waypoints from poses. Each pose represents one waypoint.
+        // The rotation component of the pose should be the direction of travel. Do not use holonomic rotation.
+        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
+                new Pose2d(getPoseMeters().getTranslation(), (desired.minus(getPoseMeters()).getTranslation().getAngle())),
+                desired
+        );
+
+        PathConstraints constraints = new PathConstraints(3.0, 3.0, 2 * Math.PI, 4 * Math.PI); // The constraints for this path.
+        // PathConstraints constraints = PathConstraints.unlimitedConstraints(12.0); // You can also use unlimited constraints, only limited by motor torque and nominal battery voltage
+
+        // Create the path using the waypoints created above
+        PathPlannerPath path = new PathPlannerPath(
+                waypoints,
+                constraints,
+                null, // The ideal starting state, this is only relevant for pre-planned paths, so can be null for on-the-fly paths.
+                new GoalEndState(0.0, desired.getRotation()) // Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
+        );
+
+        // Prevent the path from being flipped if the coordinates are already correct
+        path.preventFlipping = true;
+        RobotConfig config;
+        try{
+            config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            // Handle exception as needed
+            e.printStackTrace();
+            config = new RobotConfig(0, 0, null);
+        }
+
+        PathPlannerTrajectory pathTrajectory = path.generateTrajectory(getFieldOrientedVelocity(), getGyroRotation2d(), 
+        config);
+        ArrayList<Pose2d> trajectoryPoses = new ArrayList<Pose2d>();
+        for (int i=0;i<pathTrajectory.getStates().size(); i++) {
+            trajectoryPoses.add(pathTrajectory.getState(i).pose);
+        }
+        TrajectoryConfig trajectoryConfig = new TrajectoryConfig(Units.feetToMeters(12), Units.feetToMeters(12));
+        trajectoryConfig.setReversed(true);
+        Trajectory trajectory = TrajectoryGenerator.generateTrajectory(trajectoryPoses, trajectoryConfig);
+
+        Logger.recordOutput("pathplanner path", trajectory);
+        
+
+        return path;
     }
     
     /**
