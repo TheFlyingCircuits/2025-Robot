@@ -19,7 +19,6 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
-import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
@@ -44,9 +43,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -406,6 +402,7 @@ public class Drivetrain extends SubsystemBase {
         // Create a list of waypoints from poses. Each pose represents one waypoint.
         // The rotation component of the pose should be the direction of travel. Do not use holonomic rotation.
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
+                getPoseMeters(),
                 new Pose2d(getPoseMeters().getTranslation(), (desired.minus(getPoseMeters()).getTranslation().getAngle())),
                 desired
         );
@@ -423,26 +420,26 @@ public class Drivetrain extends SubsystemBase {
 
         // Prevent the path from being flipped if the coordinates are already correct
         path.preventFlipping = true;
-        RobotConfig config;
-        try{
-            config = RobotConfig.fromGUISettings();
-        } catch (Exception e) {
-            // Handle exception as needed
-            e.printStackTrace();
-            config = new RobotConfig(0, 0, null);
-        }
+        // RobotConfig config;
+        // try{
+        //     config = RobotConfig.fromGUISettings();
+        // } catch (Exception e) {
+        //     // Handle exception as needed
+        //     e.printStackTrace();
+        //     config = new RobotConfig(0, 0, null);
+        // }
 
-        PathPlannerTrajectory pathTrajectory = path.generateTrajectory(getFieldOrientedVelocity(), getGyroRotation2d(), 
-        config);
-        ArrayList<Pose2d> trajectoryPoses = new ArrayList<Pose2d>();
-        for (int i=0;i<pathTrajectory.getStates().size(); i++) {
-            trajectoryPoses.add(pathTrajectory.getState(i).pose);
-        }
-        TrajectoryConfig trajectoryConfig = new TrajectoryConfig(Units.feetToMeters(12), Units.feetToMeters(12));
-        trajectoryConfig.setReversed(true);
-        Trajectory trajectory = TrajectoryGenerator.generateTrajectory(trajectoryPoses, trajectoryConfig);
+        // PathPlannerTrajectory pathTrajectory = path.generateTrajectory(getFieldOrientedVelocity(), getGyroRotation2d(), 
+        // config);
+        // ArrayList<Pose2d> trajectoryPoses = new ArrayList<Pose2d>();
+        // for (int i=0;i<pathTrajectory.getStates().size(); i++) {
+        //     trajectoryPoses.add(pathTrajectory.getState(i).pose);
+        // }
+        // TrajectoryConfig trajectoryConfig = new TrajectoryConfig(Units.feetToMeters(12), Units.feetToMeters(12));
+        // trajectoryConfig.setReversed(true);
+        // Trajectory trajectory = TrajectoryGenerator.generateTrajectory(trajectoryPoses, trajectoryConfig);
 
-        Logger.recordOutput("pathplanner path", trajectory);
+        // // Logger.recordOutput("pathplanner path trajectory", trajectory);
         
 
         return path;

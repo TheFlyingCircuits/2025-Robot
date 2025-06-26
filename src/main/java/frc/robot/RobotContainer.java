@@ -7,6 +7,7 @@ package frc.robot;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
@@ -30,10 +31,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -177,6 +180,8 @@ public class RobotContainer {
         // escape hatch for aim assist while intaking
         amaraController.leftTrigger().onTrue(new InstantCommand(() -> visionAssistedIntakeInTeleop = false));
         amaraController.rightTrigger().onTrue(new InstantCommand(() -> visionAssistedIntakeInTeleop = true));
+
+        duncanController.povRight().whileTrue(leftSidePathplanner());
 
         // ground intake
         duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
@@ -491,6 +496,15 @@ public class RobotContainer {
         return aim.withDeadline(waitPlusSucc.andThen(scoreCoral));
     }
 
+    public Command leftSidePathplanner(){ return new DeferredCommand(
+
+        () -> AutoBuilder.followPath(drivetrain.createPathOnTheFly(
+            drivetrain.adjustReefPose(ReefBranch.BRANCH_J4.getPose2d(), placerGrabber.sideCoralIsIn(), drivetrain.isFacingReef(), 4)))
+        , Set.of(drivetrain)
+            );
+
+    }
+
     public Command backAwayFromReef(double speedMetersPerSecond) { return drivetrain.run(() -> {
         Rotation2d awayFromReef = drivetrain.getClosestReefFace().getOrientation2d();
 
@@ -752,10 +766,6 @@ public class RobotContainer {
 
     public Command autoChoosingAuto() {
 
-        Command leftSidePathplanner = new SequentialCommandGroup(
-            AutoBuilder.followPath(drivetrain.createPathOnTheFly(
-                drivetrain.adjustReefPose(ReefBranch.BRANCH_J4.getPose2d(), placerGrabber.sideCoralIsIn(), drivetrain.isFacingReef(), 4)))
-        );
 
         Command leftSideAuto = pivotSideAutoCommand(
             ReefBranch.BRANCH_J4,
@@ -801,7 +811,7 @@ public class RobotContainer {
 
         BooleanSupplier startingOnLeft = () -> {return drivetrain.getClosestLoadingStation() == FieldElement.LEFT_LOADING_STATION;};
 
-        return new ConditionalCommand(leftSidePathplanner, rightSideAuto, startingOnLeft);
+        return new ConditionalCommand(leftSideAuto, rightSideAuto, startingOnLeft);
         // return new ConditionalCommand(leftSideLollipopAuto, rightSideLollipopAuto, startingOnLeft);
     }
 

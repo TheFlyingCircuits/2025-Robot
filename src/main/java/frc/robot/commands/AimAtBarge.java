@@ -92,6 +92,22 @@ public class AimAtBarge extends Command {
         Logger.recordOutput("bargeScore/extensionDesiredMeters", desiredArmPosition.extensionMeters);
 
 
+        /**** DRIVETRAIN ALIGNMENT ****/
+
+        ChassisSpeeds driverControl = translationController.get();
+        if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
+            double maxSpeed = 1;
+            if (DriverStation.isAutonomous()) {
+                maxSpeed = 2.0;
+            }
+            
+            if (shouldDrive)
+                drivetrain.pidToPose(targetPose, maxSpeed);
+            else drivetrain.fieldOrientedDrive(new ChassisSpeeds(), true);
+        }
+        else {
+            drivetrain.fieldOrientedDrive(driverControl.div(3), true);
+        }
         /**** ARM ALIGNMENT ****/
 
         boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10;
@@ -116,22 +132,7 @@ public class AimAtBarge extends Command {
         }
 
 
-        /**** DRIVETRAIN ALIGNMENT ****/
 
-        ChassisSpeeds driverControl = translationController.get();
-        if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
-            double maxSpeed = 1;
-            if (DriverStation.isAutonomous()) {
-                maxSpeed = 2.0;
-            }
-            
-            if (shouldDrive)
-                drivetrain.pidToPose(targetPose, maxSpeed);
-            else drivetrain.fieldOrientedDrive(new ChassisSpeeds(), true);
-        }
-        else {
-            drivetrain.fieldOrientedDrive(driverControl.div(3), true);
-        }
     }
 
     // Called once the command ends or is interrupted.
