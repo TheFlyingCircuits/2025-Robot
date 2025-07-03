@@ -4,13 +4,22 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.littletonrobotics.junction.Logger;
+
+import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -18,6 +27,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -53,9 +63,11 @@ import frc.robot.subsystems.arm.ArmIOKraken;
 import frc.robot.subsystems.arm.ArmIOSim;
 import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
+import frc.robot.subsystems.drivetrain.GyroIOMapleSim;
 import frc.robot.subsystems.drivetrain.GyroIOPigeon;
 import frc.robot.subsystems.drivetrain.GyroIOSim;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOKraken;
+import frc.robot.subsystems.drivetrain.SwerveModuleIOMapleSim;
 import frc.robot.subsystems.drivetrain.SwerveModuleIOSim;
 import frc.robot.subsystems.placerGrabber.PlacerGrabber;
 import frc.robot.subsystems.placerGrabber.PlacerGrabberIONeo;
@@ -84,6 +96,8 @@ public class RobotContainer {
     public final Leds leds;
     public final PlacerGrabber placerGrabber;
 
+    private SwerveDriveSimulation swerveDriveSimulation;
+
     private DigitalInput coastModeButton = new DigitalInput(0);
     
     public RobotContainer() {
@@ -96,8 +110,7 @@ public class RobotContainer {
                 new SwerveModuleIOKraken(0, 1, -0.377686, 0, "FL"), 
                 new SwerveModuleIOKraken(2, 3, 0.397705, 1, "FR"),
                 new SwerveModuleIOKraken(4, 5, 0.238281, 2, "BL"),
-                new SwerveModuleIOKraken(6, 7,  -0.370850, 3, "BR"),
-                new VisionIO() {} //VisionConstants.useNewSingleTagCodeFromBuckeye ? new VisionIO() {} : new VisionIOPhotonLib()
+                new SwerveModuleIOKraken(6, 7,  -0.370850, 3, "BR")
             );
 
             arm = new Arm(new ArmIOKraken());
@@ -106,14 +119,46 @@ public class RobotContainer {
             leds = new Leds();
         }
         else {
-            drivetrain = new Drivetrain(
-                new GyroIOSim(){},
-                new SwerveModuleIOSim(){},
-                new SwerveModuleIOSim(){},
-                new SwerveModuleIOSim(){},
-                new SwerveModuleIOSim(){},
-                new VisionIO() {}
+
+            DriveTrainSimulationConfig driveSimulationConfig = DriveTrainSimulationConfig.Default()
+                    // Specify gyro type (for realistic gyro drifting and error simulation)
+                    .withGyro(COTS.ofPigeon2())
+                    // Specify swerve module (for realistic swerve dynamics)
+                    .withSwerveModule(COTS.ofMark4i(
+                            DCMotor.getKrakenX60(1), // Drive motor is a Kraken X60
+                            DCMotor.getKrakenX60(1), // Steer motor is a Falcon 500
+                            COTS.WHEELS.SLS_PRINTED_WHEELS.cof, // Use the COF for Colson Wheels
+                            3)) // L3 Gear ratio
+                    // Configures the track length and track width (spacing between swerve modules)
+                    .withTrackLengthTrackWidth(
+                        Meters.of(DrivetrainConstants.wheelbaseMeters), 
+                        Meters.of(DrivetrainConstants.trackwidthMeters)
+                        )
+                    // Configures the bumper size (dimensions of the robot bumper)
+                    .withBumperSize(
+                        Meters.of(DrivetrainConstants.bumperWidthMeters),
+                        Meters.of(DrivetrainConstants.bumperWidthMeters)
+                    );
+
+            /* Create a swerve drive simulation */
+            swerveDriveSimulation = new SwerveDriveSimulation(
+                    // Specify Configuration
+                    driveSimulationConfig,
+                    // Specify starting pose
+                    new Pose2d(3, 3, new Rotation2d())
             );
+
+            drivetrain = new Drivetrain(
+                new GyroIOMapleSim(swerveDriveSimulation.getGyroSimulation()),
+                new SwerveModuleIOMapleSim(swerveDriveSimulation.getModules()[0]),
+                new SwerveModuleIOMapleSim(swerveDriveSimulation.getModules()[1]),
+                new SwerveModuleIOMapleSim(swerveDriveSimulation.getModules()[2]),
+                new SwerveModuleIOMapleSim(swerveDriveSimulation.getModules()[3])
+            );
+
+            drivetrain.setPoseMeters(new Pose2d(3, 3, new Rotation2d()));
+
+            SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
 
             arm = new Arm(new ArmIOSim());
             wrist = new Wrist(new WristIOSim());
@@ -357,6 +402,7 @@ public class RobotContainer {
 
     /** Called by Robot.java, convenience function for logging. */
     public void periodic() {
+        Logger.recordOutput("robotContainer/simulatedDrivetrainPoseMeters", swerveDriveSimulation.getSimulatedDriveTrainPose());
         Logger.recordOutput("robotContainer/coastModeLimitSwitch", coastModeButton.get());
         Logger.recordOutput("coralTracking/enabledInTeleop", visionAssistedIntakeInTeleop);
         Logger.recordOutput("robotContainer/hasAlgae", hasAlgae);

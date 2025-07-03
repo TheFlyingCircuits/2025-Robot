@@ -126,7 +126,7 @@ public class SingleTagCam {
         return new Pose3d(robotPose_fieldFrame.getTranslation(), robotPose_fieldFrame.getRotation());
     }
 
-        private void makeTagCamsAgree(Pose2d knownRobotPose) {
+    private void makeTagCamsAgree(Pose2d knownRobotPose) {
         makeTagCamsAgree(new Pose3d(knownRobotPose));
     }
 

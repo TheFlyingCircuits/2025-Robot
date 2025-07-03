@@ -65,8 +65,6 @@ public class Drivetrain extends SubsystemBase {
     private GyroIO gyroIO;
     private GyroIOInputsAutoLogged gyroInputs;
 
-    private VisionIO visionIO;
-    private VisionIOInputsLogged visionInputs;
     private ColorCamera intakeCam = new ColorCamera("intakeCam", VisionConstants.robotToCoralCameraCalibrated);
     private SingleTagCam[] tagCams = {
         new SingleTagCam(VisionConstants.tagCameraNames[0], VisionConstants.tagCameraTransforms[0]), // front left
@@ -116,14 +114,10 @@ public class Drivetrain extends SubsystemBase {
         SwerveModuleIO flSwerveModuleIO, 
         SwerveModuleIO frSwerveModuleIO, 
         SwerveModuleIO blSwerveModuleIO, 
-        SwerveModuleIO brSwerveModuleIO,
-        VisionIO visionIO
+        SwerveModuleIO brSwerveModuleIO
     ) {
         this.gyroIO = gyroIO;
         gyroInputs = new GyroIOInputsAutoLogged();
-
-        this.visionIO = visionIO;
-        visionInputs = new VisionIOInputsLogged();
 
         swerveModules = new SwerveModule[] {
             new SwerveModule(flSwerveModuleIO, 0, "frontLeft"),
@@ -895,16 +889,13 @@ public class Drivetrain extends SubsystemBase {
     @Override
     public void periodic() {
         gyroIO.updateInputs(gyroInputs);
-        visionIO.updateInputs(visionInputs);
         for (SwerveModule mod : swerveModules)
             mod.periodic();
 
         if (gyroIO instanceof GyroIOSim) //calculates sim gyro
             gyroIO.calculateYaw(getModulePositions());
           
-
         Logger.processInputs("gyroInputs", gyroInputs);
-        Logger.processInputs("visionInputs", visionInputs);
 
         updatePoseEstimator();
         intakeCam.periodic(fusedPoseEstimator);
