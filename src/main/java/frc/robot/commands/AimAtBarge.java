@@ -10,16 +10,12 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.DrivetrainConstants;
-import frc.robot.Constants.WristConstants;
-import frc.robot.PlayingField.FieldConstants;
-import frc.robot.PlayingField.FieldElement;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmPosition;
 import frc.robot.subsystems.drivetrain.Drivetrain;
@@ -43,12 +39,14 @@ public class AimAtBarge extends Command {
         this.wrist=wrist;
         this.placerGrabber=placerGrabber;
         this.translationController=translationController;
+
+        addRequirements(wrist, drivetrain, arm.extension, arm.shoulder);
         
         
     }
 
     public boolean readyToScore() {
-        boolean extensionReady = arm.getExtensionMeters() > ArmConstants.maxExtensionMeters - 0.4;
+        boolean extensionReady = arm.getExtensionMeters() > ArmConstants.maxExtensionMeters - 0.6; //was 0.4
 
         Logger.recordOutput("aimAtBarge/extensionReady", extensionReady);
 
@@ -92,6 +90,24 @@ public class AimAtBarge extends Command {
         Logger.recordOutput("bargeScore/extensionDesiredMeters", desiredArmPosition.extensionMeters);
 
 
+                /**** DRIVETRAIN ALIGNMENT ****/
+
+        ChassisSpeeds driverControl = translationController.get();
+        if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
+            double maxSpeed = 1;
+            if (DriverStation.isAutonomous()) {
+                maxSpeed = 2.0;
+            }
+            
+            if (shouldDrive)
+                drivetrain.pidToPose(targetPose, maxSpeed);
+            else drivetrain.fieldOrientedDrive(new ChassisSpeeds(), true);
+        }
+        else {
+            drivetrain.fieldOrientedDrive(driverControl.div(3), true);
+        }
+
+
         /**** ARM ALIGNMENT ****/
 
         boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - desiredArmPosition.shoulderAngleDegrees) < 10;
@@ -112,26 +128,9 @@ public class AimAtBarge extends Command {
         else {
             // Stow extension and wrist when the shoulder isn't ready yet
             arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
-            wrist.setTargetPositionDegrees(WristConstants.homeAngleDegrees);
+            wrist.setTargetPositionDegrees(-20);
         }
 
-
-        /**** DRIVETRAIN ALIGNMENT ****/
-
-        ChassisSpeeds driverControl = translationController.get();
-        if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
-            double maxSpeed = 1;
-            if (DriverStation.isAutonomous()) {
-                maxSpeed = 2.0;
-            }
-            
-            if (shouldDrive)
-                drivetrain.pidToPose(targetPose, maxSpeed);
-            else drivetrain.fieldOrientedDrive(new ChassisSpeeds(), true);
-        }
-        else {
-            drivetrain.fieldOrientedDrive(driverControl.div(3), true);
-        }
     }
 
     // Called once the command ends or is interrupted.
