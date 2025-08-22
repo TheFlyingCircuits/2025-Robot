@@ -73,7 +73,7 @@ public class RobotContainer {
     protected final HumanDriver amara = new HumanDriver(1);
     final CommandXboxController amaraController;
 
-    private int desiredLevel = 2;
+    private int desiredLevel = 3;
     private Direction desiredStalk = Direction.left;
     private boolean visionAssistedIntakeInTeleop = false;
     private boolean hasAlgae = false;
@@ -140,58 +140,16 @@ public class RobotContainer {
 
         // face buttons to select desired level
         // amaraController.b().onTrue(new InstantCommand(() -> {desiredLevel = 1; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-        amaraController.a().onTrue(new InstantCommand(() -> {desiredLevel = 2; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        // amaraController.a().onTrue(new InstantCommand(() -> {desiredLevel = 2; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
         amaraController.x().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-        amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        // amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
 
-        if (RobotBase.isSimulation()) { // use a single controller in sim for convenience
-            // duncanController.povDown().onTrue(new InstantCommand(() -> {desiredLevel = 1; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-            duncanController.povLeft().onTrue(new InstantCommand(() -> {desiredLevel = 2; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-            duncanController.povRight().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-            duncanController.povUp().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-
-                        // climb prep
-
-        }
-
-        // escape hatch for aim assist while intaking
-        amaraController.leftTrigger().onTrue(new InstantCommand(() -> visionAssistedIntakeInTeleop = false));
-        amaraController.rightTrigger().onTrue(new InstantCommand(() -> visionAssistedIntakeInTeleop = true));
-
-        // ground intake
         duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
             intakeUntilCoralAcquired()
         );
-        duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
-            intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
-                driverFullyControlDrivetrain().until(this::armInPickupPose),
-                driveTowardsCoralTeleop()
-            ))
-        );
-
-
-        // FOR TESTING LOLLIPOP PICKUP
-        // duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
-        //     intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
-        //         driverFullyControlDrivetrain().until(this::armInPickupPose),
-        //         lollipopPickupInAuto(FieldElement.RIGHT_LOLLIPOP, true)
-        //     ))
-        // );
-
-        
-        // trough score
-        duncanController.leftTrigger().whileTrue(troughScore());
-        duncanController.leftTrigger().onFalse(
-            scoreCoral(true)
-            .raceWith(
-                arm.shoulder.setTargetAngleCommand(ArmPosition.frontL1.shoulderAngleDegrees),
-                arm.extension.setTargetLengthCommand(ArmPosition.frontL1.extensionMeters),
-                wrist.setTargetPositionCommand(ArmPosition.frontL1.wristAngleDegrees)
-            )
-        );
 
         // reef score
-        duncanController.rightBumper().and(() -> !hasAlgae).whileTrue(
+        duncanController.rightBumper().and(() -> !hasAlgae).onTrue(
             scoreOnReefCommand(
                 duncan::getRequestedFieldOrientedVelocity, 
                 this::getDesiredBranch,
@@ -205,78 +163,11 @@ public class RobotContainer {
             ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
         );
 
-        duncanController.rightBumper().and(() -> hasAlgae).whileTrue(
-            scoreOnBarge()
-        ).onFalse(
-            new InstantCommand(() -> this.hasAlgae = false)
-            .alongWith(
-                arm.shoulder.safeSetTargetAngleCommand(0),
-                wrist.setTargetPositionCommand(WristConstants.homeAngleDegrees)
-            )
-        );
-
-        // duncanController.rightBumper().whileTrue(
-        //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> FieldElement.STALK_B.getBranch(desiredLevel))
-        //     new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel))
-        //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, this::getDesiredBranch)
-        // );
-        // duncanController.rightBumper().onTrue(new DashboardControlArm(arm, wrist));
-        // duncanController.b().onTrue(scoreCoral(false));
-
-        // eject
+    
         duncanController.leftBumper().whileTrue(Commands.sequence(
             placerGrabber.setPlacerGrabberVoltsCommand(9, -9).until(() -> !placerGrabber.doesHaveCoral()),
             placerGrabber.setPlacerGrabberVoltsCommand(9, -9).withTimeout(0.5)
         ));
-
-        // remove algae, then score
-        duncanController.a().whileTrue(Commands.sequence(
-            removeAlgae(),
-            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, this::getDesiredBranch, drivetrain::isFacingReef)
-        ));
-
-        //algae pickup
-        duncanController.b().and(() -> !hasAlgae).whileTrue(
-            pickupAlgae()
-        ).onFalse(
-            new InstantCommand(() -> this.hasAlgae = true)
-        );
-        
-        duncanController.b().and(() -> hasAlgae).whileTrue(
-            processorScore() // DON'T actually score with this use to eject algae of get out of algae mode press start for score
-        ).onFalse(
-            new InstantCommand(() -> this.hasAlgae = false)
-        );
-
-        duncanController.back().and(() -> wrist.getWristAngleDegrees() > 5).onTrue(
-            arm.shoulder.setTargetAngleCommand(13.71) // wrist -51, extend .787, shoulder 13.711
-            .alongWith(arm.extension.setTargetLengthCommand(0.787))
-            .alongWith(placerGrabber.setPlacerGrabberVoltsCommand(10, 0))
-            .alongWith(new ConditionalCommand(wrist.setTargetPositionCommand(-51), new InstantCommand(), 
-            () -> ((arm.getShoulderAngleDegrees() > 12) && (arm.getExtensionMeters() > .72))))
-        );
-
-        duncanController.back().and(() -> wrist.getWristAngleDegrees() < 5).whileTrue(
-            new InstantCommand(() -> this.hasAlgae = true, wrist)
-        );
-        
-        duncanController.start().and(() -> proscessorScoringMode).and(() -> (arm.getShoulderAngleDegrees() < 20)).whileTrue(
-            placerGrabber.setPlacerGrabberVoltsCommand(-11, 0)
-            .finallyDo(() -> this.proscessorScoringMode = false)
-            .alongWith(new InstantCommand(() -> this.hasAlgae = false))
-        );
-
-        duncanController.start().and(() -> (!proscessorScoringMode) || (arm.getShoulderAngleDegrees() > 20)).whileTrue(
-            new InstantCommand()
-        ).onFalse(new InstantCommand(() -> this.proscessorScoringMode = true));
-
-        new Trigger(() -> proscessorScoringMode).whileTrue(
-            arm.shoulder.setTargetAngleCommand(3)
-            .alongWith(arm.extension.setTargetLengthCommand(0.77))
-            .alongWith(wrist.setTargetPositionCommand(0))
-        );
-
-
 
         // reset everything
         duncanController.x().onTrue(Commands.runOnce(() -> {
@@ -289,22 +180,6 @@ public class RobotContainer {
         duncanController.y().onTrue(reSeedRobotPose());
         // duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
         
-
-
-        if (RobotBase.isReal()) { // climb buttons are re-purposed as reef target level selection in sim
-            // climb prep
-            duncanController.povUp().onTrue(new ParallelCommandGroup(
-                arm.shoulder.setTargetAngleCommand(101.4),
-                wrist.setTargetPositionCommand(0)
-            ));
-
-            // climb pull
-            duncanController.povDown().onTrue(new ParallelCommandGroup(
-                arm.shoulder.run(() -> arm.setShoulderVoltage(-5)),
-                wrist.setTargetPositionCommand(13),
-                arm.extension.setTargetLengthCommand(0.75)
-            ));
-        }
     }
     public void setDefaultCommands() {
         arm.extension.setDefaultCommand(

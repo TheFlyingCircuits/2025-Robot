@@ -234,17 +234,17 @@ public class AimAtReef extends Command {
             }
             
             // drivetrain.beeLineToPose(targetPose);
-            // closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
-            // if (!closeToReef) {
-            //     drivetrain.profileToPose(targetPose);
-            // } else {
-            //     drivetrain.pidToPose(targetPose, maxSpeed);
-            // }
+            closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
+            if (!closeToReef) {
+                drivetrain.profileToPose(targetPose);
+            } else {
+                drivetrain.pidToPose(targetPose, maxSpeed);
+            }
             // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
             // drivetrain.fieldOrientedDriveOnALine(driverControl.div(3.0), targetPose);
         }
         else {
-            drivetrain.fieldOrientedDrive(driverControl.div(3), true);
+            // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
         }
 
 

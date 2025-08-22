@@ -8,13 +8,11 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.robot.PlayingField.FieldConstants;
 
@@ -180,8 +178,8 @@ public final class Constants {
          */
         public static final double krakenFreeSpeedRPM = 5800;
         public static final double krakenFreeSpeedRotationsPerSecond = krakenFreeSpeedRPM / 60.;
-        public static final double maxAchievableVelocityMetersPerSecond = krakenFreeSpeedRotationsPerSecond *
-            SwerveModuleConstants.driveGearReduction * SwerveModuleConstants.wheelCircumferenceMeters; // ~5.23 using a theoretical wheel radius of 2 inches m/s
+        // public static final double maxAchievableVelocityMetersPerSecond = krakenFreeSpeedRotationsPerSecond *
+        //     SwerveModuleConstants.driveGearReduction * SwerveModuleConstants.wheelCircumferenceMeters; // ~5.23 using a theoretical wheel radius of 2 inches m/s
                                                                                                        // ~5.06 when adding 1/16 of an inch of wheel sink into the carpet.
                                                                                                        // ~5.10 using an emperical measurement of wheel radius on fresh wheels.
                                                                                                        // Actual top speed based on testing is ~4.7 m/s
@@ -189,7 +187,7 @@ public final class Constants {
                                                                                                        //  but I don't think we can actually achieve this because 
                                                                                                        //  the battery voltage will likely drop below 12 when all drive motors are running)
                                                                                                        // To give ourselves a little breathing room, we use a max speed of 4.5 m/s in auto.
-
+        public static final double maxAchievableVelocityMetersPerSecond = 1;
         /**
          * This is the max desired speed that will be achievable in teleop.
          * <br>
