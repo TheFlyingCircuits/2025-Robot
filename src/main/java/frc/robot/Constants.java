@@ -187,7 +187,7 @@ public final class Constants {
                                                                                                        //  but I don't think we can actually achieve this because 
                                                                                                        //  the battery voltage will likely drop below 12 when all drive motors are running)
                                                                                                        // To give ourselves a little breathing room, we use a max speed of 4.5 m/s in auto.
-        public static final double maxAchievableVelocityMetersPerSecond = 1;
+        public static final double maxAchievableVelocityMetersPerSecond = 0.6;
         /**
          * This is the max desired speed that will be achievable in teleop.
          * <br>

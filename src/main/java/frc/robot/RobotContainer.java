@@ -25,7 +25,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -144,9 +143,17 @@ public class RobotContainer {
         amaraController.x().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
         // amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
 
+        amaraController.povUp().whileTrue(Commands.run((() -> arm.setShoulderTargetAngle(90))));
+
+        amaraController.povUp().whileTrue(new ConditionalCommand(
+                Commands.run( () -> arm.setExtensionTargetLength(1.08)), 
+                new InstantCommand(),
+                () -> (Math.abs(arm.getShoulderAngleDegrees()) > 88)));
+
         duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
             intakeUntilCoralAcquired()
         );
+
 
         // reef score
         duncanController.rightBumper().and(() -> !hasAlgae).onTrue(
@@ -162,18 +169,6 @@ public class RobotContainer {
                 // TODO: check practice field log around 5:00pm on April 3rd 2025 for example of dancing
             ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
         );
-
-    
-        duncanController.leftBumper().whileTrue(Commands.sequence(
-            placerGrabber.setPlacerGrabberVoltsCommand(9, -9).until(() -> !placerGrabber.doesHaveCoral()),
-            placerGrabber.setPlacerGrabberVoltsCommand(9, -9).withTimeout(0.5)
-        ));
-
-        // reset everything
-        duncanController.x().onTrue(Commands.runOnce(() -> {
-            CommandScheduler.getInstance().cancelAll();
-        }));
-
 
 
         // reset gyro and recover from collisions that cause big wheel slip
