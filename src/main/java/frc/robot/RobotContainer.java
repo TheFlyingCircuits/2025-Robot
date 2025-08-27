@@ -143,8 +143,9 @@ public class RobotContainer {
         amaraController.x().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
         // amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
 
-        amaraController.povUp().whileTrue(raiseArmThenExtend()).onFalse(
-            Commands.run(() -> {setDefaultCommands();}));
+        amaraController.povUp().whileTrue(raiseArmThenExtend());
+        // .onFalse(
+        //     Commands.run(() -> {setDefaultCommands();}));
 
         // amaraController.povUp().whileTrue(
         //     new WaitUntilCommand()
@@ -215,8 +216,11 @@ public class RobotContainer {
     }).until(drivetrain::seesAcceptableTag).ignoringDisable(true);}
 
     private Command raiseArmThenExtend() {return Commands.run(() -> {
-        arm.setShoulderTargetAngle(90);
-        if (arm.getShoulderAngleDegrees() > 89.3) {
+        // using the commands to require bc of weird wrist issue
+        wrist.setTargetPositionCommand(WristConstants.homeAngleDegrees);
+        placerGrabber.setPlacerGrabberVoltsCommand(0, 0);
+        arm.setShoulderTargetAngle(88);
+        if (arm.getShoulderAngleDegrees() > 86.5) {
             arm.setExtensionTargetLength(ArmConstants.maxExtensionMeters - 0.05);
         }
     });}
