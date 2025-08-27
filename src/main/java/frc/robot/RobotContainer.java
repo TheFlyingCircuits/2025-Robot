@@ -143,12 +143,17 @@ public class RobotContainer {
         amaraController.x().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
         // amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
 
-        amaraController.povUp().whileTrue(Commands.run((() -> arm.setShoulderTargetAngle(90))));
+        amaraController.povUp().whileTrue(raiseArmThenExtend()).onFalse(
+            Commands.run(() -> {setDefaultCommands();}));
 
-        amaraController.povUp().whileTrue(new ConditionalCommand(
-                Commands.run( () -> arm.setExtensionTargetLength(1.08)), 
-                new InstantCommand(),
-                () -> (Math.abs(arm.getShoulderAngleDegrees()) > 88)));
+        // amaraController.povUp().whileTrue(
+        //     new WaitUntilCommand()
+        //     Commands.run( () -> arm.setExtensionTargetLength(1.08))
+        // );
+            //new ConditionalCommand(
+        //         Commands.run( () -> arm.setExtensionTargetLength(1.08)), 
+        //         new InstantCommand(),
+        //         () -> (Math.abs(arm.getShoulderAngleDegrees()) > 88))), arm);
 
         duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
             intakeUntilCoralAcquired()
@@ -209,6 +214,13 @@ public class RobotContainer {
         drivetrain.allowTeleportsNextPoseUpdate();
     }).until(drivetrain::seesAcceptableTag).ignoringDisable(true);}
 
+    private Command raiseArmThenExtend() {return Commands.run(() -> {
+        arm.setShoulderTargetAngle(90);
+        if (arm.getShoulderAngleDegrees() > 89.3) {
+            arm.setExtensionTargetLength(ArmConstants.maxExtensionMeters - 0.05);
+        }
+    });}
+
     private void triggers() {
         // Coral acquisition
         Trigger hasCoral = new Trigger(() -> placerGrabber.doesHaveCoral());
@@ -241,6 +253,7 @@ public class RobotContainer {
 
 
         // Pickup in sim
+
         Command simulatePickup = Commands.run(() -> {
             boolean leftShouldPickup = drivetrain.simulatedIntakeIsNearCoral(Direction.left);
             boolean rightShouldPickup = drivetrain.simulatedIntakeIsNearCoral(Direction.right);
