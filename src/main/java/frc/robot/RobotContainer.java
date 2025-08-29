@@ -78,6 +78,8 @@ public class RobotContainer {
     private boolean visionAssistedIntakeInTeleop = false;
     private boolean hasAlgae = false;
     private boolean proscessorScoringMode = false;
+    private boolean groundAlgaeIntaking = false;
+    private boolean shouldeGroundAlgaeIntake = false;
 
     public final Drivetrain drivetrain;
     public final Arm arm;
@@ -248,16 +250,22 @@ public class RobotContainer {
             new InstantCommand(() -> this.hasAlgae = false)
         );
 
-        duncanController.back().and(() -> wrist.getWristAngleDegrees() > 5).onTrue(
-            arm.shoulder.setTargetAngleCommand(13.71) // wrist -51, extend .787, shoulder 13.711
-            .alongWith(arm.extension.setTargetLengthCommand(0.787))
-            .alongWith(placerGrabber.setPlacerGrabberVoltsCommand(10, 0))
-            .alongWith(new ConditionalCommand(wrist.setTargetPositionCommand(-51), new InstantCommand(), 
-            () -> ((arm.getShoulderAngleDegrees() > 12) && (arm.getExtensionMeters() > .72))))
-        );
+        duncanController.back().and(() -> !groundAlgaeIntaking).whileTrue(
+            new InstantCommand(() -> this.shouldeGroundAlgaeIntake = true)
+        ).onFalse(new InstantCommand(() -> this.groundAlgaeIntaking = true));
 
-        duncanController.back().and(() -> wrist.getWristAngleDegrees() < 5).whileTrue(
-            new InstantCommand(() -> this.hasAlgae = true, wrist)
+
+        duncanController.back().and(() -> groundAlgaeIntaking == true).whileTrue(
+            new InstantCommand(() -> this.shouldeGroundAlgaeIntake = false)
+            .alongWith(new InstantCommand(() -> this.hasAlgae = true))
+        ).onFalse(new InstantCommand(() -> this.groundAlgaeIntaking = false));
+
+        new Trigger(() -> shouldeGroundAlgaeIntake).whileTrue(
+            arm.shoulder.setTargetAngleCommand(6.5) // wrist -51, extend .787, shoulder 13.711
+            .alongWith(arm.extension.setTargetLengthCommand(0.85)) // wrist.setTargetPositionCommand(-51)
+            .alongWith(placerGrabber.setPlacerGrabberVoltsCommand(10, 0))
+            .alongWith(new WaitUntilCommand(() -> ((arm.getShoulderAngleDegrees() > 5.6) && (arm.getExtensionMeters() > .81)))
+            .andThen(wrist.setTargetPositionCommand(-35, 6)))// extend.85
         );
         
         duncanController.start().and(() -> proscessorScoringMode).and(() -> (arm.getShoulderAngleDegrees() < 20)).whileTrue(
@@ -439,6 +447,11 @@ public class RobotContainer {
 
 
     /**** INTAKE ****/
+
+        public boolean printTest() {
+            System.out.println("orkghqiowughioqwhgqoigioq3hgiopehgowi;kl");
+            return false;
+        }
 
     private Command intakeUntilCoralAcquired() {
         Command armToIntake = new ParallelCommandGroup(
