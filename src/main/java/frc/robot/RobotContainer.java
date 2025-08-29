@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -140,10 +141,11 @@ public class RobotContainer {
         // face buttons to select desired level
         // amaraController.b().onTrue(new InstantCommand(() -> {desiredLevel = 1; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
         // amaraController.a().onTrue(new InstantCommand(() -> {desiredLevel = 2; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-        amaraController.x().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        amaraController.x().onTrue(Commands.runOnce(() -> {
+            CommandScheduler.getInstance().cancelAll();}));
         // amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
 
-        amaraController.povUp().whileTrue(raiseArmThenExtend());
+        amaraController.povUp().whileTrue(raiseArmThenExtend()).onFalse(safeExtendRetract());
         // .onFalse(
         //     Commands.run(() -> {setDefaultCommands();}));
 
@@ -224,6 +226,13 @@ public class RobotContainer {
             arm.setExtensionTargetLength(ArmConstants.maxExtensionMeters - 0.05);
         }
     });}
+
+    private Command safeExtendRetract() {return Commands.run(() -> {
+        wrist.setTargetPositionCommand(WristConstants.homeAngleDegrees);
+        placerGrabber.setPlacerGrabberVoltsCommand(0, 0);
+        arm.setShoulderTargetAngle(88);
+        arm.setExtensionTargetLength(ArmConstants.minExtensionMeters);
+    }).until(() -> arm.getExtensionMeters() < ArmConstants.minExtensionMeters + 0.1);}
 
     private void triggers() {
         // Coral acquisition
