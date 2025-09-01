@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
@@ -61,6 +60,8 @@ public class Robot extends LoggedRobot {
         }
     }
 
+
+
     @Override
     public void disabledInit() {
         CommandScheduler.getInstance().cancelAll();
@@ -72,9 +73,6 @@ public class Robot extends LoggedRobot {
         m_robotContainer.drivetrain.allowTeleportsNextPoseUpdate();
         m_robotContainer.drivetrain.fullyTrustVisionNextPoseUpdate();
 
-        if (autoCommand == null) {
-            autoCommand = m_robotContainer.autoChoosingAuto();
-        }
     }
 
     @Override

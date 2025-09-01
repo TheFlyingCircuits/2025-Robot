@@ -15,7 +15,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.PlayingField.FieldConstants;
+import frc.robot.Constants.VisionConstants;
 
 public class FlyingCircuitUtils {
 
@@ -71,7 +71,7 @@ public class FlyingCircuitUtils {
         int[] cornerTagIDs = {1, 2, 12, 13};
         for (int tagID : cornerTagIDs) {
             // Get vector from tag to location
-            Pose2d tagPose = FieldConstants.tagLayout.getTagPose(tagID).get().toPose2d();
+            Pose2d tagPose = VisionConstants.aprilTagFieldLayout.getTagPose(tagID).get().toPose2d();
             Translation2d tagToLocation = location.minus(tagPose.getTranslation());
 
             // Project that onto the tag's normal vector to get signed distance from the loading station wall.
@@ -86,8 +86,8 @@ public class FlyingCircuitUtils {
 
         // we've passed all the loading station checks if we've gotten to this point,
         // so all that's left to check is the length and width of the field.
-        boolean insideX = ((0 - toleranceMeters) < location.getX()) && (location.getX() < (FieldConstants.maxX + toleranceMeters));
-        boolean insideY = ((0 - toleranceMeters) < location.getY()) && (location.getY() < (FieldConstants.maxY + toleranceMeters));
+        boolean insideX = ((0 - toleranceMeters) < location.getX()) && (location.getX() < (VisionConstants.aprilTagFieldLayout.getFieldLength() + toleranceMeters));
+        boolean insideY = ((0 - toleranceMeters) < location.getY()) && (location.getY() < (VisionConstants.aprilTagFieldLayout.getFieldWidth() + toleranceMeters));
         return insideX && insideY;
     }
     public static boolean isInField(Translation3d location, double toleranceMeters) {

@@ -8,15 +8,14 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.math.geometry.Quaternion;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import frc.robot.PlayingField.FieldConstants;
+
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -41,105 +40,6 @@ public final class Constants {
             right
         }
 
-    }
-
-    public final static class ArmConstants {
-        
-
-        public final static double armMassKg = 10;
-
-        /**
-         * Vertical distance from the center of the shoulder pivot to the line at the center of the arm.
-         */
-        public final static double shoulderBracketLengthMeters = -0.2;
-        public final static Translation2d shoulderPivotPositionMeters = new Translation2d(-0.4, 0.4);
-
-
-
-        // ↑ ← → ↓
-        // TODO: ascii art
-        public final static Translation3d shoulderLocation_robotFrame = new Translation3d(Units.inchesToMeters(-10.25), 0, Units.inchesToMeters(17.80750));
-        public final static Translation3d elbowLocation_shoulderFrame = new Translation3d(0, 0, Units.inchesToMeters(-8.0));
-        public final static Translation3d retractionHardStop_elbowFrame = new Translation3d(Units.inchesToMeters(-3.0), 0, 0);
-        public final static Translation3d tipOfStationaryStage_elbowFrame = new Translation3d(Units.inchesToMeters(22.0), 0, 0);
-        public final static Translation3d tipOfFinalStage_elbowFrame_retracted = tipOfStationaryStage_elbowFrame.plus(new Translation3d(Units.inchesToMeters(0.00004),0,0));
-        public final static Translation3d tipOfFinalStageToWrist = new Translation3d(Units.inchesToMeters(0.93417), 0, 0);
-        public final static double wristOuterWidthMeters = Units.inchesToMeters(10.18); // center to center distance of omniwheel axles
-        public final static double wristWidthMeters = Units.inchesToMeters(7.0); // center to center distance between the two holding positions for coral
-        public final static double stationaryStageWidthMeters = Units.inchesToMeters(4.0);
-        public final static double stationaryStageHeightMeters = Units.inchesToMeters(4.0);
-
-        public final static Translation3d orangeWheels_wristFrame = new Translation3d(Units.inchesToMeters(11.15338), 0, Units.inchesToMeters(-4.27657));
-
-        //                                       wristPivotToTopSurfaceOfBottomPlate
-        public final static double wristToCoralZ = Units.inchesToMeters(-9.5) + FieldConstants.coralOuterRadiusMeters;
-
-        //                                       wristPivotToBumpersInIntakePosition
-        public final static double wristToCoralX = Units.inchesToMeters(-0.95612) + (FieldConstants.coralLengthMeters/2.0);
-        public final static Translation3d intakeToLeftCoral = new Translation3d(wristToCoralX, wristWidthMeters/2.0, wristToCoralZ);
-        public final static Translation3d intakeToRightCoral = new Translation3d(wristToCoralX, -wristWidthMeters/2.0, wristToCoralZ);
-
-        
-        /** Minimum length of the arm when fully retracted, 0.64 meters*/
-        public final static double minExtensionMeters = Units.inchesToMeters(25);
-        /** Maximum length of the arm when fully extended, 1.6 meters*/
-        public final static double maxExtensionMeters = Units.inchesToMeters(38)+minExtensionMeters;
-
-
-        /** Rotations of the motor per rotations of the belt pulley */
-        public final static double extensionGearReduction = 5.454545;
-        /** Radius of the pulley that the extension belt runs on. */
-        public static final double extensionPulleyRadiusMeters = Units.inchesToMeters(1.504/2);
-        /** Circumference of the pulley that the extension belt runs on. */
-        public final static double beltPulleyCircumferenceMeters = 2*extensionPulleyRadiusMeters*Math.PI; 
-        /** How far the belt of the extension moves per rotation of the motor. */
-        public final static double beltMetersPerMotorRotation = beltPulleyCircumferenceMeters / extensionGearReduction;
-        /** How far the tip of the arm extends per rotation of the motor. */
-        public final static double extensionMetersPerMotorRotation = beltMetersPerMotorRotation * 2;
-
-
-
-        public final static double kSExtensionVolts = 0.25;
-        public final static double kGExtensionVolts = 0.52;
-        public final static double kVExtensionVoltsSecondsPerRadian = 3.35;
-        public final static double kAExtensionVoltsSecondsSquaredPerRadian = 0;
-        public final static double kPExtensionVoltsPerMeter = 25.;
-        public final static double kDExtensionVoltsPerMeterPerSecond = 1.5;
-
-        public final static double extensionMaxMetersPerSecond = 4;
-        public final static double extensionMaxMetersPerSecondSquared = 8;
-
-
-        /**Minimum angle of the arm, in degrees.*/
-        public final static double armMinAngleDegrees = -3;
-        /**Maximum angle of the arm, in degrees. This value should be positive and greater than 90, as it is beyond the vertical. */
-        public final static double armMaxAngleDegrees = 135.0;  
-
-
-
-        /**Rotations of the motor per rotations of the arm; a number greater than 1 represents a reduction. */
-        public final static double shoulderGearReduction = 246.67;
-        
-
-
-        
-        public final static double kSArmVolts = 0.0;
-        public final static double kGArmVolts = 0.;
-        public final static double kVArmVoltsSecondsPerRadian = 0;
-        public final static double kAArmVoltsSecondsSquaredPerRadian = 0;
-
-
-        //Motor IDs
-        public final static int leftShoulderMotorID = 8;
-        public final static int rightShoulderMotorID = 9;
-        public final static int frontExtensionMotorID = 10;
-        public final static int backExtensionMotorID = 11;
-        public final static int leftPivotEncoderID = 4;
-        public final static int rightPivotEncoderID = 5;
-        
-
-
-        
     }
 
 
@@ -285,7 +185,7 @@ public final class Constants {
         //frontRight, 10.17.87.51, Photon-RPi4-FR
         //backRight, 10.17.87.52, Photon-RPi4-BR
         //backLeft, 10.17.87.53, Photon-RPi4-BL
-        public final static AprilTagFieldLayout aprilTagFieldLayout = FieldConstants.tagLayout;
+        public final static AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);;
                                                        
 
         public final static Transform3d robotToFrontLeft = new Transform3d(

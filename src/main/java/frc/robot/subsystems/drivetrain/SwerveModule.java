@@ -1,8 +1,6 @@
 package frc.robot.subsystems.drivetrain;
 
 import frc.robot.Constants.SwerveModuleConstants;
-
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.MathUtil;

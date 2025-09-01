@@ -22,6 +22,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.DrivetrainConstants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.PlayingField.FieldConstants;
 
 // TODO: add quick camera placement detector by putting robot at known pose
@@ -169,7 +170,7 @@ public class SingleTagCam {
     public void makeTagCamsAgree() {
         int tagID = (int)SmartDashboard.getNumber("tagCamsAgree/Face", 9);
         SmartDashboard.putNumber("tagCamsAgree/Face", tagID);
-        Pose2d calibrationFace = FieldConstants.tagLayout.getTagPose(tagID).get().toPose2d();
+        Pose2d calibrationFace = VisionConstants.aprilTagFieldLayout.getTagPose(tagID).get().toPose2d();
 
         double inchesBack = SmartDashboard.getNumber("tagCamsAgree/inchesBack", 10.1);
         SmartDashboard.putNumber("tagCamsAgree/inchesBack", inchesBack);

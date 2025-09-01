@@ -8,11 +8,9 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import frc.robot.Constants.SwerveModuleConstants;
 import frc.robot.Constants.UniversalConstants;
 import frc.robot.VendorWrappers.Kraken;
-import frc.robot.VendorWrappers.Neo;
 
 public class SwerveModuleIOKraken implements SwerveModuleIO {
     
