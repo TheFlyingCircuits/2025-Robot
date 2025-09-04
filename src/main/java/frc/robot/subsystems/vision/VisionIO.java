@@ -6,7 +6,6 @@ import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
@@ -53,7 +52,6 @@ public interface VisionIO {
             this.robotFieldPose=robotFieldPose;
             this.timestampSeconds=timestampSeconds;
             this.averageTagDistanceMeters=nearestTagDistanceMeters;
-            this.stdDevs=stdDevs;
             this.tagsUsed = null;
         }
 
@@ -102,9 +100,6 @@ public interface VisionIO {
                 table.put(rootString+"/RobotFieldPose", meas.robotFieldPose);
                 table.put(rootString+"/TimestampSeconds", meas.timestampSeconds);
                 table.put(rootString+"/NearestTagDistanceMeters", meas.averageTagDistanceMeters);
-                table.put(rootString+"/StdDevX", meas.stdDevs.get(0, 0));
-                table.put(rootString+"/StdDevY", meas.stdDevs.get(1, 0));
-                table.put(rootString+"/StdDevRot", meas.stdDevs.get(2, 0));
                 table.put(rootString+"/CameraName", meas.cameraName);
                 table.put(rootString+"/tagsUsed", meas.tagsUsed);
 
@@ -120,9 +115,6 @@ public interface VisionIO {
 
         public void fromLog(LogTable table) {
 
-
-
-
             for (int i = 0;;i++) {
                 String rootString = VisionConstants.tagCameraNames[i]+"VisionMeasurement";
 
@@ -135,10 +127,6 @@ public interface VisionIO {
                 meas.robotFieldPose = table.get(rootString+"/RobotFieldPose", meas.robotFieldPose);
                 meas.timestampSeconds = table.get(rootString+"/TimestampSeconds", meas.timestampSeconds);
                 meas.averageTagDistanceMeters = table.get(rootString+"/NearestTagDistanceMeters", meas.averageTagDistanceMeters);
-                double stdDevX = table.get(rootString+"/StdDevX", meas.stdDevs.get(0, 0));
-                double stdDevY = table.get(rootString+"/StdDevY", meas.stdDevs.get(1, 0));
-                double stdDevRot = table.get(rootString+"/StdDevRot", meas.stdDevs.get(2, 0));
-                meas.stdDevs = VecBuilder.fill(stdDevX, stdDevY, stdDevRot);
                 meas.cameraName = table.get(rootString+"/CameraName", "");
                 meas.tagsUsed = table.get(rootString+"/tagsUsed", new int[0]);
 

@@ -1,12 +1,11 @@
 package frc.robot.subsystems.vision;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -14,24 +13,11 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants;
-import frc.robot.Constants.DrivetrainConstants;
+
 import frc.robot.Constants.VisionConstants;
-import frc.robot.PlayingField.FieldConstants;
-import frc.robot.PlayingField.FieldElement;
+
 
 public class VisionIOPhotonLib implements VisionIO {
     
@@ -91,73 +77,46 @@ public class VisionIOPhotonLib implements VisionIO {
      * @param distToTargetMeters - Distance from the camera to the apriltag.
      * @return A vector of the standard deviations given distance in X (m), Y (m), and Rotation (Rad)
      */
-    private Matrix<N3, N1> getVisionStdDevs(double distToTargetMeters, boolean useMultitag) {
-
-        double slopeStdDevMetersPerMeterX;
-        double slopeStdDevMetersPerMeterY;
-
-        double slopeStdDevMetersPerMeter = 0.01;
-
-
-
-        // previous working vision
-        
-        // if (useMultitag) {
-        //     slopeStdDevMetersPerMeterX = 0.004;
-        //     slopeStdDevMetersPerMeterY = 0.009;
-        // }
-        // else {
-        //     slopeStdDevMetersPerMeterX = 0.008;
-        //     slopeStdDevMetersPerMeterY = 0.02;
-        // }
-
-        // previous linear model
-        return VecBuilder.fill(
-            slopeStdDevMetersPerMeter*distToTargetMeters,
-            slopeStdDevMetersPerMeter*distToTargetMeters,
-            99999
-        );
-    }
 
     
-    private void makeTagCamsAgree(Pose2d knownRobotPose) {
-        makeTagCamsAgree(new Pose3d(knownRobotPose));
-    }
+    // private void makeTagCamsAgree(Pose2d knownRobotPose) {
+    //     makeTagCamsAgree(new Pose3d(knownRobotPose));
+    // }
 
-    private void makeTagCamsAgree(Pose3d knownRobotPose) {
-        for (PhotonCamera tagCam : tagCameras) {
-            List<PhotonPipelineResult> newFrames = tagCam.getAllUnreadResults();
-            if (newFrames.size() == 0) {
-                continue;
-            }
+    // private void makeTagCamsAgree(Pose3d knownRobotPose) {
+    //     for (PhotonCamera tagCam : tagCameras) {
+    //         List<PhotonPipelineResult> newFrames = tagCam.getAllUnreadResults();
+    //         if (newFrames.size() == 0) {
+    //             continue;
+    //         }
 
-            PhotonPipelineResult mostRecentFrame = newFrames.get(newFrames.size()-1);
+    //         PhotonPipelineResult mostRecentFrame = newFrames.get(newFrames.size()-1);
 
-            Transform3d camPose_fieldFrame = new Transform3d();
-            if (mostRecentFrame.multitagResult.isPresent()) {
-                camPose_fieldFrame = mostRecentFrame.multitagResult.get().estimatedPose.best;
-            }
-            else if (mostRecentFrame.hasTargets()) {
-                // single tag
-                PhotonTrackedTarget singleTag = mostRecentFrame.targets.get(0);
-                Transform3d tagPose_camFrame = singleTag.bestCameraToTarget;
-                Transform3d camPose_tagFrame = tagPose_camFrame.inverse();
-                Pose3d tagPose_fieldFrame = Constants.VisionConstants.aprilTagFieldLayout.getTagPose(singleTag.fiducialId).get();
-                Transform3d tagTransform_fieldFrame = new Transform3d(tagPose_fieldFrame.getTranslation(), tagPose_fieldFrame.getRotation());
-                camPose_fieldFrame = tagTransform_fieldFrame.plus(camPose_tagFrame);
-            }
-            else {
-                continue;
-            }
+    //         Transform3d camPose_fieldFrame = new Transform3d();
+    //         if (mostRecentFrame.multitagResult.isPresent()) {
+    //             camPose_fieldFrame = mostRecentFrame.multitagResult.get().estimatedPose.best;
+    //         }
+    //         else if (mostRecentFrame.hasTargets()) {
+    //             // single tag
+    //             PhotonTrackedTarget singleTag = mostRecentFrame.targets.get(0);
+    //             Transform3d tagPose_camFrame = singleTag.bestCameraToTarget;
+    //             Transform3d camPose_tagFrame = tagPose_camFrame.inverse();
+    //             Pose3d tagPose_fieldFrame = Constants.VisionConstants.aprilTagFieldLayout.getTagPose(singleTag.fiducialId).get();
+    //             Transform3d tagTransform_fieldFrame = new Transform3d(tagPose_fieldFrame.getTranslation(), tagPose_fieldFrame.getRotation());
+    //             camPose_fieldFrame = tagTransform_fieldFrame.plus(camPose_tagFrame);
+    //         }
+    //         else {
+    //             continue;
+    //         }
 
-            Pose3d camPose_fieldFrame_asPose = new Pose3d(camPose_fieldFrame.getTranslation(), camPose_fieldFrame.getRotation());
-            Pose3d camPose_robotFrame = camPose_fieldFrame_asPose.relativeTo(knownRobotPose);
-            Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/pose", camPose_robotFrame);
-            Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/rollDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getX()));
-            Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/pitchDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getY()));
-            Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/yawDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getZ()));
-        }
-    }
+    //         Pose3d camPose_fieldFrame_asPose = new Pose3d(camPose_fieldFrame.getTranslation(), camPose_fieldFrame.getRotation());
+    //         Pose3d camPose_robotFrame = camPose_fieldFrame_asPose.relativeTo(knownRobotPose);
+    //         Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/pose", camPose_robotFrame);
+    //         Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/rollDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getX()));
+    //         Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/pitchDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getY()));
+    //         Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/yawDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getZ()));
+    //     }
+    // }
 
 
     /**
@@ -203,7 +162,6 @@ public class VisionIOPhotonLib implements VisionIO {
 
         output.robotFieldPose = poseEstimate.estimatedPose.toPose2d();
         output.timestampSeconds = poseEstimate.timestampSeconds;
-        output.stdDevs = getVisionStdDevs(output.averageTagDistanceMeters, (seenTags.size() > 1));  //different standard devs for different methods of detecting apriltags
         output.cameraName = camera.getName();
         output.tagsUsed = new int[seenTags.size()];
         for (int i = 0; i < seenTags.size(); i += 1) {
@@ -224,82 +182,26 @@ public class VisionIOPhotonLib implements VisionIO {
         return intakeCamCoords.rotateBy(camAxesFromRobotPerspective.getRotation()).plus(camAxesFromRobotPerspective.getTranslation());
     }
 
-    private List<Translation3d> updateIntakeCamera() {
-        return new ArrayList<>();
 
-        // List<Translation3d> detectedCorals = new ArrayList<Translation3d>();
-        // if (!intakeCamera.isConnected()) {
-        //     Logger.recordOutput("intakeCamConnected", false);
-        //     return detectedCorals; // can't see anything if unplugged.
-        //                            // shouldn't default to most recent frame.
-        // }
-        // Logger.recordOutput("intakeCamConnected", true);
+    // public void makeTagCamsAgree() {
+    //     int tagID = (int)SmartDashboard.getNumber("tagCamsAgree/Face", 9);
+    //     SmartDashboard.putNumber("tagCamsAgree/Face", tagID);
+    //     Pose2d calibrationFace = FieldConstants.tagLayout.getTagPose(tagID).get().toPose2d();
 
-        // PhotonPipelineResult intakeCameraResult = intakeCamera.getLatestResult();
+    //     double inchesBack = SmartDashboard.getNumber("tagCamsAgree/inchesBack", 10.1);
+    //     SmartDashboard.putNumber("tagCamsAgree/inchesBack", inchesBack);
+    //     double metersBack = Units.inchesToMeters(inchesBack);
+    //     double pushOutDistanceMeters = metersBack + (DrivetrainConstants.frameWidthMeters/2.0);
 
-        // for (PhotonTrackedTarget target : intakeCameraResult.getTargets()) {
-        //     // Negate the pitch and yaw that's reported by photon vision because
-        //     // their convention isn't consistent with a right handed coordinate system.
-        //     double coralYawDegrees = -target.getYaw();
-        //     double coralPitchDegrees = -target.getPitch();
+    //     boolean facingReef = SmartDashboard.getBoolean("tagCamsAgree/facingReef", true);
+    //     SmartDashboard.putBoolean("tagCamsAgree/facingReef", facingReef);
+    //     Rotation2d rotationFromFace = facingReef ? Rotation2d.k180deg : Rotation2d.kZero;
 
-        //     if (coralPitchDegrees > 10) continue;
+    //     Transform2d offset = new Transform2d(pushOutDistanceMeters, 0, rotationFromFace);
+    //     Logger.recordOutput("vision/calibrationPose", calibrationFace.plus(offset));
 
-        //     // Use the reported pitch and yaw to calculate a unit vector in the camera
-        //     // frame that points towards the coral.
-        //     Rotation3d directionOfCoral = new Rotation3d(0, Math.toRadians(coralPitchDegrees), Math.toRadians(coralYawDegrees));
-        //     Translation3d unitTowardsCoral = new Translation3d(1, directionOfCoral);
-
-        //     // Start the process of finding the full 3D distance from the camera to the coral
-        //     // by finding the coordinates of the normal vector of the floor,
-        //     // as seen in the camera frame.
-        //     Translation3d robotOrigin_robotFrame = new Translation3d(0, 0, 0.1);
-        //     Translation3d aboveTheFloor_robotFrame = new Translation3d(0, 0, 1);
-        //     Translation3d robotOrigin_camFrame = intakeCameraCoordsFromRobotCoords(robotOrigin_robotFrame);
-        //     Translation3d aboveTheFloor_camFrame = intakeCameraCoordsFromRobotCoords(aboveTheFloor_robotFrame);
-        //     Translation3d floorNormal_camFrame = aboveTheFloor_camFrame.minus(robotOrigin_camFrame);
-
-        //     // Find where the vector that points from the camera to the coral intersects
-        //     // the plane of the floor.
-        //     Translation3d floorAnchor = robotOrigin_camFrame;
-        //     double distanceToCoral = floorAnchor.toVector().dot(floorNormal_camFrame.toVector())
-        //                             / unitTowardsCoral.toVector().dot(floorNormal_camFrame.toVector());
-
-        //     // extend the original unit vector to the intersection point in the plane
-        //     Translation3d coral_camFrame = unitTowardsCoral.times(distanceToCoral);
-        //     Translation3d coral_robotFrame = robotCoordsFromIntakeCameraCoords(coral_camFrame);
-
-        //     if (coral_robotFrame.getNorm() > 3 || coral_robotFrame.getNorm() < Units.inchesToMeters(DrivetrainConstants.frameWidthMeters/2)) {
-        //         continue;
-        //     };
-
-        //     detectedCorals.add(coral_robotFrame);
-        // }
-
-
-            
-        // return detectedCorals;
-    }
-
-    public void makeTagCamsAgree() {
-        int tagID = (int)SmartDashboard.getNumber("tagCamsAgree/Face", 9);
-        SmartDashboard.putNumber("tagCamsAgree/Face", tagID);
-        Pose2d calibrationFace = FieldConstants.tagLayout.getTagPose(tagID).get().toPose2d();
-
-        double inchesBack = SmartDashboard.getNumber("tagCamsAgree/inchesBack", 10.1);
-        SmartDashboard.putNumber("tagCamsAgree/inchesBack", inchesBack);
-        double metersBack = Units.inchesToMeters(inchesBack);
-        double pushOutDistanceMeters = metersBack + (DrivetrainConstants.frameWidthMeters/2.0);
-
-        boolean facingReef = SmartDashboard.getBoolean("tagCamsAgree/facingReef", true);
-        SmartDashboard.putBoolean("tagCamsAgree/facingReef", facingReef);
-        Rotation2d rotationFromFace = facingReef ? Rotation2d.k180deg : Rotation2d.kZero;
-
-        Transform2d offset = new Transform2d(pushOutDistanceMeters, 0, rotationFromFace);
-        Logger.recordOutput("vision/calibrationPose", calibrationFace.plus(offset));
-
-        this.makeTagCamsAgree(calibrationFace.plus(offset));
-    }
+    //     this.makeTagCamsAgree(calibrationFace.plus(offset));
+    // }
 
 
     @Override
@@ -332,7 +234,7 @@ public class VisionIOPhotonLib implements VisionIO {
             }
         });
 
-        inputs.detectedCoralsRobotFrame = updateIntakeCamera();
+        inputs.detectedCoralsRobotFrame = new ArrayList<>();
 
         // this.makeTagCamsAgree();
     }

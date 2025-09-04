@@ -172,14 +172,6 @@ public class RobotContainer {
         );
 
 
-        // FOR TESTING LOLLIPOP PICKUP
-        // duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
-        //     intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
-        //         driverFullyControlDrivetrain().until(this::armInPickupPose),
-        //         lollipopPickupInAuto(FieldElement.RIGHT_LOLLIPOP, true)
-        //     ))
-        // );
-
         
         // trough score
         duncanController.leftTrigger().whileTrue(troughScore());
@@ -217,14 +209,6 @@ public class RobotContainer {
             )
         );
 
-        // duncanController.rightBumper().whileTrue(
-        //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> FieldElement.STALK_B.getBranch(desiredLevel))
-        //     new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, () -> drivetrain.getClosestReefStalk().getBranch(desiredLevel))
-        //     // new ChickenHead(drivetrain, duncan::getRequestedFieldOrientedVelocity, arm, wrist, placerGrabber, this::getDesiredBranch)
-        // );
-        // duncanController.rightBumper().onTrue(new DashboardControlArm(arm, wrist));
-        // duncanController.b().onTrue(scoreCoral(false));
-
         // eject
         duncanController.leftBumper().whileTrue(Commands.sequence(
             placerGrabber.setPlacerGrabberVoltsCommand(9, -9).until(() -> !placerGrabber.doesHaveCoral()),
@@ -239,42 +223,30 @@ public class RobotContainer {
 
         //algae pickup
         duncanController.b().and(() -> !hasAlgae).whileTrue(
-            pickupAlgae()
+            pickupAlgaeFromReef()
         ).onFalse(
             new InstantCommand(() -> this.hasAlgae = true)
         );
         
         duncanController.b().and(() -> hasAlgae).whileTrue(
-            processorScore() // DON'T actually score with this use to eject algae of get out of algae mode press start for score
+            putDownAlgae() // DON'T actually score with this use to eject algae of get out of algae mode press start for score
         ).onFalse(
             new InstantCommand(() -> this.hasAlgae = false)
         );
 
-        duncanController.back().and(() -> !groundAlgaeIntaking).whileTrue(
-            new InstantCommand(() -> this.shouldeGroundAlgaeIntake = true)
-        ).onFalse(new InstantCommand(() -> this.groundAlgaeIntaking = true));
+
+        // ground algae pick up need to test
+        duncanController.y().onTrue(pickupAlgaeFromGround().until( () -> placerGrabber.getFrontRollerAmps() > 12).andThen(new InstantCommand(() -> this.hasAlgae = true)));
 
 
-        duncanController.back().and(() -> groundAlgaeIntaking == true).whileTrue(
-            new InstantCommand(() -> this.shouldeGroundAlgaeIntake = false)
-            .alongWith(new InstantCommand(() -> this.hasAlgae = true))
-        ).onFalse(new InstantCommand(() -> this.groundAlgaeIntaking = false));
-
-        new Trigger(() -> shouldeGroundAlgaeIntake).whileTrue(
-            arm.shoulder.setTargetAngleCommand(6.5) // wrist -51, extend .787, shoulder 13.711
-            .alongWith(arm.extension.setTargetLengthCommand(0.85)) // wrist.setTargetPositionCommand(-51)
-            .alongWith(placerGrabber.setPlacerGrabberVoltsCommand(10, 0))
-            .alongWith(new WaitUntilCommand(() -> ((arm.getShoulderAngleDegrees() > 5.6) && (arm.getExtensionMeters() > .81)))
-            .andThen(wrist.setTargetPositionCommand(-35, 6)))// extend.85
-        );
-        
-        duncanController.start().and(() -> proscessorScoringMode).and(() -> (arm.getShoulderAngleDegrees() < 20)).whileTrue(
+        // processor scoring
+        duncanController.back().and(() -> proscessorScoringMode).and(() -> (arm.getShoulderAngleDegrees() < 20)).whileTrue(
             placerGrabber.setPlacerGrabberVoltsCommand(-11, 0)
             .finallyDo(() -> this.proscessorScoringMode = false)
             .alongWith(new InstantCommand(() -> this.hasAlgae = false))
         );
 
-        duncanController.start().and(() -> (!proscessorScoringMode) || (arm.getShoulderAngleDegrees() > 20)).whileTrue(
+        duncanController.back().and(() -> (!proscessorScoringMode) || (arm.getShoulderAngleDegrees() > 20)).whileTrue(
             new InstantCommand()
         ).onFalse(new InstantCommand(() -> this.proscessorScoringMode = true));
 
@@ -294,7 +266,7 @@ public class RobotContainer {
 
 
         // reset gyro and recover from collisions that cause big wheel slip
-        duncanController.y().onTrue(reSeedRobotPose());
+        duncanController.start().onTrue(reSeedRobotPose());
         // duncanController.y().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
         
 
@@ -448,10 +420,6 @@ public class RobotContainer {
 
     /**** INTAKE ****/
 
-        public boolean printTest() {
-            System.out.println("orkghqiowughioqwhgqoigioq3hgiopehgowi;kl");
-            return false;
-        }
 
     private Command intakeUntilCoralAcquired() {
         Command armToIntake = new ParallelCommandGroup(
@@ -504,7 +472,7 @@ public class RobotContainer {
         // drivetrain.pidToPose(pickupPose, 1.0);
     }).finallyDo(drivetrain::resetCenterOfRotation);}
 
-    private Command pickupAlgae() {
+    private Command pickupAlgaeFromReef() {
 
         return new ConditionalCommand(
             new PickupAlgae(true, arm, placerGrabber, drivetrain, wrist, duncan::getRequestedFieldOrientedVelocity),
@@ -513,6 +481,15 @@ public class RobotContainer {
         ).until(() -> placerGrabber.getFrontRollerAvgAmps() > 12)
             .andThen(backAwayFromReef(0.75)); //this command should never end so that hasAlgae can switch to false
             
+    }
+
+    private Command pickupAlgaeFromGround() {
+        return
+            arm.shoulder.setTargetAngleCommand(6.5)
+            .alongWith(arm.extension.setTargetLengthCommand(0.85))
+            .alongWith(placerGrabber.setPlacerGrabberVoltsCommand(10, 0))
+            .alongWith(new WaitUntilCommand(() -> ((arm.getShoulderAngleDegrees() > 5.6) && (arm.getExtensionMeters() > .81)))
+            .andThen(wrist.setTargetPositionCommand(-35, 6)));
     }
 
     /**** SCORING ****/
@@ -624,7 +601,7 @@ public class RobotContainer {
         () -> drivetrain.getClosestReefFace().isHighAlgae()
     );}
 
-    private Command processorScore() {
+    private Command putDownAlgae() {
         return arm.shoulder.setTargetAngleCommand(0)
             .alongWith(arm.extension.setTargetLengthCommand(0.77))
             .alongWith(wrist.setTargetPositionCommand(0))
@@ -730,40 +707,6 @@ public class RobotContainer {
         }
 
 
-        //Adjust lollipop pose in order to always pickup with left side
-        // Translation2d adjustedLollipopTranslation = lollipop.getPose2d().getTranslation();
-        // Translation2d adjustment = new Translation2d(0.5, 0);//ArmConstants.wristOuterWidthMeters*2.);
-        // if (DriverStation.getAlliance().get() == Alliance.Red) adjustedLollipopTranslation.plus(adjustment);
-        // else adjustedLollipopTranslation.minus(adjustment);
-
-        // Translation2d translationToLollipop = adjustedLollipopTranslation.minus(drivetrain.getPoseMeters().getTranslation());
-        // Rotation2d angleToPointIn = translationToLollipop.getAngle();
-
-        // if (translationToLollipop.getNorm() < DrivetrainConstants.bumperWidthMeters + 0.2) {
-        //     maxMetersPerSecond = 0.5;
-        // }
-
-        // //5 for first pickup
-        // //-28 for second pickup
-        // if (lollipop.equals(FieldElement.RIGHT_LOLLIPOP) || lollipop.equals(FieldElement.LEFT_LOLLIPOP)) {
-        //     angleToPointIn = Rotation2d.fromDegrees(5);
-        // }
-        // else if (lollipop.equals(FieldElement.MIDDLE_LOLLIPOP)) {
-        //     angleToPointIn = Rotation2d.fromDegrees(-28);
-        // }
-
-        // if (isRightSideAuto) angleToPointIn.times(-1);
-        // if (DriverStation.getAlliance().get() == Alliance.Blue) angleToPointIn.plus(Rotation2d.k180deg);
-        
-        // if (translationToLollipop.getNorm() < 0.2) {
-        //     angleToPointIn = Rotation2d.fromDegrees(-90);
-        // }
-
-        // Pose2d desiredPose = new Pose2d(adjustedLollipopTranslation, angleToPointIn);
-
-        // drivetrain.pidToPose(desiredPose, maxMetersPerSecond);
-            
-
     }).finallyDo(drivetrain::resetCenterOfRotation);}
 
     private Command driveTowardsCoralInAuto() { return drivetrain.run(() -> {
@@ -816,45 +759,9 @@ public class RobotContainer {
             ReefBranch.BRANCH_B4
         );
 
-        Command leftSideLollipopAuto = lollipopAutoCommand(
-            new ArrayList<>(Arrays.asList(
-                ReefBranch.BRANCH_J4,
-                ReefBranch.BRANCH_L4,
-                ReefBranch.BRANCH_A4,
-                ReefBranch.BRANCH_K4
-            )),
-            new ArrayList<>(Arrays.asList(
-                FieldElement.LEFT_LOLLIPOP,
-                FieldElement.MIDDLE_LOLLIPOP
-            )),
-            false
-        );
-
-        Command rightSideLollipopAuto = lollipopAutoCommand(
-            new ArrayList<>(Arrays.asList(
-                ReefBranch.BRANCH_E4,
-                ReefBranch.BRANCH_C4,
-                ReefBranch.BRANCH_B4,
-                ReefBranch.BRANCH_D4
-            )),
-            new ArrayList<>(Arrays.asList(
-                FieldElement.RIGHT_LOLLIPOP,
-                FieldElement.MIDDLE_LOLLIPOP
-            ))  ,
-            true  
-        );
-
         BooleanSupplier startingOnLeft = () -> {return drivetrain.getClosestLoadingStation() == FieldElement.LEFT_LOADING_STATION;};
 
         return new ConditionalCommand(leftSideAuto, rightSideAuto, startingOnLeft);
         // return new ConditionalCommand(leftSideLollipopAuto, rightSideLollipopAuto, startingOnLeft);
     }
-
-    private Command homeArmWhileGoingToSource() { return stowArm().alongWith(drivetrain.run(() -> {
-        Transform2d poseAdjustment = new Transform2d(2, 0, new Rotation2d());
-        Translation2d desiredTranslation = drivetrain.getClosestLoadingStation().getPose2d().plus(poseAdjustment).getTranslation();
-
-        Rotation2d desiredRotation = FlyingCircuitUtils.getAllianceDependentValue(Rotation2d.k180deg, Rotation2d.kZero, Rotation2d.kZero);
-        drivetrain.pidToPose(new Pose2d(desiredTranslation, desiredRotation), 3.5);
-    })).until(() -> arm.getShoulderAngleDegrees() < 40);}
 }
