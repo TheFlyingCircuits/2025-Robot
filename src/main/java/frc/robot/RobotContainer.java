@@ -5,7 +5,6 @@
 package frc.robot;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -135,6 +134,7 @@ public class RobotContainer {
         triggers();
     }
 
+
     private void realBindings() {
         // bumpers to select left/right stalk
         amaraController.rightBumper().onTrue(new InstantCommand(() -> desiredStalk = Direction.right));
@@ -156,26 +156,14 @@ public class RobotContainer {
 
         }
 
-        // escape hatch for aim assist while intaking
-        amaraController.leftTrigger().onTrue(new InstantCommand(() -> visionAssistedIntakeInTeleop = false));
-        amaraController.rightTrigger().onTrue(new InstantCommand(() -> visionAssistedIntakeInTeleop = true));
-
         // ground intake
-        duncanController.rightTrigger().and(() -> !visionAssistedIntakeInTeleop).whileTrue(
+        duncanController.rightTrigger().whileTrue(
             intakeUntilCoralAcquired()
         );
-        duncanController.rightTrigger().and(() -> visionAssistedIntakeInTeleop).whileTrue(
-            intakeUntilCoralAcquired().deadlineFor(new SequentialCommandGroup(
-                driverFullyControlDrivetrain().until(this::armInPickupPose),
-                driveTowardsCoralTeleop()
-            ))
-        );
-
-
         
         // trough score
-        duncanController.leftTrigger().whileTrue(troughScore());
-        duncanController.leftTrigger().onFalse(
+        duncanController.y().whileTrue(troughScore());
+        duncanController.y().onFalse(
             scoreCoral(true)
             .raceWith(
                 arm.shoulder.setTargetAngleCommand(ArmPosition.frontL1.shoulderAngleDegrees),
@@ -236,17 +224,20 @@ public class RobotContainer {
 
 
         // ground algae pick up need to test
-        duncanController.y().onTrue(pickupAlgaeFromGround().until( () -> placerGrabber.getFrontRollerAmps() > 12).andThen(new InstantCommand(() -> this.hasAlgae = true)));
+        duncanController.leftTrigger().and(() -> !hasAlgae).whileTrue(pickupAlgaeFromGround().until( () -> placerGrabber.getFrontRollerAmps() > 26).andThen(new InstantCommand(() -> this.hasAlgae = true)));
 
+        duncanController.povRight().onTrue(new InstantCommand(() -> this.hasAlgae = false).alongWith(
+            new InstantCommand(() -> CommandScheduler.getInstance().cancelAll())
+        ));
 
         // processor scoring
-        duncanController.back().and(() -> proscessorScoringMode).and(() -> (arm.getShoulderAngleDegrees() < 20)).whileTrue(
+        duncanController.leftTrigger().and(() -> hasAlgae).and(() -> proscessorScoringMode).and(() -> (arm.getShoulderAngleDegrees() < 20)).whileTrue(
             placerGrabber.setPlacerGrabberVoltsCommand(-11, 0)
             .finallyDo(() -> this.proscessorScoringMode = false)
             .alongWith(new InstantCommand(() -> this.hasAlgae = false))
         );
 
-        duncanController.back().and(() -> (!proscessorScoringMode) || (arm.getShoulderAngleDegrees() > 20)).whileTrue(
+        duncanController.leftTrigger().and(() ->hasAlgae).and(() -> (!proscessorScoringMode) || (arm.getShoulderAngleDegrees() > 20)).whileTrue(
             new InstantCommand()
         ).onFalse(new InstantCommand(() -> this.proscessorScoringMode = true));
 
@@ -485,11 +476,11 @@ public class RobotContainer {
 
     private Command pickupAlgaeFromGround() {
         return
-            arm.shoulder.setTargetAngleCommand(6.5)
+            arm.shoulder.setTargetAngleCommand(8)// 6.5
             .alongWith(arm.extension.setTargetLengthCommand(0.85))
             .alongWith(placerGrabber.setPlacerGrabberVoltsCommand(10, 0))
-            .alongWith(new WaitUntilCommand(() -> ((arm.getShoulderAngleDegrees() > 5.6) && (arm.getExtensionMeters() > .81)))
-            .andThen(wrist.setTargetPositionCommand(-35, 6)));
+            .alongWith(new WaitUntilCommand(() -> ((arm.getShoulderAngleDegrees() > 5.6) && (arm.getExtensionMeters() > .81))) 
+            .andThen(wrist.setTargetPositionCommand(-40, 6))); //-35
     }
 
     /**** SCORING ****/
