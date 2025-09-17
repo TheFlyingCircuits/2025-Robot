@@ -130,8 +130,14 @@ public class RobotContainer {
         duncanController = duncan.getXboxController();
         amaraController = amara.getXboxController();
 
-        realBindings();
+        // realBindings();
+        driveMeetingBindings();
         triggers();
+    }
+
+    private void driveMeetingBindings() {
+        duncanController.y().onTrue(reSeedRobotPose());
+        duncanController.povUp().onTrue(Commands.runOnce(drivetrain::setRobotFacingForward));
     }
 
 
@@ -325,20 +331,20 @@ public class RobotContainer {
         }).ignoringDisable(true));
 
         // Arm pre-aiming
-        Trigger shouldPreAim = hasCoral.and(drivetrain::inScoringDistance)
-                               .and(DriverStation::isTeleop)
-                               .and(() -> arm.extension.getDefaultCommand().isScheduled());
+        // Trigger shouldPreAim = hasCoral.and(drivetrain::inScoringDistance)
+        //                        .and(DriverStation::isTeleop)
+        //                        .and(() -> arm.extension.getDefaultCommand().isScheduled());
         
-        shouldPreAim.whileTrue(arm.shoulder.waitForRetraction().andThen(arm.shoulder.run(() -> {
+        // shouldPreAim.whileTrue(arm.shoulder.waitForRetraction().andThen(arm.shoulder.run(() -> {
 
-            if (!drivetrain.isFacingReef()) {
-                arm.setShoulderTargetAngle(90);
-                return;
-            }
+        //     if (!drivetrain.isFacingReef()) {
+        //         arm.setShoulderTargetAngle(90);
+        //         return;
+        //     }
 
-            double preAimAngle = ArmPosition.getPreset(desiredLevel, drivetrain.isFacingReef()).shoulderAngleDegrees;
-            arm.setShoulderTargetAngle(preAimAngle);
-        })));
+        //     double preAimAngle = ArmPosition.getPreset(desiredLevel, drivetrain.isFacingReef()).shoulderAngleDegrees;
+        //     arm.setShoulderTargetAngle(preAimAngle);
+        // })));
 
 
         // Pickup in sim
