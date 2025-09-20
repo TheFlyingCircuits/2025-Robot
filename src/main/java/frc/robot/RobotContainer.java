@@ -397,7 +397,7 @@ public class RobotContainer {
 
     private Command stowArm() { return Commands.parallel(
         new ConditionalCommand(
-            arm.shoulder.safeSetTargetAngleCommand(80), 
+            arm.shoulder.setTargetAngleCommand(80), 
             arm.shoulder.safeSetTargetAngleCommand(0),
             () -> this.hasAlgae),
         arm.extension.setTargetLengthCommand(ArmConstants.minExtensionMeters),
