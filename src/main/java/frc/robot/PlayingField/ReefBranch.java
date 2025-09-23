@@ -1,5 +1,7 @@
 package frc.robot.PlayingField;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -20,6 +22,8 @@ public class ReefBranch implements FieldElement {
     protected final ReefStalk stalk;
     protected final int branchLevel;
 
+    public boolean scoredOn = false;
+
 
     protected ReefBranch(ReefStalk stalk, int branchLevel) {
         this.name = "BRANCH_"+stalk.getLabel()+""+branchLevel;
@@ -28,6 +32,8 @@ public class ReefBranch implements FieldElement {
         this.blueTagID = stalk.blueTagID;
         Pose3d redTagPose_fieldFrame = FieldConstants.tagLayout.getTagPose(redTagID).get();
         Pose3d blueTagPose_fieldFrame = FieldConstants.tagLayout.getTagPose(blueTagID).get();
+
+        Logger.recordOutput("branches/" + stalk.getFace().name + stalk.name + branchLevel, scoredOn);
 
         // Top down view of a reef face with local coordinate systems:
         // 

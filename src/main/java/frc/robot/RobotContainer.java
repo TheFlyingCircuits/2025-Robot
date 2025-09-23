@@ -79,6 +79,15 @@ public class RobotContainer {
     private boolean proscessorScoringMode = false;
     private boolean groundAlgaeIntaking = false;
     private boolean shouldeGroundAlgaeIntake = false;
+    
+    private boolean autoSelectBranch = true;
+    private boolean goingForCoralRP = false;
+    private int scoringPriority = 1;
+    private int[] rpLevelPriority = {4,3,2};
+
+    
+
+    private ScoringChooser scoringChooser = new ScoringChooser();
 
     public final Drivetrain drivetrain;
     public final Arm arm;
@@ -123,6 +132,11 @@ public class RobotContainer {
             leds = new Leds();
         }
 
+        Logger.recordOutput("robotContainer/goingForCoralRP", goingForCoralRP);
+        Logger.recordOutput("robotContainer/autoSelectScoring", autoSelectBranch);
+        Logger.recordOutput("robotContainer/scoringPriority", scoringPriority);
+        Logger.recordOutput("robotContainer/rpLevelPriority", rpLevelPriority);
+
         setDefaultCommands();
         
 
@@ -132,6 +146,8 @@ public class RobotContainer {
 
         realBindings();
         triggers();
+
+        
     }
 
 
@@ -173,17 +189,25 @@ public class RobotContainer {
         );
 
         // reef score
-        duncanController.rightBumper().and(() -> !hasAlgae).whileTrue(
+        duncanController.rightBumper().and(() -> !hasAlgae).and(() -> !autoSelectBranch).whileTrue(
             scoreOnReefCommand(
                 duncan::getRequestedFieldOrientedVelocity, 
-                this::getDesiredBranch,
+                this::getDesiredOperatorsBranch,
                 drivetrain::isFacingReef)
             .deadlineFor( // using "deadlineFor" instead of "alongWith" allows the command to end if we somehow score before seeing a tag
                 Commands.run(drivetrain::fullyTrustVisionNextPoseUpdate)
-                // Note: pressing Y again while Larry was dancing was enought to stop the dance.
-                //       This indicates that trusting the cameras more up close may eliminate some
-                //       of the dancing?
-                // TODO: check practice field log around 5:00pm on April 3rd 2025 for example of dancing
+                
+            ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
+        );
+
+        duncanController.rightBumper().and(() -> !hasAlgae).and(() -> autoSelectBranch).whileTrue(
+            scoreOnReefCommand(
+                duncan::getRequestedFieldOrientedVelocity, 
+                () -> scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), scoringPriority, goingForCoralRP, rpLevelPriority),
+                drivetrain::isFacingReef)
+            .deadlineFor( // using "deadlineFor" instead of "alongWith" allows the command to end if we somehow score before seeing a tag
+                Commands.run(drivetrain::fullyTrustVisionNextPoseUpdate)
+                
             ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
         );
 
@@ -206,7 +230,7 @@ public class RobotContainer {
         // remove algae, then score
         duncanController.a().whileTrue(Commands.sequence(
             removeAlgae(),
-            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, this::getDesiredBranch, drivetrain::isFacingReef)
+            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, this::getDesiredOperatorsBranch, drivetrain::isFacingReef)
         ));
 
         //algae pickup
@@ -485,7 +509,7 @@ public class RobotContainer {
 
     /**** SCORING ****/
     
-    public ReefBranch getDesiredBranch() {
+    public ReefBranch getDesiredOperatorsBranch() {
         if (desiredStalk == Direction.left)
             return drivetrain.getClosestReefFace().getLeftStalk().getBranch(desiredLevel);
         else
