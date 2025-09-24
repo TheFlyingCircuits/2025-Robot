@@ -21,6 +21,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -80,10 +82,12 @@ public class RobotContainer {
     private boolean groundAlgaeIntaking = false;
     private boolean shouldeGroundAlgaeIntake = false;
     
-    private boolean autoSelectBranch = true;
-    private boolean goingForCoralRP = false;
-    private int scoringPriority = 1;
-    private int[] rpLevelPriority = {4,3,2};
+    private SimpleWidget autoSelectBranch;
+    private SimpleWidget goingForCoralRP;
+    private SimpleWidget scoringPriority;
+    private SimpleWidget rpLevelPriority;
+
+    long l;
 
     
 
@@ -132,15 +136,25 @@ public class RobotContainer {
             leds = new Leds();
         }
 
-        Logger.recordOutput("robotContainer/goingForCoralRP", goingForCoralRP);
-        Logger.recordOutput("robotContainer/autoSelectScoring", autoSelectBranch);
-        Logger.recordOutput("robotContainer/scoringPriority", scoringPriority);
-        Logger.recordOutput("robotContainer/rpLevelPriority", rpLevelPriority);
+
+        double[] fillerList = new double[3];
+        fillerList[0] = 4;
+        fillerList[1] = 3;
+        fillerList[2] = 2;
+        autoSelectBranch = Shuffleboard.getTab("robotContainer")
+        .add("autoSelectBranch", false);
+
+        goingForCoralRP = Shuffleboard.getTab("robotContainer")
+        .add("goingForCoralRP", false);
+
+        scoringPriority = Shuffleboard.getTab("robotContainer")
+        .add("scoringPriority", (int)1);
+
+        rpLevelPriority = Shuffleboard.getTab("robotContainer")
+        .add("rpLevelPriority", fillerList);
 
         setDefaultCommands();
         
-
-
         duncanController = duncan.getXboxController();
         amaraController = amara.getXboxController();
 
@@ -189,7 +203,7 @@ public class RobotContainer {
         );
 
         // reef score
-        duncanController.rightBumper().and(() -> !hasAlgae).and(() -> !autoSelectBranch).whileTrue(
+        duncanController.rightBumper().and(() -> !hasAlgae).and(() -> !autoSelectBranch.getEntry().get().getBoolean()).whileTrue(
             scoreOnReefCommand(
                 duncan::getRequestedFieldOrientedVelocity, 
                 this::getDesiredOperatorsBranch,
@@ -200,15 +214,18 @@ public class RobotContainer {
             ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
         );
 
-        duncanController.rightBumper().and(() -> !hasAlgae).and(() -> autoSelectBranch).whileTrue(
+
+        duncanController.rightBumper().and(() -> !hasAlgae).and(() -> autoSelectBranch.getEntry().get().getBoolean()).whileTrue(
             scoreOnReefCommand(
                 duncan::getRequestedFieldOrientedVelocity, 
-                () -> scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), scoringPriority, goingForCoralRP, rpLevelPriority),
+                () -> scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), (int) scoringPriority.getEntry().get().getDouble(), goingForCoralRP.getEntry().get().getBoolean(), rpLevelPriority.getEntry().get().getDoubleArray()),
                 drivetrain::isFacingReef)
             .deadlineFor( // using "deadlineFor" instead of "alongWith" allows the command to end if we somehow score before seeing a tag
                 Commands.run(drivetrain::fullyTrustVisionNextPoseUpdate)
                 
-            ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
+            ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3).
+                alongWith(new InstantCommand( 
+                    () -> scoringChooser.setBranchScored(scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), (int) scoringPriority.getEntry().get().getDouble(), goingForCoralRP.getEntry().get().getBoolean(), rpLevelPriority.getEntry().get().getDoubleArray())))))
         );
 
         duncanController.rightBumper().and(() -> hasAlgae).whileTrue(
