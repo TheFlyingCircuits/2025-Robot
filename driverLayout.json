@@ -108,8 +108,8 @@
         "containers": [
           {
             "title": "hasAlgae",
-            "x": 1040.0,
-            "y": 0.0,
+            "x": 1120.0,
+            "y": 320.0,
             "width": 160.0,
             "height": 160.0,
             "type": "Boolean Box",
@@ -165,55 +165,6 @@
             "type": "Boolean Box",
             "properties": {
               "topic": "/FMSInfo/IsRedAlliance",
-              "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
-              "true_icon": "None",
-              "false_icon": "None"
-            }
-          },
-          {
-            "title": "MatchNumber",
-            "x": 1360.0,
-            "y": 160.0,
-            "width": 160.0,
-            "height": 160.0,
-            "type": "Match Time",
-            "properties": {
-              "topic": "/FMSInfo/MatchNumber",
-              "period": 0.06,
-              "data_type": "int",
-              "time_display_mode": "Minutes and Seconds",
-              "red_start_time": 15,
-              "yellow_start_time": 30
-            }
-          },
-          {
-            "title": "StationNumber",
-            "x": 1360.0,
-            "y": 0.0,
-            "width": 160.0,
-            "height": 160.0,
-            "type": "Match Time",
-            "properties": {
-              "topic": "/FMSInfo/StationNumber",
-              "period": 0.06,
-              "data_type": "int",
-              "time_display_mode": "Minutes and Seconds",
-              "red_start_time": 15,
-              "yellow_start_time": 30
-            }
-          },
-          {
-            "title": "isTranslationAligned",
-            "x": 400.0,
-            "y": 400.0,
-            "width": 160.0,
-            "height": 120.0,
-            "type": "Boolean Box",
-            "properties": {
-              "topic": "/AdvantageKit/RealOutputs/drivetrain/isTranslationAligned",
               "period": 0.06,
               "data_type": "boolean",
               "true_color": 4283215696,
@@ -294,8 +245,8 @@
           },
           {
             "title": "rpLevelPriority",
-            "x": 1100.0,
-            "y": 320.0,
+            "x": 860.0,
+            "y": 0.0,
             "width": 180.0,
             "height": 160.0,
             "type": "Text Display",
@@ -308,8 +259,8 @@
           },
           {
             "title": "scoringPriority",
-            "x": 1040.0,
-            "y": 160.0,
+            "x": 700.0,
+            "y": 0.0,
             "width": 160.0,
             "height": 160.0,
             "type": "Text Display",
@@ -761,6 +712,103 @@
               "period": 0.06,
               "data_type": "boolean"
             }
+          },
+          {
+            "title": "Sim Field",
+            "x": 1020.0,
+            "y": 520.0,
+            "width": 1000.0,
+            "height": 480.0,
+            "type": "Field",
+            "properties": {
+              "topic": "/SmartDashboard/VisionSystemSim-simulatedCoralLayout/Sim Field",
+              "period": 0.06,
+              "field_game": "Reefscape",
+              "robot_width": 0.85,
+              "robot_length": 0.85,
+              "show_other_objects": false,
+              "show_trajectories": false,
+              "field_rotation": 0.0,
+              "robot_color": 4294198070,
+              "trajectory_color": 4294967295
+            }
+          },
+          {
+            "title": "branchRPDone",
+            "x": 380.0,
+            "y": 400.0,
+            "width": 200.0,
+            "height": 120.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/scoringChooser/branchRPDone",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Enabled",
+            "x": 1040.0,
+            "y": 0.0,
+            "width": 160.0,
+            "height": 160.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/AdvantageKit/DriverStation/Enabled",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "AllianceStation",
+            "x": 1360.0,
+            "y": 0.0,
+            "width": 160.0,
+            "height": 160.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/DriverStation/AllianceStation",
+              "period": 0.06,
+              "data_type": "int"
+            }
+          },
+          {
+            "title": "FMSAttached",
+            "x": 1040.0,
+            "y": 160.0,
+            "width": 160.0,
+            "height": 160.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/AdvantageKit/DriverStation/FMSAttached",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "MatchNumber",
+            "x": 1360.0,
+            "y": 160.0,
+            "width": 160.0,
+            "height": 160.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/DriverStation/MatchNumber",
+              "period": 0.06,
+              "data_type": "int"
+            }
           }
         ]
       }
@@ -780,6 +828,7 @@
             "properties": {
               "topic": "/Shuffleboard/branches/FRONT_REEF_FACESTALK_A2",
               "period": 0.06,
+              "data_type": "boolean",
               "true_color": 4283215696,
               "false_color": 4294198070,
               "true_icon": "None",
@@ -804,6 +853,7 @@
             "properties": {
               "topic": "/Shuffleboard/robotContainer/autoSelectBranch",
               "period": 0.06,
+              "data_type": "boolean",
               "true_color": 4283215696,
               "false_color": 4294198070,
               "true_icon": "None",

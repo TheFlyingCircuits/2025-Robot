@@ -136,6 +136,7 @@ public class RobotContainer {
             leds = new Leds();
         }
 
+        scoringChooser.setBranchRPBoolean(false);
 
         double[] fillerList = new double[3];
         fillerList[0] = 4;

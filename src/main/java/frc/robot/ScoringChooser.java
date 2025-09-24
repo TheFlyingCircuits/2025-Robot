@@ -2,12 +2,21 @@ package frc.robot;
 
 import java.util.ArrayList;
 
+import org.littletonrobotics.junction.Logger;
+
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.PlayingField.ReefFace;
 import frc.robot.PlayingField.ReefStalk;
 
 public class ScoringChooser {
+
+    boolean branchRPDone = false;
+
+    public void setBranchRPBoolean(boolean rpBoolean) {
+        branchRPDone = rpBoolean;
+        Logger.recordOutput("scoringChooser/branchRPDone", branchRPDone);
+    }
     
     public void setBranchScored(ReefBranch branch) {
         branch.changeToScoredOn();
@@ -21,6 +30,7 @@ public class ScoringChooser {
                 amountScored++;
             }
         }
+
         return amountScored >= 5;
     }
 
@@ -58,9 +68,11 @@ public class ScoringChooser {
     public ReefBranch getBranchForRP(ReefFace desiredFace, double[] rpLevelPriority, int priority) {
         ArrayList<ReefBranch> branchPriority = new ArrayList<>(); 
         priority--;
+        boolean faceFullButNoRP = true;
         // goes through each level priority and sees if the 5 it needs for the rp is filled and if not it addes all of the branch level to the priority
         for (int i = 0; i < rpLevelPriority.length; i++) {
             if (!hasScoredFiveCoralOnLevel((int)rpLevelPriority[i])) {
+                faceFullButNoRP = false; // makes sure that we dont set rp to true if the face is fully bc list would be empty
                 for (ReefBranch reefBranch : desiredFace.getBranches((int)rpLevelPriority[i])) {
                     if (!reefBranch.scoredOn()) {
                         branchPriority.add(reefBranch);
@@ -70,9 +82,11 @@ public class ScoringChooser {
         }
         // if either got all of the l 4-2 for the rp of there is no places to score just call highest scoring thing
         if (priority > branchPriority.size() - 1) {
+            setBranchRPBoolean(faceFullButNoRP);
             return getHighestScoringAvailableBranch(desiredFace, priority+1);
         }
 
+        setBranchRPBoolean(false);
         return branchPriority.get(priority);
     }
 
