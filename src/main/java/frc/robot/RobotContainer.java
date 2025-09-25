@@ -79,13 +79,14 @@ public class RobotContainer {
     private boolean visionAssistedIntakeInTeleop = false;
     private boolean hasAlgae = false;
     private boolean proscessorScoringMode = false;
-    private boolean groundAlgaeIntaking = false;
-    private boolean shouldeGroundAlgaeIntake = false;
     
     private SimpleWidget autoSelectBranch;
     private SimpleWidget goingForCoralRP;
     private SimpleWidget scoringPriority;
     private SimpleWidget rpLevelPriority;
+
+    public boolean hasACoral = false;
+    public boolean lockedIntoAutoAlgae = false;
 
     long l;
 
@@ -143,7 +144,7 @@ public class RobotContainer {
         fillerList[1] = 3;
         fillerList[2] = 2;
         autoSelectBranch = Shuffleboard.getTab("robotContainer")
-        .add("autoSelectBranch", false);
+        .add("autoSelectBranch", true);
 
         goingForCoralRP = Shuffleboard.getTab("robotContainer")
         .add("goingForCoralRP", false);
@@ -215,7 +216,8 @@ public class RobotContainer {
             ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
         );
 
-
+        // duncanController.rightBumper().and(duncanController.y()).onTrue(new InstantCommand(() -> scoringPriority.getEntry()
+        //     .setDouble(scoringPriority.getEntry().get().getDouble() + 1.0)));
         duncanController.rightBumper().and(() -> !hasAlgae).and(() -> autoSelectBranch.getEntry().get().getBoolean()).whileTrue(
             scoreOnReefCommand(
                 duncan::getRequestedFieldOrientedVelocity, 
@@ -226,7 +228,8 @@ public class RobotContainer {
                 
             ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3).
                 alongWith(new InstantCommand( 
-                    () -> scoringChooser.setBranchScored(scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), (int) scoringPriority.getEntry().get().getDouble(), goingForCoralRP.getEntry().get().getBoolean(), rpLevelPriority.getEntry().get().getDoubleArray())))))
+                    () -> scoringChooser.setBranchScored(scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), (int) scoringPriority.getEntry().get().getDouble(), goingForCoralRP.getEntry().get().getBoolean(), rpLevelPriority.getEntry().get().getDoubleArray())))
+                    .alongWith(new InstantCommand(() -> scoringPriority.getEntry().setDouble(1.0)))))
         );
 
         duncanController.rightBumper().and(() -> hasAlgae).whileTrue(
@@ -250,6 +253,12 @@ public class RobotContainer {
             removeAlgae(),
             scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, this::getDesiredOperatorsBranch, drivetrain::isFacingReef)
         ));
+
+        duncanController.b().and(() -> (hasACoral || lockedIntoAutoAlgae)).whileTrue(
+            autoPickupAlgaeFromReef()
+        ).onFalse(
+            new InstantCommand(() -> this.hasAlgae = true)
+        );
 
         //algae pickup
         duncanController.b().and(() -> !hasAlgae).whileTrue(
@@ -279,7 +288,7 @@ public class RobotContainer {
             .alongWith(new InstantCommand(() -> this.hasAlgae = false))
         );
 
-        duncanController.leftTrigger().and(() ->hasAlgae).and(() -> (!proscessorScoringMode) || (arm.getShoulderAngleDegrees() > 20)).whileTrue(
+        duncanController.leftTrigger().and(() -> hasAlgae).and(() -> (!proscessorScoringMode) || (arm.getShoulderAngleDegrees() > 20)).whileTrue(
             new InstantCommand()
         ).onFalse(new InstantCommand(() -> this.proscessorScoringMode = true));
 
@@ -358,6 +367,8 @@ public class RobotContainer {
         hasCoral.onTrue(leds.strobeCommand(Color.kWhite, 4, 0.5).ignoringDisable(true));
         hasCoral.onFalse(leds.strobeCommand(Color.kYellow, 4, 0.5).ignoringDisable(true));
         hasCoral.onTrue(duncan.rumbleController(1.0).withTimeout(0.5));
+        hasCoral.onTrue(new InstantCommand(() -> hasACoral = true));
+        hasCoral.onTrue(new InstantCommand(() -> hasACoral = false));
 
         // Coast Mode Switch
         Trigger coastModeLimitSwitch = new Trigger(() -> coastModeButton.get() && DriverStation.isDisabled());
@@ -504,6 +515,20 @@ public class RobotContainer {
         // drivetrain.fieldOrientedDriveOnALine(duncan.getRequestedFieldOrientedVelocity(), pickupPose);
         // drivetrain.pidToPose(pickupPose, 1.0);
     }).finallyDo(drivetrain::resetCenterOfRotation);}
+
+
+    private Command autoPickupAlgaeFromReef() {
+        return new ConditionalCommand(
+            new ParallelCommandGroup(
+                arm.extension.setTargetLengthCommand(0.92),
+                arm.shoulder.safeSetTargetAngleCommand(desiredLevel)
+            ),
+            new PickupAlgae(false, arm, placerGrabber, drivetrain, wrist, duncan::getRequestedFieldOrientedVelocity),
+            () -> drivetrain.getClosestReefFace().isHighAlgae()
+        ).until(() -> placerGrabber.getFrontRollerAmps() > 26)
+            .andThen(backAwayFromReef(0.75)); //this command should never end so that hasAlgae can switch to false
+            
+    }
 
     private Command pickupAlgaeFromReef() {
 
