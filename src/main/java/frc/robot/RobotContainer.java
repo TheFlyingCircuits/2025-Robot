@@ -254,11 +254,11 @@ public class RobotContainer {
             scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, this::getDesiredOperatorsBranch, drivetrain::isFacingReef)
         ));
 
-        duncanController.b().and(() -> (hasACoral || lockedIntoAutoAlgae)).whileTrue(
-            autoPickupAlgaeFromReef()
-        ).onFalse(
-            new InstantCommand(() -> this.hasAlgae = true)
-        );
+        // duncanController.b().and(() -> (hasACoral || lockedIntoAutoAlgae)).whileTrue(
+        //     autoPickupAlgaeFromReef()
+        // ).onFalse(
+        //     new InstantCommand(() -> this.hasAlgae = true)
+        // );
 
         //algae pickup
         duncanController.b().and(() -> !hasAlgae).whileTrue(
