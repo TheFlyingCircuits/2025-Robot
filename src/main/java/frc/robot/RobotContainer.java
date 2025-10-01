@@ -189,7 +189,7 @@ public class RobotContainer {
         }
 
         // ground intake
-        duncanController.rightTrigger().whileTrue(
+        duncanController.rightTrigger().and(() -> !hasAlgae).whileTrue(
             intakeUntilCoralAcquired()
         );
         
@@ -249,9 +249,31 @@ public class RobotContainer {
         ));
 
         // remove algae, then score
-        duncanController.a().whileTrue(Commands.sequence(
+        duncanController.a().and(() -> !autoSelectBranch.getEntry().get().getBoolean()).whileTrue(Commands.sequence(
             removeAlgae(),
-            scoreOnReefCommand(duncan::getRequestedFieldOrientedVelocity, this::getDesiredOperatorsBranch, drivetrain::isFacingReef)
+            scoreOnReefCommand(
+                duncan::getRequestedFieldOrientedVelocity, 
+                this::getDesiredOperatorsBranch,
+                drivetrain::isFacingReef)
+            .deadlineFor( // using "deadlineFor" instead of "alongWith" allows the command to end if we somehow score before seeing a tag
+                Commands.run(drivetrain::fullyTrustVisionNextPoseUpdate)
+                
+            ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3))
+        ));
+
+        duncanController.a().and(() -> autoSelectBranch.getEntry().get().getBoolean()).whileTrue(Commands.sequence(
+            removeAlgae(),
+            scoreOnReefCommand(
+                duncan::getRequestedFieldOrientedVelocity, 
+                () -> scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), (int) scoringPriority.getEntry().get().getDouble(), goingForCoralRP.getEntry().get().getBoolean(), rpLevelPriority.getEntry().get().getDoubleArray()),
+                drivetrain::isFacingReef)
+            .deadlineFor( // using "deadlineFor" instead of "alongWith" allows the command to end if we somehow score before seeing a tag
+                Commands.run(drivetrain::fullyTrustVisionNextPoseUpdate)
+                
+            ).andThen(stowArm().alongWith(backAwayFromReef(0.5)).withTimeout(0.3).
+                alongWith(new InstantCommand( 
+                    () -> scoringChooser.setBranchScored(scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), (int) scoringPriority.getEntry().get().getDouble(), goingForCoralRP.getEntry().get().getBoolean(), rpLevelPriority.getEntry().get().getDoubleArray())))
+                    .alongWith(new InstantCommand(() -> scoringPriority.getEntry().setDouble(1.0)))))
         ));
 
         // duncanController.b().and(() -> (hasACoral || lockedIntoAutoAlgae)).whileTrue(
@@ -275,20 +297,19 @@ public class RobotContainer {
 
 
         // ground algae pick up need to test
-        duncanController.leftTrigger().and(() -> !hasAlgae).whileTrue(pickupAlgaeFromGround().until( () -> placerGrabber.getFrontRollerAmps() > 26).andThen(new InstantCommand(() -> this.hasAlgae = true)));
+        duncanController.leftTrigger().and(() -> !hasAlgae).whileTrue(pickupAlgaeFromGround().until( () -> placerGrabber.getFrontRollerAvgAmps() > 13.5).andThen(new InstantCommand(() -> this.hasAlgae = true)));
 
         duncanController.povRight().onTrue(new InstantCommand(() -> this.hasAlgae = false).alongWith(
             new InstantCommand(() -> CommandScheduler.getInstance().cancelAll())
         ));
 
         // processor scoring
-        duncanController.leftTrigger().and(() -> hasAlgae).and(() -> proscessorScoringMode).and(() -> (arm.getShoulderAngleDegrees() < 20)).whileTrue(
+        duncanController.rightTrigger().and(() -> hasAlgae).and(() -> proscessorScoringMode).and(() -> (arm.getShoulderAngleDegrees() < 20)).whileTrue(
             placerGrabber.setPlacerGrabberVoltsCommand(-11, 0)
-            .finallyDo(() -> this.proscessorScoringMode = false)
-            .alongWith(new InstantCommand(() -> this.hasAlgae = false))
-        );
+        ).onFalse(new InstantCommand(() -> this.proscessorScoringMode = false)
+        .alongWith(new InstantCommand(() -> this.hasAlgae = false)));
 
-        duncanController.leftTrigger().and(() -> hasAlgae).and(() -> (!proscessorScoringMode) || (arm.getShoulderAngleDegrees() > 20)).whileTrue(
+        duncanController.rightTrigger().and(() -> hasAlgae).and(() -> (!proscessorScoringMode) || (arm.getShoulderAngleDegrees() > 20)).whileTrue(
             new InstantCommand()
         ).onFalse(new InstantCommand(() -> this.proscessorScoringMode = true));
 
