@@ -13,6 +13,12 @@ public record SingleTagPoseObservation (String camName, Pose3d robotPose, double
     public Matrix<N3, N1> getStandardDeviations() {
         double slopeStdDevMeters_PerMeter = 0.003;
 
+        if (tagToCamMeters < 1.5) {
+            slopeStdDevMeters_PerMeter = 0.0;
+        } else if(tagToCamMeters < 2.5) {
+            slopeStdDevMeters_PerMeter = 0.001;
+        }
+
         return VecBuilder.fill(
             slopeStdDevMeters_PerMeter*tagToCamMeters,
             slopeStdDevMeters_PerMeter*tagToCamMeters,

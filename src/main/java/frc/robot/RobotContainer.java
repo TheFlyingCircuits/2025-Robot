@@ -194,7 +194,8 @@ public class RobotContainer {
         );
         
         // trough score
-        duncanController.y().whileTrue(troughScore());
+        duncanController.y().whileTrue(troughScore().deadlineFor( // using "deadlineFor" instead of "alongWith" allows the command to end if we somehow score before seeing a tag
+                Commands.run(drivetrain::fullyTrustVisionNextPoseUpdate)));
         duncanController.y().onFalse(
             scoreCoral(true)
             .raceWith(
@@ -338,13 +339,13 @@ public class RobotContainer {
             // climb prep
             duncanController.povUp().onTrue(new ParallelCommandGroup(
                 arm.shoulder.setTargetAngleCommand(101.4),
-                wrist.setTargetPositionCommand(0)
+                wrist.setTargetPositionCommand(WristConstants.minAngleDegrees + 10)
             ));
 
             // climb pull
             duncanController.povDown().onTrue(new ParallelCommandGroup(
                 arm.shoulder.run(() -> arm.setShoulderVoltage(-5)),
-                wrist.setTargetPositionCommand(13),
+                wrist.setTargetPositionCommand(-arm.getShoulderAngleDegrees() + 13), // 13 deg
                 arm.extension.setTargetLengthCommand(0.75)
             ));
         }
@@ -537,27 +538,13 @@ public class RobotContainer {
         // drivetrain.pidToPose(pickupPose, 1.0);
     }).finallyDo(drivetrain::resetCenterOfRotation);}
 
-
-    private Command autoPickupAlgaeFromReef() {
-        return new ConditionalCommand(
-            new ParallelCommandGroup(
-                arm.extension.setTargetLengthCommand(0.92),
-                arm.shoulder.safeSetTargetAngleCommand(desiredLevel)
-            ),
-            new PickupAlgae(false, arm, placerGrabber, drivetrain, wrist, duncan::getRequestedFieldOrientedVelocity),
-            () -> drivetrain.getClosestReefFace().isHighAlgae()
-        ).until(() -> placerGrabber.getFrontRollerAmps() > 26)
-            .andThen(backAwayFromReef(0.75)); //this command should never end so that hasAlgae can switch to false
-            
-    }
-
     private Command pickupAlgaeFromReef() {
 
         return new ConditionalCommand(
             new PickupAlgae(true, arm, placerGrabber, drivetrain, wrist, duncan::getRequestedFieldOrientedVelocity),
             new PickupAlgae(false, arm, placerGrabber, drivetrain, wrist, duncan::getRequestedFieldOrientedVelocity),
             () -> drivetrain.getClosestReefFace().isHighAlgae()
-        ).until(() -> placerGrabber.getFrontRollerAvgAmps() > 12)
+        ).until(() -> placerGrabber.getFrontRollerAvgAmps() > 13.5)
             .andThen(backAwayFromReef(0.75)); //this command should never end so that hasAlgae can switch to false
             
     }
