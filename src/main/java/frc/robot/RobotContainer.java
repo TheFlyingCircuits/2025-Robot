@@ -298,7 +298,10 @@ public class RobotContainer {
                 drivetrain::isFacingReef)
             .deadlineFor( // using "deadlineFor" instead of "alongWith" allows the command to end if we somehow score before seeing a tag
                 Commands.run(drivetrain::fullyTrustVisionNextPoseUpdate)
-            ).andThen(AutoRemoveAlgae()))
+            ).andThen(new InstantCommand( 
+                    () -> scoringChooser.setBranchScored(scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), (int) scoringPriority.getEntry().get().getDouble(), goingForCoralRP.getEntry().get().getBoolean(), rpLevelPriority.getEntry().get().getDoubleArray())))
+                    .alongWith(new InstantCommand(() -> scoringPriority.getEntry().setDouble(1.0))))
+                    .andThen(AutoRemoveAlgae()))
         ).onFalse(new InstantCommand(() -> this.hasAlgae = true));
         
         // duncanController.b().and(() -> hasAlgae).whileTrue(

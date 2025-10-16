@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.DrivetrainConstants;
+import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.ReefFace;
 import frc.robot.subsystems.arm.Arm;
@@ -44,7 +45,7 @@ public class AutoPickupAlgae extends Command {
         isHighAlgae=closestFace.get().isHighAlgae();
         this.translationController=translationController;
         this.placerGrabber = placerGrabber;
-        addRequirements(drivetrain, arm.shoulder, arm.extension, wrist);
+        addRequirements(drivetrain, arm.shoulder, arm.extension, wrist, placerGrabber);
 
         super.setName("AutoPickupAlgae");
     }
@@ -81,8 +82,8 @@ public class AutoPickupAlgae extends Command {
     @Override
     public void initialize() {
         
-        retractionAdjustedX = 0.4;
-        retractedAndWaitingForOthersAdjustedX = 0.2;
+        retractionAdjustedX = 0.425;
+        retractedAndWaitingForOthersAdjustedX = 0.275;
         intakeAlgaeAdjustedX = -0.05;
 
     }
@@ -94,10 +95,12 @@ public class AutoPickupAlgae extends Command {
         double wristTargetAngle;
         double adjustedX;
 
-        arm.extension.setTargetLengthCommand(extensionTargetLength);
+        arm.setExtensionTargetLength(extensionTargetLength);
         boolean extensionNearTarget = Math.abs(arm.getExtensionMeters() - extensionTargetLength) < 0.1;
         Logger.recordOutput("autoPickup/extensionTargetError",Math.abs(arm.getExtensionMeters() - extensionTargetLength));
         Logger.recordOutput("autoPickup/extensionNearTarget",extensionNearTarget);
+        Logger.recordOutput("autoPickup/extensionTargetLength",extensionTargetLength);
+        Logger.recordOutput("autoPickup/arm.getExtensionMeters()",arm.getExtensionMeters());
         if (extensionNearTarget) {
             shoulderTargetAngle = isHighAlgae ? 65.3: 47;
         } else {
@@ -107,12 +110,12 @@ public class AutoPickupAlgae extends Command {
         if (extensionNearTarget) {
             wristTargetAngle = isHighAlgae ? -52 : -46;
         } else {
-            wristTargetAngle = ArmPosition.frontL4.wristAngleDegrees;
+            wristTargetAngle = 90;
         }
 
-        arm.shoulder.setTargetAngleCommand(shoulderTargetAngle);
-        wrist.setTargetPositionCommand(wristTargetAngle);
-        placerGrabber.setPlacerGrabberVoltsCommand(10, 0);
+        arm.setShoulderTargetAngle(shoulderTargetAngle);
+        wrist.setTargetPositionDegrees(wristTargetAngle);
+        placerGrabber.setFrontRollerVolts(10);
 
         boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - shoulderTargetAngle) < 5;
         boolean wristNearTarget = Math.abs(wrist.getWristAngleDegrees() - wristTargetAngle) < 5;
@@ -121,8 +124,8 @@ public class AutoPickupAlgae extends Command {
             adjustedX = retractionAdjustedX;
         } else if (extensionNearTarget && (!wristNearTarget||!shoulderNearTarget)) {
             adjustedX = retractedAndWaitingForOthersAdjustedX;
-        } else if (placerGrabber.getFrontRollerAvgAmps() > 16){
-            adjustedX = 0.5;
+        } else if (placerGrabber.getFrontRollerAvgAmps() > 13.5){
+            adjustedX = 1.0;
         } else {
             adjustedX=intakeAlgaeAdjustedX;
         }
