@@ -45,6 +45,7 @@ import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
 import frc.robot.commands.AimAtBarge;
 import frc.robot.commands.AimAtReef;
+import frc.robot.commands.AutoPickupAlgae;
 import frc.robot.commands.PickupAlgae;
 import frc.robot.commands.RemoveAlgae;
 import frc.robot.subsystems.HumanDriver;
@@ -284,17 +285,27 @@ public class RobotContainer {
         // );
 
         //algae pickup
-        duncanController.b().and(() -> !hasAlgae).whileTrue(
-            pickupAlgaeFromReef()
-        ).onFalse(
-            new InstantCommand(() -> this.hasAlgae = true)
-        );
+        // duncanController.b().and(() -> !hasAlgae).whileTrue(
+        //     pickupAlgaeFromReef()
+        // ).onFalse(
+        //     new InstantCommand(() -> this.hasAlgae = true)
+        // );
+
+        duncanController.b().whileTrue(Commands.sequence(
+            scoreOnReefCommand(
+                duncan::getRequestedFieldOrientedVelocity, 
+                () -> scoringChooser.getAutoSelectedBranch(drivetrain.getClosestReefFace(), (int) scoringPriority.getEntry().get().getDouble(), goingForCoralRP.getEntry().get().getBoolean(), rpLevelPriority.getEntry().get().getDoubleArray()),
+                drivetrain::isFacingReef)
+            .deadlineFor( // using "deadlineFor" instead of "alongWith" allows the command to end if we somehow score before seeing a tag
+                Commands.run(drivetrain::fullyTrustVisionNextPoseUpdate)
+            ).andThen(AutoRemoveAlgae()))
+        ).onFalse(new InstantCommand(() -> this.hasAlgae = true));
         
-        duncanController.b().and(() -> hasAlgae).whileTrue(
-            putDownAlgae() // DON'T actually score with this use to eject algae of get out of algae mode press start for score
-        ).onFalse(
-            new InstantCommand(() -> this.hasAlgae = false)
-        );
+        // duncanController.b().and(() -> hasAlgae).whileTrue(
+        //     putDownAlgae() // DON'T actually score with this use to eject algae of get out of algae mode press start for score
+        // ).onFalse(
+        //     new InstantCommand(() -> this.hasAlgae = false)
+        // );
 
 
         // ground algae pick up need to test
@@ -576,12 +587,17 @@ public class RobotContainer {
         ).withTimeout(0.25);
         Command waitForAlignment = new WaitUntilCommand(aim::readyToScore);
         Command scoreCoral = scoreCoral(false);
-        Command manualScoreRequested = new WaitUntilCommand(duncanController.b());
+        Command manualScoreRequested = new WaitUntilCommand(duncanController.y());
 
         //suck the coral while we are waiting for alignment to avoid command errors
         Command waitPlusSucc = waitForAlignment.raceWith(manualScoreRequested).deadlineFor(succCoral);
 
         return aim.withDeadline(waitPlusSucc.andThen(scoreCoral));
+    }
+
+    public Command AutoRemoveAlgae() {
+        return new AutoPickupAlgae(drivetrain, arm, wrist,
+            () -> drivetrain.getClosestReefFace(), duncan::getRequestedFieldOrientedVelocity, placerGrabber);
     }
 
     public Command backAwayFromReef(double speedMetersPerSecond) { return drivetrain.run(() -> {

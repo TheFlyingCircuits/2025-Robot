@@ -119,6 +119,7 @@ public class Drivetrain extends SubsystemBase {
         SwerveModuleIO brSwerveModuleIO,
         VisionIO visionIO
     ) {
+        
         this.gyroIO = gyroIO;
         gyroInputs = new GyroIOInputsAutoLogged();
 
