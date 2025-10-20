@@ -57,7 +57,7 @@ public class RemoveAlgae extends ParallelRaceGroup {
     });}
 
     private Command aimArmAtAlgae(boolean isHighAlgae) {
-        double targetDegrees = isHighAlgae ? 51 : 35;
+        double targetDegrees = isHighAlgae ? 52 : 35;
         BooleanSupplier aimComplete = () -> {return Math.abs(arm.getShoulderAngleDegrees()-targetDegrees) < 5;};
         return arm.shoulder.setTargetAngleCommand(targetDegrees).until(aimComplete);
     }

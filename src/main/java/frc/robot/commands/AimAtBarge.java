@@ -60,8 +60,8 @@ public class AimAtBarge extends Command {
         double centerLineXMeters = 8.811;
 
         double centerLineToTapeMeters = 0.59;
-        double adjustedXMeters = centerLineToTapeMeters + (DrivetrainConstants.bumperWidthMeters/2) + 0; //final adition is fudge factor
-        adjustedXMeters *= isBlueAlliance ? -1 : 1;
+        double adjustedXMeters = centerLineToTapeMeters + (DrivetrainConstants.bumperWidthMeters/2) + 0.080; //final adition is fudge factor
+        adjustedXMeters *= isBlueAlliance ? -1 : 1; //was at .075
 
         Pose2d scoringPose = new Pose2d(
             centerLineXMeters + adjustedXMeters, 

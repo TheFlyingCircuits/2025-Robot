@@ -159,19 +159,19 @@ public class Drivetrain extends SubsystemBase {
             new Pose2d());
 
         //angleController = new PIDController(11, 0, 0.5); // kP has units of degreesPerSecond per degree of error.
-        angleController = new PIDController(5, 0, 0.0); 
+        angleController = new PIDController(5, 0, 0.3); 
         angleController.enableContinuousInput(-180, 180);
         angleController.setTolerance(1); // degrees, degreesPerSecond.
 
-        translationController = new PIDController(3.75, 0, 0.0); // kP has units of metersPerSecond per meter of error.
+        translationController = new PIDController(3.75, 0, 0.1); // kP has units of metersPerSecond per meter of error.
         translationController.setTolerance(0.02, 1.0); // meters, metersPerSecond
 
         SmartDashboard.putData("drivetrain/angleController", angleController);
         SmartDashboard.putData("drivetrain/translationController", translationController);
 
-        profiledController = new ProfiledPIDController(2.8, 0, 0.0, new TrapezoidProfile.Constraints(
+        profiledController = new ProfiledPIDController(2.8, 0, 0.125, new TrapezoidProfile.Constraints(
             4, 4));
-        profiledController.setTolerance(0.01, 0.01);
+        profiledController.setTolerance(0.05, 0.5);
 
 
         //configPathPlanner();  

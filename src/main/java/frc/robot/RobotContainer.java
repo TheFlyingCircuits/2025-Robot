@@ -304,6 +304,7 @@ public class RobotContainer {
                     .andThen(AutoRemoveAlgae()))
         ).onFalse(new InstantCommand(() -> this.hasAlgae = true));
         
+        duncanController.back().whileTrue(AutoRemoveAlgae()).onFalse(new InstantCommand(() -> this.hasAlgae = true));
         // duncanController.b().and(() -> hasAlgae).whileTrue(
         //     putDownAlgae() // DON'T actually score with this use to eject algae of get out of algae mode press start for score
         // ).onFalse(

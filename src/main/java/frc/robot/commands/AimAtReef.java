@@ -177,8 +177,8 @@ public class AimAtReef extends Command {
         /**** ARM ALIGNMENT ****/
 
 
-        boolean closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
-        boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 2;
+        boolean closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1.0;
+        boolean movingSlow = drivetrain.getSpeedMetersPerSecond() < 2.0;
 
         Translation2d frontFace = FieldElement.FRONT_REEF_FACE.getLocation2d();
         Translation2d backFace = FieldElement.BACK_REEF_FACE.getLocation2d();
@@ -234,8 +234,9 @@ public class AimAtReef extends Command {
             }
             
             // drivetrain.beeLineToPose(targetPose);
-            closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1;
+            closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1.25;
             if (!closeToReef) {
+                // drivetrain.profileToPose(targetPose);
                 drivetrain.profileToPose(targetPose);
             } else {
                 drivetrain.pidToPose(targetPose, maxSpeed);

@@ -45,7 +45,7 @@ public class ArmPosition {
     //1 coral distance
     public static final ArmPosition backL4 = new ArmPosition(92.81, 134.95, ArmConstants.maxExtensionMeters);
 
-    public static final ArmPosition backBarge = new ArmPosition(80, -10, ArmConstants.maxExtensionMeters);
+    public static final ArmPosition backBarge = new ArmPosition(78.5, -10, ArmConstants.maxExtensionMeters);
 
     /**
         * Creates a new ArmPosition object, representing the position of the arm at a given point.

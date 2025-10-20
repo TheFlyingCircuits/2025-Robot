@@ -10,7 +10,6 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.DrivetrainConstants;
-import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.ReefFace;
 import frc.robot.subsystems.arm.Arm;
@@ -90,7 +89,7 @@ public class AutoPickupAlgae extends Command {
 
     @Override
     public void execute() {
-        double extensionTargetLength = isHighAlgae ? 0.92 : 0.71;
+        double extensionTargetLength = closestFace.get().isHighAlgae() ? 0.92 : 0.71;
         double shoulderTargetAngle;
         double wristTargetAngle;
         double adjustedX;
@@ -102,13 +101,13 @@ public class AutoPickupAlgae extends Command {
         Logger.recordOutput("autoPickup/extensionTargetLength",extensionTargetLength);
         Logger.recordOutput("autoPickup/arm.getExtensionMeters()",arm.getExtensionMeters());
         if (extensionNearTarget) {
-            shoulderTargetAngle = isHighAlgae ? 65.3: 47;
+            shoulderTargetAngle = closestFace.get().isHighAlgae() ? 65.3: 47;
         } else {
             shoulderTargetAngle = ArmPosition.frontL4.shoulderAngleDegrees;
         }
 
         if (extensionNearTarget) {
-            wristTargetAngle = isHighAlgae ? -52 : -46;
+            wristTargetAngle = closestFace.get().isHighAlgae() ? -52 : -46;
         } else {
             wristTargetAngle = 90;
         }
