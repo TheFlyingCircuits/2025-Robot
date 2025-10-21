@@ -237,7 +237,7 @@ public class AimAtReef extends Command {
             closeToReef = targetPose.minus(drivetrain.getPoseMeters()).getTranslation().getNorm() < 1.25;
             if (!closeToReef) {
                 // drivetrain.profileToPose(targetPose);
-                drivetrain.profileToPose(targetPose);
+                drivetrain.pidToPose(targetPose, 2.0);
             } else {
                 drivetrain.pidToPose(targetPose, maxSpeed);
             }

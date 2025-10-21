@@ -22,8 +22,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -39,7 +37,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -98,10 +95,6 @@ public class Drivetrain extends SubsystemBase {
     /** error measured in meters, output is in meters per second. */
     private PIDController translationController;
 
-    private ProfiledPIDController profiledController;
-
-    private SimpleMotorFeedforward motorFeedForward;
-
     /** used to rotate about the intake instead of the center of the robot */
     private Transform2d centerOfRotation_robotFrame = new Transform2d();
     private double intakeX_robotFrame = (DrivetrainConstants.bumperWidthMeters / 2.0);
@@ -159,19 +152,15 @@ public class Drivetrain extends SubsystemBase {
             new Pose2d());
 
         //angleController = new PIDController(11, 0, 0.5); // kP has units of degreesPerSecond per degree of error.
-        angleController = new PIDController(5, 0, 0.3); 
+        angleController = new PIDController(5, 0, 0.0); 
         angleController.enableContinuousInput(-180, 180);
         angleController.setTolerance(1); // degrees, degreesPerSecond.
 
-        translationController = new PIDController(3.75, 0, 0.1); // kP has units of metersPerSecond per meter of error.
+        translationController = new PIDController(1.0, 0, 0.0); // kP has units of metersPerSecond per meter of error.
         translationController.setTolerance(0.02, 1.0); // meters, metersPerSecond
 
         SmartDashboard.putData("drivetrain/angleController", angleController);
         SmartDashboard.putData("drivetrain/translationController", translationController);
-
-        profiledController = new ProfiledPIDController(2.8, 0, 0.125, new TrapezoidProfile.Constraints(
-            4, 4));
-        profiledController.setTolerance(0.05, 0.5);
 
 
         //configPathPlanner();  
@@ -405,12 +394,43 @@ public class Drivetrain extends SubsystemBase {
         this.fieldOrientedDriveWhileAiming(desiredVelocity, directionToPoint);
     }
 
+    public void autolineUpWithPose(Pose2d desired, double pValue) {
+        Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
+
+        Pose2d current = getPoseMeters();
+
+        Translation2d error = desired.getTranslation().minus(current.getTranslation());
+
+        Logger.recordOutput("drivetrain/pidErrorMeters", error);
+        
+        double pidOutputMetersPerSecond = -translationController.calculate(error.getNorm(), 0);
+
+
+        if (translationController.atSetpoint()) {
+            pidOutputMetersPerSecond = 0;
+        }
+
+        // pidOutputMetersPerSecond = MathUtil.clamp(pidOutputMetersPerSecond, -maxSpeedMetersPerSecond, maxSpeedMetersPerSecond);
+
+        double xMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getCos();
+        double yMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getSin();
+        
+        fieldOrientedDriveWhileAiming(
+            new ChassisSpeeds(
+                xMetersPerSecond,
+                yMetersPerSecond,
+                0
+            ),
+            desired.getRotation()
+        );
+    }
 
     /**
      * Uses PID control to reach a target pose2d.
      * 
      * @param maxSpeedMetersPerSecond - Max speed that the robot will travel at while PID-ing. The output of the translation is clamped to never exceed this value.
      */
+    
     public void pidToPose(Pose2d desired, double maxSpeedMetersPerSecond) {
         Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
 
@@ -442,48 +462,8 @@ public class Drivetrain extends SubsystemBase {
         );
     }
 
-    public void resetProfile(Pose2d desired) {
 
-        Pose2d current = getPoseMeters();
-
-        Translation2d error = desired.getTranslation().minus(current.getTranslation());
-        profiledController.reset(error.getNorm(), getSpeedMetersPerSecond());
-    }
-
-    public void profileToPose(Pose2d desired) {
-        Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
-
-        Pose2d current = getPoseMeters();
-
-        Translation2d error = desired.getTranslation().minus(current.getTranslation());
-
-        Logger.recordOutput("drivetrain/pidErrorMeters", error);
-        
-        double profiledOutputMetersPerSecond = -profiledController.calculate(error.getNorm(), 0)
-         - profiledController.getSetpoint().velocity;
-
-
-        // copy and pasted tollerance from pid to pose
-
-        double fillerValue = -translationController.calculate(error.getNorm(), 0);
-
-        if (translationController.atSetpoint()) {
-            profiledOutputMetersPerSecond = 0;
-        }
-
-
-        double xMetersPerSecond = profiledOutputMetersPerSecond*error.getAngle().getCos();
-        double yMetersPerSecond = profiledOutputMetersPerSecond*error.getAngle().getSin();
-        
-        fieldOrientedDriveWhileAiming(
-            new ChassisSpeeds(
-                xMetersPerSecond,
-                yMetersPerSecond,
-                0
-            ),
-            desired.getRotation()
-        );
-    }
+    
 
     //could be used for a drivetrain command in the future; leave this as its own function
     private void setModuleStates(SwerveModuleState[] desiredStates, boolean closedLoop) {

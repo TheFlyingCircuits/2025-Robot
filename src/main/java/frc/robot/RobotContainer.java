@@ -43,6 +43,7 @@ import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
+import frc.robot.PlayingField.ReefFace;
 import frc.robot.commands.AimAtBarge;
 import frc.robot.commands.AimAtReef;
 import frc.robot.commands.AutoPickupAlgae;
@@ -85,6 +86,8 @@ public class RobotContainer {
     private SimpleWidget goingForCoralRP;
     private SimpleWidget scoringPriority;
     private SimpleWidget rpLevelPriority;
+
+    private SimpleWidget pidTestingValue;
 
     public boolean hasACoral = false;
     public boolean lockedIntoAutoAlgae = false;
@@ -156,15 +159,24 @@ public class RobotContainer {
         rpLevelPriority = Shuffleboard.getTab("robotContainer")
         .add("rpLevelPriority", fillerList);
 
+        pidTestingValue = Shuffleboard.getTab("robotContainer")
+        .add("pidPvalue", 1.0);
+
         setDefaultCommands();
         
         duncanController = duncan.getXboxController();
         amaraController = amara.getXboxController();
 
-        realBindings();
+        fakeBindings();
         triggers();
 
         
+    }
+
+    private void fakeBindings() {
+        duncanController.rightTrigger().whileTrue(Commands.run(() -> drivetrain.autolineUpWithPose(ReefFace.BACK_REEF_FACE.getPose2d().plus(
+            new Transform2d(1,0, Rotation2d.k180deg)
+        ), pidTestingValue.getEntry().get().getDouble()), drivetrain));
     }
 
 
