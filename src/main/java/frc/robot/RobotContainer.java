@@ -175,7 +175,7 @@ public class RobotContainer {
 
     private void fakeBindings() {
         duncanController.rightTrigger().whileTrue(Commands.run(() -> drivetrain.autolineUpWithPose(ReefFace.BACK_REEF_FACE.getPose2d().plus(
-            new Transform2d(1,0, Rotation2d.k180deg)
+            new Transform2d(0.6,0, Rotation2d.k180deg)
         ), pidTestingValue.getEntry().get().getDouble()), drivetrain));
     }
 

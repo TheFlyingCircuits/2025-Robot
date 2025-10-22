@@ -396,6 +396,7 @@ public class Drivetrain extends SubsystemBase {
 
     public void autolineUpWithPose(Pose2d desired, double pValue) {
         Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
+        translationController.setP(pValue);
 
         Pose2d current = getPoseMeters();
 
