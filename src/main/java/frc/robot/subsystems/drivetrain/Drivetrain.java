@@ -156,7 +156,7 @@ public class Drivetrain extends SubsystemBase {
         angleController.enableContinuousInput(-180, 180);
         angleController.setTolerance(1); // degrees, degreesPerSecond.
 
-        translationController = new PIDController(1.0, 0, 0.0); // kP has units of metersPerSecond per meter of error.
+        translationController = new PIDController(2.0, 0, 0.0); // kP has units of metersPerSecond per meter of error.
         translationController.setTolerance(0.02, 1.0); // meters, metersPerSecond
 
         SmartDashboard.putData("drivetrain/angleController", angleController);
@@ -394,9 +394,9 @@ public class Drivetrain extends SubsystemBase {
         this.fieldOrientedDriveWhileAiming(desiredVelocity, directionToPoint);
     }
 
-    public void autolineUpWithPose(Pose2d desired, double pValue) {
+    public void pidToPose(Pose2d desired, double maxSpeedMetersPerSecond) {
         Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
-        translationController.setP(pValue);
+        // translationController.setP(pValue);
 
         Pose2d current = getPoseMeters();
 
@@ -413,6 +413,7 @@ public class Drivetrain extends SubsystemBase {
 
         // pidOutputMetersPerSecond = MathUtil.clamp(pidOutputMetersPerSecond, -maxSpeedMetersPerSecond, maxSpeedMetersPerSecond);
 
+        pidOutputMetersPerSecond = MathUtil.clamp(pidOutputMetersPerSecond, -maxSpeedMetersPerSecond, maxSpeedMetersPerSecond);
         double xMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getCos();
         double yMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getSin();
         
@@ -432,36 +433,36 @@ public class Drivetrain extends SubsystemBase {
      * @param maxSpeedMetersPerSecond - Max speed that the robot will travel at while PID-ing. The output of the translation is clamped to never exceed this value.
      */
     
-    public void pidToPose(Pose2d desired, double maxSpeedMetersPerSecond) {
-        Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
+    // public void pidToPose(Pose2d desired, double maxSpeedMetersPerSecond) {
+    //     Logger.recordOutput("drivetrain/pidSetpointMeters", desired);
 
-        Pose2d current = getPoseMeters();
+    //     Pose2d current = getPoseMeters();
 
-        Translation2d error = desired.getTranslation().minus(current.getTranslation());
+    //     Translation2d error = desired.getTranslation().minus(current.getTranslation());
 
-        Logger.recordOutput("drivetrain/pidErrorMeters", error);
+    //     Logger.recordOutput("drivetrain/pidErrorMeters", error);
         
-        double pidOutputMetersPerSecond = -translationController.calculate(error.getNorm(), 0);
+    //     double pidOutputMetersPerSecond = -translationController.calculate(error.getNorm(), 0);
 
 
-        if (translationController.atSetpoint()) {
-            pidOutputMetersPerSecond = 0;
-        }
+    //     if (translationController.atSetpoint()) {
+    //         pidOutputMetersPerSecond = 0;
+    //     }
 
-        pidOutputMetersPerSecond = MathUtil.clamp(pidOutputMetersPerSecond, -maxSpeedMetersPerSecond, maxSpeedMetersPerSecond);
+    //     pidOutputMetersPerSecond = MathUtil.clamp(pidOutputMetersPerSecond, -maxSpeedMetersPerSecond, maxSpeedMetersPerSecond);
 
-        double xMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getCos();
-        double yMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getSin();
+    //     double xMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getCos();
+    //     double yMetersPerSecond = pidOutputMetersPerSecond*error.getAngle().getSin();
         
-        fieldOrientedDriveWhileAiming(
-            new ChassisSpeeds(
-                xMetersPerSecond,
-                yMetersPerSecond,
-                0
-            ),
-            desired.getRotation()
-        );
-    }
+    //     fieldOrientedDriveWhileAiming(
+    //         new ChassisSpeeds(
+    //             xMetersPerSecond,
+    //             yMetersPerSecond,
+    //             0
+    //         ),
+    //         desired.getRotation()
+    //     );
+    // }
 
 
     

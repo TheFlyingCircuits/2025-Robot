@@ -160,24 +160,24 @@ public class RobotContainer {
         .add("rpLevelPriority", fillerList);
 
         pidTestingValue = Shuffleboard.getTab("robotContainer")
-        .add("pidPvalue", 1.0);
+        .add("pidPvalue", 2.0);
 
         setDefaultCommands();
         
         duncanController = duncan.getXboxController();
         amaraController = amara.getXboxController();
 
-        fakeBindings();
+        realBindings();
         triggers();
 
         
     }
 
-    private void fakeBindings() {
-        duncanController.rightTrigger().whileTrue(Commands.run(() -> drivetrain.autolineUpWithPose(ReefFace.BACK_REEF_FACE.getPose2d().plus(
-            new Transform2d(0.6,0, Rotation2d.k180deg)
-        ), pidTestingValue.getEntry().get().getDouble()), drivetrain));
-    }
+    // private void fakeBindings() {
+    //     duncanController.rightTrigger().whileTrue(Commands.run(() -> drivetrain.autolineUpWithPose(ReefFace.BACK_REEF_FACE.getPose2d().plus(
+    //         new Transform2d(0.6,0, Rotation2d.k180deg)
+    //     ), pidTestingValue.getEntry().get().getDouble()), drivetrain));
+    // }
 
 
     private void realBindings() {
