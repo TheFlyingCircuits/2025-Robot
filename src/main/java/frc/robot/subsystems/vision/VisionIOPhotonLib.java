@@ -1,11 +1,11 @@
 package frc.robot.subsystems.vision;
 
 import java.util.ArrayList;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -13,10 +13,17 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
+import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.PlayingField.FieldConstants;
 
 
 public class VisionIOPhotonLib implements VisionIO {
@@ -83,40 +90,42 @@ public class VisionIOPhotonLib implements VisionIO {
     //     makeTagCamsAgree(new Pose3d(knownRobotPose));
     // }
 
-    // private void makeTagCamsAgree(Pose3d knownRobotPose) {
-    //     for (PhotonCamera tagCam : tagCameras) {
-    //         List<PhotonPipelineResult> newFrames = tagCam.getAllUnreadResults();
-    //         if (newFrames.size() == 0) {
-    //             continue;
-    //         }
 
-    //         PhotonPipelineResult mostRecentFrame = newFrames.get(newFrames.size()-1);
 
-    //         Transform3d camPose_fieldFrame = new Transform3d();
-    //         if (mostRecentFrame.multitagResult.isPresent()) {
-    //             camPose_fieldFrame = mostRecentFrame.multitagResult.get().estimatedPose.best;
-    //         }
-    //         else if (mostRecentFrame.hasTargets()) {
-    //             // single tag
-    //             PhotonTrackedTarget singleTag = mostRecentFrame.targets.get(0);
-    //             Transform3d tagPose_camFrame = singleTag.bestCameraToTarget;
-    //             Transform3d camPose_tagFrame = tagPose_camFrame.inverse();
-    //             Pose3d tagPose_fieldFrame = Constants.VisionConstants.aprilTagFieldLayout.getTagPose(singleTag.fiducialId).get();
-    //             Transform3d tagTransform_fieldFrame = new Transform3d(tagPose_fieldFrame.getTranslation(), tagPose_fieldFrame.getRotation());
-    //             camPose_fieldFrame = tagTransform_fieldFrame.plus(camPose_tagFrame);
-    //         }
-    //         else {
-    //             continue;
-    //         }
+    private void makeTagCamsAgree(Pose3d knownRobotPose) {
+        for (PhotonCamera tagCam : tagCameras) {
+            List<PhotonPipelineResult> newFrames = tagCam.getAllUnreadResults();
+            if (newFrames.size() == 0) {
+                continue;
+            }
 
-    //         Pose3d camPose_fieldFrame_asPose = new Pose3d(camPose_fieldFrame.getTranslation(), camPose_fieldFrame.getRotation());
-    //         Pose3d camPose_robotFrame = camPose_fieldFrame_asPose.relativeTo(knownRobotPose);
-    //         Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/pose", camPose_robotFrame);
-    //         Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/rollDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getX()));
-    //         Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/pitchDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getY()));
-    //         Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/yawDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getZ()));
-    //     }
-    // }
+            PhotonPipelineResult mostRecentFrame = newFrames.get(newFrames.size()-1);
+
+            Transform3d camPose_fieldFrame = new Transform3d();
+            if (mostRecentFrame.multitagResult.isPresent()) {
+                camPose_fieldFrame = mostRecentFrame.multitagResult.get().estimatedPose.best;
+            }
+            else if (mostRecentFrame.hasTargets()) {
+                // single tag
+                PhotonTrackedTarget singleTag = mostRecentFrame.targets.get(0);
+                Transform3d tagPose_camFrame = singleTag.bestCameraToTarget;
+                Transform3d camPose_tagFrame = tagPose_camFrame.inverse();
+                Pose3d tagPose_fieldFrame = Constants.VisionConstants.aprilTagFieldLayout.getTagPose(singleTag.fiducialId).get();
+                Transform3d tagTransform_fieldFrame = new Transform3d(tagPose_fieldFrame.getTranslation(), tagPose_fieldFrame.getRotation());
+                camPose_fieldFrame = tagTransform_fieldFrame.plus(camPose_tagFrame);
+            }
+            else {
+                continue;
+            }
+
+            Pose3d camPose_fieldFrame_asPose = new Pose3d(camPose_fieldFrame.getTranslation(), camPose_fieldFrame.getRotation());
+            Pose3d camPose_robotFrame = camPose_fieldFrame_asPose.relativeTo(knownRobotPose);
+            Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/pose", camPose_robotFrame);
+            Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/rollDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getX()));
+            Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/pitchDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getY()));
+            Logger.recordOutput("tagCamAgree/"+tagCam.getName()+"/yawDegrees", Units.radiansToDegrees(camPose_robotFrame.getRotation().getZ()));
+        }
+    }
 
 
     /**
@@ -183,25 +192,30 @@ public class VisionIOPhotonLib implements VisionIO {
     }
 
 
-    // public void makeTagCamsAgree() {
-    //     int tagID = (int)SmartDashboard.getNumber("tagCamsAgree/Face", 9);
-    //     SmartDashboard.putNumber("tagCamsAgree/Face", tagID);
-    //     Pose2d calibrationFace = FieldConstants.tagLayout.getTagPose(tagID).get().toPose2d();
+    public void makeTagCamsAgree() {
+        int tagID = (int)SmartDashboard.getNumber("tagCamsAgree/Face", 9);
+        SmartDashboard.putNumber("tagCamsAgree/Face", tagID);
+        Pose3d calibrationFace = FieldConstants.tagLayout.getTagPose(tagID).get();
 
-    //     double inchesBack = SmartDashboard.getNumber("tagCamsAgree/inchesBack", 10.1);
-    //     SmartDashboard.putNumber("tagCamsAgree/inchesBack", inchesBack);
-    //     double metersBack = Units.inchesToMeters(inchesBack);
-    //     double pushOutDistanceMeters = metersBack + (DrivetrainConstants.frameWidthMeters/2.0);
+        double inchesBack = SmartDashboard.getNumber("tagCamsAgree/inchesBack", 10.1);
+        SmartDashboard.putNumber("tagCamsAgree/inchesBack", inchesBack);
+        double metersBack = Units.inchesToMeters(inchesBack);
+        double pushOutDistanceMeters = metersBack + (DrivetrainConstants.frameWidthMeters/2.0);
 
-    //     boolean facingReef = SmartDashboard.getBoolean("tagCamsAgree/facingReef", true);
-    //     SmartDashboard.putBoolean("tagCamsAgree/facingReef", facingReef);
-    //     Rotation2d rotationFromFace = facingReef ? Rotation2d.k180deg : Rotation2d.kZero;
+        boolean facingReef = SmartDashboard.getBoolean("tagCamsAgree/facingReef", true);
+        SmartDashboard.putBoolean("tagCamsAgree/facingReef", facingReef);
+        Rotation3d rotationFromFace = facingReef ? new Rotation3d(Rotation2d.k180deg) : 
+            new Rotation3d(Rotation2d.kZero); 
 
-    //     Transform2d offset = new Transform2d(pushOutDistanceMeters, 0, rotationFromFace);
-    //     Logger.recordOutput("vision/calibrationPose", calibrationFace.plus(offset));
+        double zValueOffset = 0;
 
-    //     this.makeTagCamsAgree(calibrationFace.plus(offset));
-    // }
+        Transform3d offset = new Transform3d(pushOutDistanceMeters, 0, zValueOffset, rotationFromFace);
+        Logger.recordOutput("vision/calibrationPose", calibrationFace.plus(offset));
+        // I am assuming we are going to use a tag that is flat with no pitch
+        // will edit the z value and make sure if works because we will have a tag at
+        // any height for the jig so if we use like the source tag will have to say the robot is floating
+        this.makeTagCamsAgree(calibrationFace.plus(offset));
+    }
 
 
     @Override
