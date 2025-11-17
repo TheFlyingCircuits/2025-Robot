@@ -262,18 +262,17 @@ public final class Constants {
 
     }
 
-    public final static class WristConstants {
-        public final static double maxAngleDegrees = 163;
-        public final static double minAngleDegrees = -55;
-        public final static double homeAngleDegrees = 115;
-
-        /**rotations of the wrist motor per rotations of the wrist */
-        public final static double gearReduction = 9. * (52./12.) * (37./15.);
-        /* Modified reduction with chain instead of belt */
-        public final static double chainGearReduction = 7. * (52./12.) * (32./18.); //53.9
-
-        public final static double alternateChainGearReduction = 9. * (52./12.) * (32./18.);
-
+    public final static class ArmConstants {
+        public final static double maxAngleDegrees = 100;
+        public final static double minAngleDegrees = -95;
+        public static double kPArmVoltsPerRadian = 0.5;
+        public static double kAArmVoltsSecondsSquaredPerRadian = 0.1;
+        public static double kVArmVoltsSecondsPerRadian = 1.5;
+        public static double maxArmAccelerationRadianPerSecondSquared;
+        public static double kDArmVoltsPerRadianPerSecond = 0.0;
+        public static double maxArmVelocityRadianPerSecond = 6.2;
+        public static double kGArmVolts = 0.22;
+        public static double kSArmVolts = 0.1;
 
     }
 
