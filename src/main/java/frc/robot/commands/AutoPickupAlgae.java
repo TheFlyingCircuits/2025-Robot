@@ -32,6 +32,7 @@ public class AutoPickupAlgae extends Command {
     private double retractedAndWaitingForOthersAdjustedX;
     private double intakeAlgaeAdjustedX;
     boolean isHighAlgae;
+    boolean isBackingUp = false;
 
 
     public AutoPickupAlgae(Drivetrain drivetrain, Arm arm, Wrist wrist,
@@ -45,6 +46,7 @@ public class AutoPickupAlgae extends Command {
         this.translationController=translationController;
         this.placerGrabber = placerGrabber;
         addRequirements(drivetrain, arm.shoulder, arm.extension, wrist, placerGrabber);
+        isBackingUp = false;
 
         super.setName("AutoPickupAlgae");
     }
@@ -84,6 +86,7 @@ public class AutoPickupAlgae extends Command {
         retractionAdjustedX = 0.425;
         retractedAndWaitingForOthersAdjustedX = 0.275;
         intakeAlgaeAdjustedX = -0.05;
+        isBackingUp = false;
 
     }
 
@@ -114,30 +117,47 @@ public class AutoPickupAlgae extends Command {
 
         arm.setShoulderTargetAngle(shoulderTargetAngle);
         wrist.setTargetPositionDegrees(wristTargetAngle);
-        placerGrabber.setFrontRollerVolts(10);
 
         boolean shoulderNearTarget = Math.abs(arm.getShoulderAngleDegrees() - shoulderTargetAngle) < 5;
         boolean wristNearTarget = Math.abs(wrist.getWristAngleDegrees() - wristTargetAngle) < 5;
-
-        if (!extensionNearTarget) {
-            adjustedX = retractionAdjustedX;
-        } else if (extensionNearTarget && (!wristNearTarget||!shoulderNearTarget)) {
-            adjustedX = retractedAndWaitingForOthersAdjustedX;
-        } else if (placerGrabber.getFrontRollerAvgAmps() > 13.5){
-            adjustedX = 1.0;
+        if(!isBackingUp){
+            placerGrabber.setFrontRollerVolts(6);
+            if (!extensionNearTarget) {
+                adjustedX = retractionAdjustedX;
+            } else if (extensionNearTarget && (!wristNearTarget||!shoulderNearTarget)) {
+                adjustedX = retractedAndWaitingForOthersAdjustedX;
+            } else if (placerGrabber.getFrontRollerAvgAmps() > 13.5){
+                adjustedX = 1.0;
+                isBackingUp = true;
+            } else {
+                adjustedX=intakeAlgaeAdjustedX;
+            }
         } else {
-            adjustedX=intakeAlgaeAdjustedX;
+            adjustedX = 1.0;
+            placerGrabber.setFrontRollerVolts(1);
         }
+
 
         Pose2d targetPose = adjustedReefScoringPose(closestFace.get().getPose2d(), adjustedX);
 
         ChassisSpeeds driverControl = translationController.get();
         if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
              drivetrain.pidToPose(targetPose, 1);
+             if(isBackingUp && drivetrain.translationControllerAtSetpoint()) {
+                // System.out.println("should be done idk");
+                // return;
+                // end(true);
+             }
         }
         else {
             drivetrain.fieldOrientedDrive(driverControl.div(3), true);
         }
             
     }
+
+    @Override
+    public boolean isFinished() {
+        System.out.println("why is this still running?");
+        return (isBackingUp && drivetrain.translationControllerAtSetpoint());
+    } 
 }

@@ -94,17 +94,17 @@ public class AimAtBarge extends Command {
 
         ChassisSpeeds driverControl = translationController.get();
         if (Math.hypot(driverControl.vxMetersPerSecond, driverControl.vyMetersPerSecond) < 1) {
-            double maxSpeed = 2.0;
-            if (1.5 > Math.abs(targetPose.getTranslation().getNorm() - drivetrain.getPoseMeters().getTranslation().getNorm())) {
-                maxSpeed = 1.0;
-            }
+            // double maxSpeed = 2.0;
+            // if (1.5 > Math.abs(targetPose.getTranslation().getNorm() - drivetrain.getPoseMeters().getTranslation().getNorm())) {
+            //     maxSpeed = 1.0;
+            // }
             
-            if (shouldDrive)
-                drivetrain.pidToPose(targetPose, maxSpeed);
-            else drivetrain.fieldOrientedDrive(new ChassisSpeeds(), true);
+            // if (shouldDrive)
+                // drivetrain.pidToPose(targetPose, maxSpeed);
+            // else drivetrain.fieldOrientedDrive(new ChassisSpeeds(), true);
         }
         else {
-            drivetrain.fieldOrientedDrive(driverControl.div(3), true);
+            // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
         }
 
 
@@ -115,14 +115,15 @@ public class AimAtBarge extends Command {
         // immediately start moving shoulder
         arm.setShoulderTargetAngle(desiredArmPosition.shoulderAngleDegrees);
 
-        boolean translationCloseToTarget = 0.2 > Math.abs(targetPose.getTranslation().getNorm() - drivetrain.getPoseMeters().getTranslation().getNorm());
+        // boolean translationCloseToTarget = 0.2 > Math.abs(targetPose.getTranslation().getNorm() - drivetrain.getPoseMeters().getTranslation().getNorm());
 
-        boolean rotationClose;
-        if (DriverStation.getAlliance().get() == Alliance.Blue) {
-            rotationClose = 5 > Math.abs(drivetrain.getPoseMeters().getRotation().getDegrees());
-        } else {
-            rotationClose = 175 < Math.abs(drivetrain.getPoseMeters().getRotation().getDegrees());
-        }
+        boolean translationCloseToTarget = true;
+        boolean rotationClose = true;
+        // if (DriverStation.getAlliance().get() == Alliance.Blue) {
+        //     rotationClose = 5 > Math.abs(drivetrain.getPoseMeters().getRotation().getDegrees());
+        // } else {
+        //     rotationClose = 175 < Math.abs(drivetrain.getPoseMeters().getRotation().getDegrees());
+        // }
 
         if (((translationCloseToTarget && rotationClose) || !shouldDrive) && shoulderNearTarget) {
             // Only start moving extension & wrist when shoulder is near the setpoint

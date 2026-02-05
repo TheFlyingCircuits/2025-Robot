@@ -21,6 +21,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -43,7 +44,6 @@ import frc.robot.Constants.WristConstants;
 import frc.robot.PlayingField.FieldConstants;
 import frc.robot.PlayingField.FieldElement;
 import frc.robot.PlayingField.ReefBranch;
-import frc.robot.PlayingField.ReefFace;
 import frc.robot.commands.AimAtBarge;
 import frc.robot.commands.AimAtReef;
 import frc.robot.commands.AutoPickupAlgae;
@@ -103,10 +103,14 @@ public class RobotContainer {
     public final Wrist wrist;
     public final Leds leds;
     public final PlacerGrabber placerGrabber;
+    public final Timer timer;
 
     private DigitalInput coastModeButton = new DigitalInput(0);
     
     public RobotContainer() {
+
+        timer = new Timer();
+        timer.start();
 
         /**** INITIALIZE SUBSYSTEMS ****/
         if (RobotBase.isReal()) {
@@ -182,14 +186,14 @@ public class RobotContainer {
 
     private void realBindings() {
         // bumpers to select left/right stalk
-        amaraController.rightBumper().onTrue(new InstantCommand(() -> desiredStalk = Direction.right));
-        amaraController.leftBumper().onTrue(new InstantCommand(() -> desiredStalk = Direction.left));
+        // amaraController.rightBumper().onTrue(new InstantCommand(() -> desiredStalk = Direction.right));
+        // amaraController.leftBumper().onTrue(new InstantCommand(() -> desiredStalk = Direction.left));
 
-        // face buttons to select desired level
-        // amaraController.b().onTrue(new InstantCommand(() -> {desiredLevel = 1; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-        amaraController.a().onTrue(new InstantCommand(() -> {desiredLevel = 2; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-        amaraController.x().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
-        amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        // // face buttons to select desired level
+        // // amaraController.b().onTrue(new InstantCommand(() -> {desiredLevel = 1; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        // amaraController.a().onTrue(new InstantCommand(() -> {desiredLevel = 2; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        // amaraController.x().onTrue(new InstantCommand(() -> {desiredLevel = 3; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
+        // amaraController.y().onTrue(new InstantCommand(() -> {desiredLevel = 4; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
 
         if (RobotBase.isSimulation()) { // use a single controller in sim for convenience
             // duncanController.povDown().onTrue(new InstantCommand(() -> {desiredLevel = 1; Logger.recordOutput("amaraDesiredLevel", desiredLevel);}));
@@ -200,6 +204,8 @@ public class RobotContainer {
                         // climb prep
 
         }
+
+        amaraController.a().onTrue(AutoRemoveAlgaeAndThrow());
 
         // ground intake
         duncanController.rightTrigger().and(() -> !hasAlgae).whileTrue(
@@ -614,6 +620,13 @@ public class RobotContainer {
     public Command AutoRemoveAlgae() {
         return new AutoPickupAlgae(drivetrain, arm, wrist,
             () -> drivetrain.getClosestReefFace(), duncan::getRequestedFieldOrientedVelocity, placerGrabber);
+    }
+
+    public Command AutoRemoveAlgaeAndThrow() {
+        return new AutoPickupAlgae(drivetrain, arm, wrist,
+            () -> drivetrain.getClosestReefFace(), duncan::getRequestedFieldOrientedVelocity, placerGrabber).andThen(
+            scoreOnBarge());
+            // new InstantCommand(() -> timer.reset()).alongWith(scoreOnBarge().until(() ->(timer.get() > 4.0))));
     }
 
     public Command backAwayFromReef(double speedMetersPerSecond) { return drivetrain.run(() -> {

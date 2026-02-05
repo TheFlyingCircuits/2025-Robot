@@ -242,6 +242,7 @@ public class AimAtReef extends Command {
             //     drivetrain.pidToPose(targetPose, maxSpeed);
             // }
             drivetrain.pidToPose(targetPose, 3.25);
+            drivetrain.pidToPose(targetPose, 1.5);
 
             
             // drivetrain.fieldOrientedDrive(driverControl.div(3), true);
